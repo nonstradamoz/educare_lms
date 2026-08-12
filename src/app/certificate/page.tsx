@@ -5,92 +5,70 @@ import { Plus, Search, MoreVertical } from 'lucide-react';
 import Button from '@/components/UI/Button/Button';
 import Input from '@/components/UI/Input/Input';
 import Modal from '@/components/UI/Modal/Modal';
-import styles from '../student/page.module.css'; // Reusing student styles
+import s from '@/styles/shared.module.css';
 
-export default function CertificatesPage() {
-  const [items, setItems] = useState([
-    { id: '1', col1: 'Demo Certificate 1', col2: 'Info A', col3: 'Info B', status: 'Active' },
-    { id: '2', col1: 'Demo Certificate 2', col2: 'Info C', col3: 'Info D', status: 'Inactive' },
-  ]);
+const MOCK = [["001","John Doe","Full Stack Dev","2026-08-01","Active"],["002","Jane Smith","Data Science","2026-07-15","Active"],["003","Robert Johnson","UI/UX Design","2026-06-30","Inactive"]];
+
+export default function Page() {
+  const [rows, setRows] = useState(MOCK);
   const [search, setSearch] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [col1, setCol1] = useState('');
+  const [open, setOpen] = useState(false);
+  const [newVal, setNewVal] = useState('');
+
+  const filtered = rows.filter(r => r.some(c => String(c).toLowerCase().includes(search.toLowerCase())));
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!col1) return;
-    setItems([...items, { id: Date.now().toString(), col1, col2: '-', col3: '-', status: 'Active' }]);
-    setIsModalOpen(false);
-    setCol1('');
+    if (!newVal) return;
+    setRows([...rows, [String(rows.length + 1).padStart(3, '0'), newVal, '—', '—', 'Active']]);
+    setOpen(false); setNewVal('');
   };
 
   return (
-    <>
-      <div className={styles.container}>
-        <div className={styles.pageHeader}>
-          <div>
-            <h1 className={styles.title}>Certificates</h1>
-            <p className={styles.description}>Manage certificates records and details.</p>
-          </div>
-          <Button onClick={() => setIsModalOpen(true)}>
-            <Plus size={16} /> Add Certificate
-          </Button>
+    <div className={s.page}>
+      <div className={s.pageHeader}>
+        <div>
+          <h1 className={s.pageTitle}>Certificates</h1>
+          <p className={s.pageDesc}>Issue and track course completion certificates.</p>
         </div>
+        <Button onClick={() => setOpen(true)}><Plus size={15} /> Add Record</Button>
+      </div>
 
-        <div className={styles.card}>
-          <div className={styles.tableControls}>
-            <div className={styles.searchBox}>
-              <Search size={18} className={styles.searchIcon} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className={styles.searchInput}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+      <div className={s.card}>
+        <div className={s.tableControls}>
+          <div className={s.searchWrap}>
+            <Search size={14} className={s.searchIcon} />
+            <input className={s.searchInput} type="text" placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
-
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Student Name</th><th>Course</th><th>Issue Date</th><th>Status</th>
-                  <th>Actions</th>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div className={s.tableWrap}>
+          <table className={s.table}>
+            <thead><tr><th>#</th><th>Student Name</th><th>Course</th><th>Issue Date</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              {filtered.map((row, i) => (
+                <tr key={i}>
+                  <td><span className={s.mono}>{row[0]}</span></td>
+                  <td><div className={s.nameCell}><div className={s.nameAvatar}>{String(row[1]).charAt(0)}</div>{row[1]}</div></td>
+                  {row.slice(2, -1).map((c, j) => <td key={j}>{c}</td>)}
+                  <td><span className={`${s.badge} ${row[row.length-1] === 'Active' ? s.badgeActive : s.badgeInactive}`}>{row[row.length-1]}</span></td>
+                  <td><button className={s.iconBtn}><MoreVertical size={14} /></button></td>
                 </tr>
-              </thead>
-              <tbody>
-                {items.map(item => (
-                  <tr key={item.id}>
-                    <td className={styles.fontMono}>#{item.id}</td>
-                    <td className={styles.nameCell}>{item.col1}</td>
-                    <td>{item.col2}</td>
-                    <td>{item.col3}</td>
-                    <td><span className={`${styles.statusBadge} ${item.status === 'Active' ? styles.active : styles.inactive}`}>{item.status}</span></td>
-                    <td><button className={styles.actionBtn}><MoreVertical size={16} /></button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Certificate">
-        <form onSubmit={handleAdd} className={styles.form}>
-          <Input 
-            label="Student Name" 
-            value={col1}
-            onChange={(e) => setCol1(e.target.value)}
-            required
-          />
-          <div className={styles.formActions}>
-            <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+      <Modal isOpen={open} onClose={() => setOpen(false)} title="Add New Record">
+        <form onSubmit={handleAdd} className={s.form}>
+          <Input label="Student Name" value={newVal} onChange={e => setNewVal(e.target.value)} required />
+          <div className={s.formActions}>
+            <Button variant="ghost" type="button" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit">Save</Button>
           </div>
         </form>
       </Modal>
-    </>
+    </div>
   );
 }

@@ -1,48 +1,29 @@
 'use client';
+import s from '@/styles/shared.module.css';
 
-import { useState } from 'react';
-import { Send, CheckCircle2 } from 'lucide-react';
-import Button from '@/components/UI/Button/Button';
-import Input from '@/components/UI/Input/Input';
-import styles from '../fee/page.module.css'; // Reusing form styles
-
-export default function SystemSetupPage() {
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-  };
-
+export default function Page() {
   return (
-    <>
-      <div className={styles.container}>
-        <div className={styles.pageHeader}>
-          <h1 className={styles.title}>System Setup</h1>
-          <p className={styles.description}>Configure initial system parameters.</p>
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Configure System Setup</h2>
-          </div>
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <Input label="Primary Target" placeholder="Enter details..." required />
-            <Input label="Additional Info" placeholder="Optional..." />
-            
-            <Button type="submit" className={styles.submitBtn}>
-              <Send size={16} /> Submit & Save
-            </Button>
-            
-            {showSuccess && (
-              <div className={styles.successMessage}>
-                <CheckCircle2 size={16} /> Action completed successfully!
-              </div>
-            )}
-          </form>
+    <div className={s.page}>
+      <div className={s.pageHeader}>
+        <div>
+          <h1 className={s.pageTitle}>System Setup</h1>
+          <p className={s.pageDesc}>Configure initial system parameters and school details.</p>
         </div>
       </div>
-    </>
+
+      <div className={s.card}>
+        <div className={s.cardHeader}><h2 className={s.cardTitle}>Academic Year</h2></div>
+        <div className={s.cardBody} style={{ color: 'var(--text-2)', fontSize: '0.875rem', lineHeight: '1.75' }}>
+          <p>Current academic year: 2026–2027. You can configure term dates, holidays, and grading schemes here.</p>
+        </div>
+      </div>
+
+      <div className={s.card}>
+        <div className={s.cardHeader}><h2 className={s.cardTitle}>Integrations</h2></div>
+        <div className={s.cardBody} style={{ color: 'var(--text-2)', fontSize: '0.875rem', lineHeight: '1.75' }}>
+          <p>Connect to payment gateways (Razorpay, PayU), SMS providers (TextLocal, MSG91), and email services (SendGrid).</p>
+        </div>
+      </div>
+    </div>
   );
 }

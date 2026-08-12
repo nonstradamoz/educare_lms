@@ -1,48 +1,29 @@
 'use client';
+import s from '@/styles/shared.module.css';
 
-import { useState } from 'react';
-import { Send, CheckCircle2 } from 'lucide-react';
-import Button from '@/components/UI/Button/Button';
-import Input from '@/components/UI/Input/Input';
-import styles from '../fee/page.module.css'; // Reusing form styles
-
-export default function SMSGatewayPage() {
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-  };
-
+export default function Page() {
   return (
-    <>
-      <div className={styles.container}>
-        <div className={styles.pageHeader}>
-          <h1 className={styles.title}>SMS Gateway</h1>
-          <p className={styles.description}>Send bulk SMS notifications to students and staff.</p>
-        </div>
-
-        <div className={styles.card}>
-          <div className={styles.cardHeader}>
-            <h2 className={styles.cardTitle}>Configure SMS Gateway</h2>
-          </div>
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <Input label="Primary Target" placeholder="Enter details..." required />
-            <Input label="Additional Info" placeholder="Optional..." />
-            
-            <Button type="submit" className={styles.submitBtn}>
-              <Send size={16} /> Submit & Save
-            </Button>
-            
-            {showSuccess && (
-              <div className={styles.successMessage}>
-                <CheckCircle2 size={16} /> Action completed successfully!
-              </div>
-            )}
-          </form>
+    <div className={s.page}>
+      <div className={s.pageHeader}>
+        <div>
+          <h1 className={s.pageTitle}>SMS Gateway</h1>
+          <p className={s.pageDesc}>Send bulk SMS notifications to students and parents.</p>
         </div>
       </div>
-    </>
+
+      <div className={s.card}>
+        <div className={s.cardHeader}><h2 className={s.cardTitle}>SMS Balance</h2></div>
+        <div className={s.cardBody} style={{ color: 'var(--text-2)', fontSize: '0.875rem', lineHeight: '1.75' }}>
+          <p>Current balance: 1,000 SMS credits. Bulk messaging is available for fee reminders, exam alerts, and attendance notifications.</p>
+        </div>
+      </div>
+
+      <div className={s.card}>
+        <div className={s.cardHeader}><h2 className={s.cardTitle}>Templates</h2></div>
+        <div className={s.cardBody} style={{ color: 'var(--text-2)', fontSize: '0.875rem', lineHeight: '1.75' }}>
+          <p>Pre-built templates for fee due reminders, exam schedules, holiday announcements, and custom messages.</p>
+        </div>
+      </div>
+    </div>
   );
 }

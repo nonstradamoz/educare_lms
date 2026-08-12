@@ -2,65 +2,74 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
-  font-weight: 500;
+  gap: 0.4rem;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
   transition: all 0.2s ease;
-  gap: 0.5rem;
+  white-space: nowrap;
+  outline: none;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* Sizes */
-.sm {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
-}
-
-.md {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-}
-
-.lg {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-}
+.sm { padding: 0.375rem 0.75rem;  font-size: 0.75rem; }
+.md { padding: 0.575rem 1.125rem; font-size: 0.8125rem; }
+.lg { padding: 0.75rem 1.5rem;    font-size: 0.9rem; }
 
 /* Variants */
 .primary {
-  background-color: var(--primary);
-  color: white;
-  box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.2);
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 1px 2px rgba(79,70,229,0.2);
 }
-
 .primary:hover {
-  background-color: #1d4ed8;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  box-shadow: var(--shadow-primary);
+  transform: translateY(-1px);
 }
+.primary:active { transform: translateY(0); }
 
 .secondary {
-  background-color: var(--surface-color);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background: var(--surface);
+  color: var(--text-1);
+  border-color: var(--border);
+  box-shadow: var(--shadow-xs);
 }
-
 .secondary:hover {
-  background-color: var(--bg-color);
+  background: var(--bg);
+  border-color: #d1d5db;
 }
 
 .danger {
-  background-color: var(--danger);
-  color: white;
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
 }
-
-.danger:hover {
-  background-color: #dc2626;
-}
+.danger:hover { background: #b91c1c; border-color: #b91c1c; }
 
 .ghost {
-  background-color: transparent;
-  color: var(--text-secondary);
+  background: transparent;
+  color: var(--text-2);
+  border-color: transparent;
+}
+.ghost:hover {
+  background: var(--bg);
+  color: var(--text-1);
+  border-color: var(--border);
 }
 
-.ghost:hover {
-  background-color: var(--bg-color);
-  color: var(--text-primary);
+/* Disabled */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }

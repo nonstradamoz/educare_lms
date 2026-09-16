@@ -16,6 +16,7 @@ interface Material {
   classLevel: string;
   dateAdded: string;
   size?: string;
+  url?: string;
 }
 
 const SAMPLE_MATERIALS: Material[] = [

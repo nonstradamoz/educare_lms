@@ -1,0 +1,27 @@
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { StudentsService } from './students.service';
+
+@Controller('students')
+export class StudentsController {
+  constructor(private readonly studentsService: StudentsService) {}
+
+  @Post()
+  createStudent(@Body() data: any) {
+    return this.studentsService.createStudent(data);
+  }
+
+  @Get()
+  getStudents() {
+    return this.studentsService.getStudents();
+  }
+
+  @Put(':id')
+  updateStudent(@Param('id') id: string, @Body() data: any) {
+    return this.studentsService.updateStudent(id, data);
+  }
+
+  @Delete(':id')
+  deleteStudent(@Param('id') id: string) {
+    return this.studentsService.deleteStudent(id);
+  }
+}

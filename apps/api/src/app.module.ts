@@ -1,0 +1,31 @@
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
+import { CentresModule } from './centres/centres.module';
+import { DatabaseModule } from './database/database.module';
+import { StudentsModule } from './students/students.module';
+import { StaffModule } from './staff/staff.module';
+import { SetupModule } from './setup/setup.module';
+import { ExamsModule } from './exams/exams.module';
+
+@Module({
+  imports: [
+    DatabaseModule,
+    AuthModule,
+    UsersModule,
+    RolesModule,
+    PermissionsModule,
+    CentresModule,
+    StudentsModule,
+    StaffModule,
+    SetupModule,
+    ExamsModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}

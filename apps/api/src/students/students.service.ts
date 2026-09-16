@@ -1,0 +1,198 @@
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service';
+import * as argon2 from 'argon2';
+
+@Injectable()
+export class StudentsService {
+  constructor(private prisma: PrismaService) {}
+
+  async createStudent(data: any) {
+    try {
+      // 1. Fetch related entities based on provided string names
+      const role = await this.prisma.role.findUnique({ where: { name: 'STUDENT' } });
+      if (!role) throw new NotFoundException('STUDENT role not found. Please run seed script.');
+
+      const centre = await this.prisma.centre.findFirst({ where: { name: data.centre } });
+      if (!centre) throw new NotFoundException(`Centre "${data.centre}" not found.`);
+
+      const year = await this.prisma.academicYear.findUnique({ where: { name: data.academicYear } });
+      if (!year) throw new NotFoundException(`Academic Year "${data.academicYear}" not found.`);
+
+      const board = await this.prisma.board.findUnique({ where: { name: data.board } });
+      if (!board) throw new NotFoundException(`Board "${data.board}" not found.`);
+
+      const standard = await this.prisma.standard.findUnique({ where: { name: data.classLevel } });
+      if (!standard) throw new NotFoundException(`Class "${data.classLevel}" not found.`);
+
+      // 2. Find or create the Batch
+      const batchName = data.division || 'Default Batch';
+      let batch = await this.prisma.batch.findFirst({
+        where: {
+          name: batchName,
+          academicYearId: year.id,
+          boardId: board.id,
+          standardId: standard.id,
+          centreId: centre.id,
+        }
+      });
+
+      if (!batch) {
+        batch = await this.prisma.batch.create({
+          data: {
+            name: batchName,
+            academicYearId: year.id,
+            boardId: board.id,
+            standardId: standard.id,
+            centreId: centre.id,
+          }
+        });
+      }
+
+      // 3. Generate credentials
+      const email = data.email || `student.${Date.now()}@educare.com`;
+      const password = await argon2.hash('password123'); // Default password
+
+      // 4. Create User, StudentProfile, and Enrollment in a transaction
+      const newStudent = await this.prisma.$transaction(async (prisma) => {
+        const user = await prisma.user.create({
+          data: {
+            email,
+            password,
+            firstName: data.name ? data.name.split(' ')[0] : 'New',
+            lastName: data.name ? data.name.split(' ').slice(1).join(' ') : 'Student',
+            roleId: role.id,
+          }
+        });
+
+        const profile = await prisma.studentProfile.create({
+          data: {
+            userId: user.id,
+            admissionNo: data.admissionNo || `ADM-${Date.now()}`,
+            parentName: data.parentName,
+            parentEmail: data.parentEmail,
+            parentPhone: data.parentPhone,
+          }
+        });
+
+        const enrollment = await prisma.enrollment.create({
+          data: {
+            studentProfileId: profile.id,
+            batchId: batch.id,
+          }
+        });
+
+        // Link User to Centre
+        await prisma.userCentre.create({
+          data: {
+            userId: user.id,
+            centreId: centre.id,
+          }
+        });
+
+        return { user, profile, enrollment, batch };
+      });
+
+      return newStudent;
+    } catch (error: any) {
+      console.error('Error creating student:', error);
+      throw new InternalServerErrorException(error.message || 'Failed to create student');
+    }
+  }
+
+  async getStudents() {
+    return this.prisma.studentProfile.findMany({
+      include: {
+        user: true,
+        enrollments: {
+          include: {
+            batch: {
+              include: {
+                academicYear: true,
+                board: true,
+                standard: true,
+                centre: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async updateStudent(id: string, data: any) {
+    const profile = await this.prisma.studentProfile.findUnique({ where: { id }, include: { user: true } });
+    if (!profile) throw new NotFoundException('Student not found');
+
+    const centre = data.centre ? await this.prisma.centre.findFirst({ where: { name: data.centre } }) : null;
+    const year = data.academicYear ? await this.prisma.academicYear.findUnique({ where: { name: data.academicYear } }) : null;
+    const board = data.board ? await this.prisma.board.findUnique({ where: { name: data.board } }) : null;
+    const standard = data.classLevel ? await this.prisma.standard.findUnique({ where: { name: data.classLevel } }) : null;
+
+    let batch = null;
+    if (centre && year && board && standard) {
+      const batchName = data.division || 'Default Batch';
+      batch = await this.prisma.batch.findFirst({
+        where: { name: batchName, academicYearId: year.id, boardId: board.id, standardId: standard.id, centreId: centre.id }
+      });
+      if (!batch) {
+        batch = await this.prisma.batch.create({
+          data: { name: batchName, academicYearId: year.id, boardId: board.id, standardId: standard.id, centreId: centre.id }
+        });
+      }
+    }
+
+    return this.prisma.$transaction(async (prisma) => {
+      if (data.name || data.email) {
+        await prisma.user.update({
+          where: { id: profile.userId },
+          data: {
+            email: data.email || undefined,
+            firstName: data.name ? data.name.split(' ')[0] : undefined,
+            lastName: data.name ? data.name.split(' ').slice(1).join(' ') : undefined,
+          }
+        });
+      }
+
+      const updatedProfile = await prisma.studentProfile.update({
+        where: { id },
+        data: {
+          admissionNo: data.admissionNo || undefined,
+          parentName: data.parentName || undefined,
+          parentEmail: data.parentEmail || undefined,
+          parentPhone: data.parentPhone || undefined,
+        }
+      });
+
+      if (batch) {
+        const enrollment = await prisma.enrollment.findFirst({ where: { studentProfileId: id } });
+        if (enrollment) {
+          await prisma.enrollment.update({
+            where: { id: enrollment.id },
+            data: { batchId: batch.id }
+          });
+        }
+      }
+
+      if (centre) {
+        await prisma.userCentre.deleteMany({ where: { userId: profile.userId } });
+        await prisma.userCentre.create({ data: { userId: profile.userId, centreId: centre.id } });
+      }
+
+      return updatedProfile;
+    });
+  }
+
+  async deleteStudent(id: string) {
+    const profile = await this.prisma.studentProfile.findUnique({ where: { id } });
+    if (!profile) throw new NotFoundException('Student not found');
+    
+    // Soft delete by marking user as inactive
+    await this.prisma.user.update({
+      where: { id: profile.userId },
+      data: { status: 'INACTIVE' }
+    });
+    return { success: true };
+  }
+
+}

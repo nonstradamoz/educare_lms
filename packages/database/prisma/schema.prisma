@@ -1,0 +1,375 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  password     String
+  firstName    String
+  lastName     String
+  status       UserStatus   @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  roleId       String
+  role         Role         @relation(fields: [roleId], references: [id])
+  userCentres  UserCentre[]
+
+  studentProfile StudentProfile?
+  teacherProfile TeacherProfile?
+
+  @@map("users")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  action      String           @unique // e.g., 'students.create'
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Centre {
+  id          String       @id @default(uuid())
+  name        String
+  code        String       @unique
+  address     String?
+  contactNo   String?
+  email       String?
+  status      CentreStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  userCentres UserCentre[]
+  batches     Batch[]
+
+  @@map("centres")
+}
+
+enum CentreStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model UserCentre {
+  userId   String
+  centreId String
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  centre   Centre @relation(fields: [centreId], references: [id], onDelete: Cascade)
+
+  @@id([userId, centreId])
+  @@map("user_centres")
+}
+
+// -----------------------------------------------------------------------------
+// CORE ACADEMIC HIERARCHY
+// -----------------------------------------------------------------------------
+
+model AcademicYear {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g., "2025-26"
+  startDate DateTime?
+  endDate   DateTime?
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  batches   Batch[]
+  exams     Exam[]
+  materials StudyMaterial[]
+
+  @@map("academic_years")
+}
+
+model Board {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g., "CBSE", "State"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  batches   Batch[]
+  syllabi   Syllabus[]
+
+  @@map("boards")
+}
+
+model Standard {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g., "Class 11", "Class 12"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  batches   Batch[]
+  syllabi   Syllabus[]
+
+  @@map("standards")
+}
+
+model Subject {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g., "Physics", "Chemistry"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  syllabi     Syllabus[]
+  assignments TeacherAssignment[]
+  exams       Exam[]
+
+  @@map("subjects")
+}
+
+// -----------------------------------------------------------------------------
+// CURRICULUM HIERARCHY
+// -----------------------------------------------------------------------------
+
+model Syllabus {
+  id         String   @id @default(uuid())
+  boardId    String
+  standardId String
+  subjectId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  board      Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  standard   Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  chapters   Chapter[]
+  materials  StudyMaterial[]
+
+  @@unique([boardId, standardId, subjectId])
+  @@map("syllabi")
+}
+
+model Chapter {
+  id         String   @id @default(uuid())
+  name       String
+  syllabusId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  syllabus   Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
+  topics     Topic[]
+
+  exams      Exam[]
+  materials  StudyMaterial[]
+
+  @@map("chapters")
+}
+
+model Topic {
+  id        String   @id @default(uuid())
+  name      String
+  chapterId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  exams     Exam[]
+  materials StudyMaterial[]
+
+  @@map("topics")
+}
+
+// -----------------------------------------------------------------------------
+// ORGANIZATIONAL HIERARCHY (Batches)
+// -----------------------------------------------------------------------------
+
+model Batch {
+  id             String   @id @default(uuid())
+  name           String   // e.g., "Division A", "Morning Batch"
+  academicYearId String
+  boardId        String
+  standardId     String
+  centreId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  board          Board        @relation(fields: [boardId], references: [id])
+  standard       Standard     @relation(fields: [standardId], references: [id])
+  centre         Centre       @relation(fields: [centreId], references: [id])
+
+  enrollments    Enrollment[]
+  assignments    TeacherAssignment[]
+  exams          Exam[]
+
+  @@map("batches")
+}
+
+// -----------------------------------------------------------------------------
+// STUDENTS & ENROLLMENT
+// -----------------------------------------------------------------------------
+
+model StudentProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  admissionNo String   @unique
+  parentName  String?
+  parentEmail String?
+  parentPhone String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+
+  @@map("student_profiles")
+}
+
+model Enrollment {
+  id               String   @id @default(uuid())
+  studentProfileId String
+  batchId          String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  batch            Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProfileId, batchId])
+  @@map("enrollments")
+}
+
+// -----------------------------------------------------------------------------
+// TEACHERS & ASSIGNMENTS
+// -----------------------------------------------------------------------------
+
+model TeacherProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  qualification  String?
+  experience     Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments    TeacherAssignment[]
+
+  @@map("teacher_profiles")
+}
+
+model TeacherAssignment {
+  id               String   @id @default(uuid())
+  teacherProfileId String
+  batchId          String
+  subjectId        String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  batch            Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  subject          Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherProfileId, batchId, subjectId])
+  @@map("teacher_assignments")
+}
+
+// -----------------------------------------------------------------------------
+// ACADEMIC CONTENT
+// -----------------------------------------------------------------------------
+
+model Exam {
+  id             String   @id @default(uuid())
+  title          String
+  academicYearId String
+  batchId        String
+  subjectId      String
+  chapterId      String?
+  topicId        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  batch          Batch        @relation(fields: [batchId], references: [id])
+  subject        Subject      @relation(fields: [subjectId], references: [id])
+  chapter        Chapter?     @relation(fields: [chapterId], references: [id])
+  topic          Topic?       @relation(fields: [topicId], references: [id])
+
+  mcqQuestions   McqQuestion[]
+
+  @@map("exams")
+}
+
+model StudyMaterial {
+  id             String   @id @default(uuid())
+  title          String
+  type           MaterialType // e.g., PDF, VIDEO, LINK
+  url            String?
+  academicYearId String
+  syllabusId     String
+  chapterId      String?
+  topicId        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  syllabus       Syllabus     @relation(fields: [syllabusId], references: [id])
+  chapter        Chapter?     @relation(fields: [chapterId], references: [id])
+  topic          Topic?       @relation(fields: [topicId], references: [id])
+
+  @@map("study_materials")
+}
+
+enum MaterialType {
+  PDF
+  VIDEO
+  LINK
+  DOCUMENT
+}
+
+
+model McqQuestion {
+  id            String   @id @default(uuid())
+  questionText  String
+  options       Json
+  correctOption String
+  marks         Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  examId        String
+  exam          Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+}

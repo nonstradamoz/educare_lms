@@ -5,7 +5,7 @@ import { PrismaService } from '../database/prisma.service';
 export class ExamsService {
   constructor(private prisma: PrismaService) {}
 
-  async getExams() {
+  async getExams(): Promise<any> {
     return this.prisma.exam.findMany({
       include: {
         academicYear: true,
@@ -44,7 +44,7 @@ export class ExamsService {
             academicYearId: year?.id || (await this.prisma.academicYear.create({data:{name:"2026"}})).id,
             centreId: centre?.id || (await this.prisma.centre.create({data:{name:"Dummy", code:"DUM"}})).id,
             standardId: standard?.id || (await this.prisma.standard.create({data:{name:"Dummy Class"}})).id,
-            boardId: board?.id || (await this.prisma.board.create({data:{name:"Dummy Board", code:"DB"}})).id,
+            boardId: board?.id || (await this.prisma.board.create({data:{name:"Dummy Board"}})).id,
           }
         });
       }
@@ -57,7 +57,7 @@ export class ExamsService {
       if (!subject) {
         const standard = await this.prisma.standard.findFirst();
         subject = await this.prisma.subject.create({
-          data: { name: "Dummy Subject", code: "SUBJ", standardId: standard!.id }
+          data: { name: "Dummy Subject" }
         });
       }
       subjectId = subject.id;
@@ -75,14 +75,14 @@ export class ExamsService {
     });
   }
 
-  async getMcqQuestions() {
+  async getMcqQuestions(): Promise<any> {
     return this.prisma.mcqQuestion.findMany({
       include: { exam: true },
       orderBy: { createdAt: 'desc' }
     });
   }
 
-  async createMcqQuestion(data: any) {
+  async createMcqQuestion(data: any): Promise<any> {
     const { questionText, options, correctOption, marks, examId } = data;
     return this.prisma.mcqQuestion.create({
       data: {

@@ -6,7 +6,7 @@ export class ExamsController {
   constructor(private readonly examsService: ExamsService) {}
 
   @Get()
-  getExams() {
+  getExams(): Promise<any> {
     return this.examsService.getExams();
   }
 
@@ -16,12 +16,12 @@ export class ExamsController {
   }
 
   @Get('mcq')
-  getMcqQuestions() {
+  getMcqQuestions(): Promise<any> {
     return this.examsService.getMcqQuestions();
   }
 
   @Post('mcq')
-  createMcqQuestion(@Body() data: any) {
+  createMcqQuestion(@Body() data: any): Promise<any> {
     return this.examsService.createMcqQuestion(data);
   }
 }

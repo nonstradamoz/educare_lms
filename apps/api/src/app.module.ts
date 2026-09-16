@@ -11,6 +11,8 @@ import { StudentsModule } from './students/students.module';
 import { StaffModule } from './staff/staff.module';
 import { SetupModule } from './setup/setup.module';
 import { ExamsModule } from './exams/exams.module';
+import { CloudflareModule } from './cloudflare/cloudflare.module';
+import { EstudyModule } from './estudy/estudy.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { ExamsModule } from './exams/exams.module';
     StaffModule,
     SetupModule,
     ExamsModule,
+    CloudflareModule,
+    EstudyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

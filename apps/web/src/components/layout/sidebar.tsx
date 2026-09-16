@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { fetchApi } from "@/lib/api";
 import {
   LayoutDashboard,
   Users,
@@ -19,6 +20,7 @@ import {
   Wrench,
   HelpCircle,
   PanelLeftClose,
+  LogOut,
 } from "lucide-react";
 
 const mainNav = [
@@ -47,6 +49,18 @@ const systemNav = [
 
 export function Sidebar() {
   const path = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetchApi("/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      window.location.href = "/login";
+    }
+  };
+
 
   return (
     <aside className="hidden w-[260px] shrink-0 flex-col bg-brand-blue md:flex h-screen sticky top-0">
@@ -71,8 +85,14 @@ export function Sidebar() {
           <PanelLeftClose className="h-4 w-4" />
           Collapse
         </button>
+
+        <button onClick={handleLogout} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs font-medium text-white/50 hover:text-brand-red hover:bg-white/8 transition-colors mt-2">
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
       </div>
     </aside>
+
   );
 }
 

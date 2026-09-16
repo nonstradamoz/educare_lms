@@ -32,6 +32,47 @@ export default function CreateExamPage() {
     }));
   };
 
+  const [years, setYears] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchApi<any[]>('/setup/academic-years').then(setYears).catch(console.error);
+    // for simple demo, assume we have API to fetch these
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const exam = await fetchApi<any>('/exams', {
+        method: 'POST',
+        body: JSON.stringify({
+          title,
+          academicYearId: years[0]?.id || "dummy",
+          batchId: "dummy",
+          subjectId: "dummy"
+        })
+      });
+      
+      for (const q of questions) {
+        await fetchApi('/exams/mcq', {
+          method: 'POST',
+          body: JSON.stringify({
+            questionText: q.text,
+            options: q.options,
+            correctOption: q.options[q.correct],
+            marks: 1,
+            examId: exam.id
+          })
+        });
+      }
+      alert('Exam created!');
+      router.push('/exam/mcq');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save exam');
+    }
+  };
+
   return (
     <DashboardLayout title="Create Exam">
       <div className="flex flex-col h-full">

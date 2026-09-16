@@ -57,7 +57,6 @@ const SAMPLE_STAFF: Staff[] = [
     role: "Coordinator",
     centre: "Manacaud",
     status: "Active",
-    status: "Active",
     assignments: []
   }
 ];
@@ -87,7 +86,7 @@ export default function StaffPage() {
             phone: profile?.phone || 'N/A', // teacher profile might have phone
             role: user.role?.name === 'CENTRE_ADMIN' ? 'Admin' : 'Teacher',
             centre: centre,
-            status: user.status === 'ACTIVE' ? 'Active' : 'Inactive',
+            status: (user.status === 'ACTIVE' ? 'Active' : 'Inactive') as "Active" | "Inactive",
           };
         });
         if (mapped.length > 0) setStaffList(mapped);
@@ -300,7 +299,7 @@ export default function StaffPage() {
                         <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-3">
                             <button 
-                              onClick={() => { setEditItem(staff); setShowModal(true); }}
+                              onClick={() => { setEditItem(s); setShowModal(true); }}
                               className="text-brand-blue hover:text-brand-blue-dark font-semibold text-xs transition-colors"
                             >
                               Edit
@@ -308,8 +307,8 @@ export default function StaffPage() {
                             <button 
                               onClick={async () => {
                                 if (confirm("Are you sure you want to deactivate this staff member?")) {
-                                  await fetchApi(`/staff/${staff.id}`, { method: 'DELETE' });
-                                  setStaffList(staffList.filter(s => s.id !== staff.id));
+                                  await fetchApi(`/staff/${s.id}`, { method: 'DELETE' });
+                                  setStaffList(staffList.filter(st => st.id !== s.id));
                                 }
                               }}
                               className="text-brand-red hover:text-red-700 font-semibold text-xs transition-colors"

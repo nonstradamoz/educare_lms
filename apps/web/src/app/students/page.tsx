@@ -15,7 +15,6 @@ interface Student {
   parentName: string;
   parentEmail: string;
   parentPhone: string;
-  parentPhone: string;
   academicYear: string;
   board: string;
   classLevel: string;
@@ -33,7 +32,6 @@ const SAMPLE_STUDENTS: Student[] = [
     parentName: "Sreekumaran Nair P",
     parentEmail: "sreejithalert@gmail.com",
     parentPhone: "956545655",
-    parentPhone: "956545655",
     academicYear: "2025-26",
     board: "State",
     classLevel: "Class 11",
@@ -48,7 +46,6 @@ const SAMPLE_STUDENTS: Student[] = [
     phone: "898778878",
     parentName: "Hemanth",
     parentEmail: "jabf@keralauniversity.ac.in",
-    parentPhone: "5689855888",
     parentPhone: "5689855888",
     academicYear: "2026-27",
     board: "CBSE",
@@ -731,13 +728,16 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     id: student?.id || Math.random().toString(36).substr(2, 9),
                     name: student?.name || "New Student",
                     admissionNo: student?.admissionNo || "ADM-999",
+                    email: email || "student@example.com",
+                    phone: phone || "+91 9999999999",
+                    parentName: parentName || "Parent",
+                    parentEmail: parentEmail || "parent@example.com",
+                    parentPhone: parentPhone || "+91 9999999999",
                     academicYear: year || "2025-26",
                     board: board || "CBSE",
                     classLevel: classLevel || "Class 11",
                     division: division || "Division A",
                     centre: centre || "Educare Kalathipady",
-                    status: "Active",
-                    paymentStatus: "Paid",
                   };
                   onSave(newStudentData);
                 } else {

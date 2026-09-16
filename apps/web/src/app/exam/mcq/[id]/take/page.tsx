@@ -50,7 +50,7 @@ export default function TakeExamPage() {
     setAnswers((prev) => { const n = [...prev]; n[current] = i; return n; });
   };
 
-  const score = answers.reduce((acc, ans, i) => acc + (ans === EXAM.questions[i].correct ? 1 : 0), 0);
+  const score = answers.reduce<number>((acc, ans, i) => acc + (ans === EXAM.questions[i].correct ? 1 : 0), 0);
   const pct = Math.round((score / EXAM.questions.length) * 100);
   const passed = pct >= 40;
 

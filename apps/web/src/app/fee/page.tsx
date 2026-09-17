@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CreditCard, Plus, Search, Filter, X, ChevronRight, BookOpen, ChevronDown, CheckCircle2, FileText, Download, User } from "lucide-react";
 import Link from "next/link";
@@ -46,6 +47,7 @@ export default function FeePage() {
   const [filterStatus, setFilterStatus] = useState("All Status");
   const [filterMode, setFilterMode] = useState("All Modes");
   const [showModal, setShowModal] = useState(false);
+  const { role } = useAuth();
 
   const filtered = fees.filter(f => {
     const matchSearch = f.studentName.toLowerCase().includes(search.toLowerCase()) || 
@@ -72,12 +74,14 @@ export default function FeePage() {
               <p className="text-xs text-text-muted mt-1">Track, collect, and manage student fee payments</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
-          >
-            <Plus className="h-4 w-4" /> Collect Fee
-          </button>
+          {role !== 'STUDENT' && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+            >
+              <Plus className="h-4 w-4" /> Collect Fee
+            </button>
+          )}
         </div>
 
         {/* Breadcrumb */}
@@ -92,22 +96,24 @@ export default function FeePage() {
         <div className="px-6 lg:px-8 pb-8 space-y-6 flex-1 overflow-y-auto">
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: "Total Collected", value: "₹5,000",  color: "text-brand-blue bg-brand-blue/10" },
-              { label: "Pending Fees",    value: "₹4,500",  color: "text-warning bg-warning/10"       },
-              { label: "Overdue",         value: "₹0",      color: "text-brand-red bg-brand-red/10"   },
-              { label: "This Month",      value: "₹5,000",  color: "text-success bg-success/10"       },
-            ].map((c) => (
-              <div key={c.label} className="bg-white rounded-2xl border border-border-soft p-6 shadow-sm">
-                <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${c.color} mb-4`}>
-                  <CreditCard className="h-5 w-5" />
+          {role !== 'STUDENT' && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: "Total Collected", value: "₹5,000",  color: "text-brand-blue bg-brand-blue/10" },
+                { label: "Pending Fees",    value: "₹4,500",  color: "text-warning bg-warning/10"       },
+                { label: "Overdue",         value: "₹0",      color: "text-brand-red bg-brand-red/10"   },
+                { label: "This Month",      value: "₹5,000",  color: "text-success bg-success/10"       },
+              ].map((c) => (
+                <div key={c.label} className="bg-white rounded-2xl border border-border-soft p-6 shadow-sm">
+                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${c.color} mb-4`}>
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <p className="text-2xl font-bold text-text-primary tracking-tight">{c.value}</p>
+                  <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-wider">{c.label}</p>
                 </div>
-                <p className="text-2xl font-bold text-text-primary tracking-tight">{c.value}</p>
-                <p className="text-xs font-bold text-text-muted mt-1 uppercase tracking-wider">{c.label}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           
           {/* Filters Section */}
           <div className="bg-white rounded-2xl border border-border-soft shadow-sm p-6">
@@ -173,9 +179,11 @@ export default function FeePage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border-soft bg-white">
-                    <th className="px-6 py-4 text-left">
-                      <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
-                    </th>
+                    {role !== 'STUDENT' && (
+                      <th className="px-6 py-4 text-left">
+                        <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
+                      </th>
+                    )}
                     <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Receipt No</th>
                     <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Student & Course</th>
                     <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Amount</th>
@@ -194,9 +202,11 @@ export default function FeePage() {
                   ) : (
                     filtered.map((f) => (
                       <tr key={f.id} className="hover:bg-surface-2/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
-                      </td>
+                      {role !== 'STUDENT' && (
+                        <td className="px-6 py-4">
+                          <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
+                        </td>
+                      )}
                       <td className="px-4 py-4">
                         <span className="inline-flex items-center justify-center px-2 py-1 rounded bg-brand-blue/10 text-brand-blue font-bold text-xs">
                           {f.receiptNo}

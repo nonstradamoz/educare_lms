@@ -1,9 +1,11 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ExamTabs } from "@/components/exam/exam-tabs";
-import { FileText, Database, Layers, Trophy, Plus, TrendingUp, Users, CheckCircle2 } from "lucide-react";
+import { Trophy, Plus, TrendingUp, Users, CheckCircle2, Database, Layers, FileText } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export default function ExamOverviewPage() {
+  const { role } = useAuth();
   return (
     <DashboardLayout title="Exam">
       <div className="flex flex-col h-full">
@@ -18,35 +20,40 @@ export default function ExamOverviewPage() {
               <p className="text-xs text-text-muted mt-0.5">Manage question banks, MCQ exams, mock tests and results</p>
             </div>
           </div>
-          <Link
-            href="/exam/mcq/create"
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" /> Create Exam
-          </Link>
+          </div>
+          {role !== 'STUDENT' && (
+            <Link
+              href="/exam/mcq/create"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" /> Create Exam
+            </Link>
+          )}
         </div>
 
-        <ExamTabs />
+        {role !== 'STUDENT' && <ExamTabs />}
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: "Total Questions", value: "0",  icon: Database,    color: "text-brand-blue bg-brand-blue/8" },
-              { label: "Active Exams",    value: "0",  icon: Layers,      color: "text-brand-red  bg-brand-red/8"  },
-              { label: "Students Tested", value: "0",  icon: Users,       color: "text-success    bg-success/8"    },
-              { label: "Avg. Score",      value: "—",  icon: TrendingUp,  color: "text-warning    bg-warning/8"    },
-            ].map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="bg-white rounded-xl border border-border-soft p-5 shadow-sm">
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${color} mb-3`}>
-                  <Icon className="h-4 w-4" />
+          {role !== 'STUDENT' && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: "Total Questions", value: "0",  icon: Database,    color: "text-brand-blue bg-brand-blue/8" },
+                { label: "Active Exams",    value: "0",  icon: Layers,      color: "text-brand-red  bg-brand-red/8"  },
+                { label: "Students Tested", value: "0",  icon: Users,       color: "text-success    bg-success/8"    },
+                { label: "Avg. Score",      value: "—",  icon: TrendingUp,  color: "text-warning    bg-warning/8"    },
+              ].map(({ label, value, icon: Icon, color }) => (
+                <div key={label} className="bg-white rounded-xl border border-border-soft p-5 shadow-sm">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${color} mb-3`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-2xl font-bold text-text-primary tracking-tight">{value}</p>
+                  <p className="text-[11px] font-medium text-text-muted mt-1 uppercase tracking-wider">{label}</p>
                 </div>
-                <p className="text-2xl font-bold text-text-primary tracking-tight">{value}</p>
-                <p className="text-[11px] font-medium text-text-muted mt-1 uppercase tracking-wider">{label}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Quick Access */}
           <div>

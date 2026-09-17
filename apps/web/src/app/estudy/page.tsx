@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { fetchApi } from "@/lib/api";
 
 import { useState } from "react";
+import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { BookOpen, Plus, Search, Filter, ChevronRight, ChevronDown, FileText, Video, Link as LinkIcon, Download, X, Upload, Play, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -57,6 +58,7 @@ export default function EStudyPage() {
   const [filterType, setFilterType] = useState("All Types");
   const [sortBy, setSortBy] = useState("Date Added (Newest First)");
   const [showModal, setShowModal] = useState(false);
+  const { role } = useAuth();
 
   useEffect(() => {
     fetchApi('/estudy')
@@ -131,12 +133,14 @@ export default function EStudyPage() {
               <p className="text-xs text-text-muted mt-1">Manage study notes, video lessons, and reference links</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
-          >
-            <Plus className="h-4 w-4" /> Add Material
-          </button>
+          {role !== 'STUDENT' && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+            >
+              <Plus className="h-4 w-4" /> Add Material
+            </button>
+          )}
         </div>
 
         {/* Breadcrumb */}
@@ -214,9 +218,11 @@ export default function EStudyPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border-soft bg-white">
-                    <th className="px-6 py-4 text-left">
-                      <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
-                    </th>
+                    {role !== 'STUDENT' && (
+                      <th className="px-6 py-4 text-left">
+                        <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
+                      </th>
+                    )}
                     <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Title</th>
                     <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Type</th>
                     <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Subject & Class</th>
@@ -234,9 +240,11 @@ export default function EStudyPage() {
                   ) : (
                     sortedMaterials.map((m) => (
                       <tr key={m.id} className="hover:bg-surface-2/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
-                      </td>
+                      {role !== 'STUDENT' && (
+                        <td className="px-6 py-4">
+                          <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
+                        </td>
+                      )}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${getTypeStyle(m.type)}`}>

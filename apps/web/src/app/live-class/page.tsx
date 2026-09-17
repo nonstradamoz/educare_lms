@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { JitsiMeet } from "@/components/live-class/jitsi-meet";
 import {
@@ -65,6 +66,7 @@ const SAMPLE_CLASSES: LiveClass[] = [
 export default function LiveClassPage() {
   const [activeRoom, setActiveRoom] = useState<LiveClass | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
+  const { role } = useAuth();
 
   /* ── Active Room (full-screen meeting) ── */
   if (activeRoom) {
@@ -121,32 +123,36 @@ export default function LiveClassPage() {
               <p className="text-xs text-text-muted mt-0.5">Powered by Jitsi Meet — no accounts required</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowSchedule(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" /> Schedule Class
-          </button>
+          {role !== 'STUDENT' && (
+            <button
+              onClick={() => setShowSchedule(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" /> Schedule Class
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
 
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Total Classes", value: "3",  icon: BookOpen, color: "text-brand-blue bg-brand-blue/8" },
-              { label: "Live Now",       value: "1",  icon: Wifi,     color: "text-brand-red  bg-brand-red/8"  },
-              { label: "Students",       value: "35", icon: Users,    color: "text-success    bg-success/8"    },
-            ].map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="bg-white rounded-xl border border-border-soft p-5 shadow-sm">
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${color}`}>
-                  <Icon className="h-4 w-4" />
+          {role !== 'STUDENT' && (
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "Total Classes", value: "3",  icon: BookOpen, color: "text-brand-blue bg-brand-blue/8" },
+                { label: "Live Now",       value: "1",  icon: Wifi,     color: "text-brand-red  bg-brand-red/8"  },
+                { label: "Students",       value: "35", icon: Users,    color: "text-success    bg-success/8"    },
+              ].map(({ label, value, icon: Icon, color }) => (
+                <div key={label} className="bg-white rounded-xl border border-border-soft p-5 shadow-sm">
+                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${color}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-2xl font-bold text-text-primary mt-3 tracking-tight">{value}</p>
+                  <p className="text-[11px] font-medium text-text-muted mt-0.5 uppercase tracking-wider">{label}</p>
                 </div>
-                <p className="text-2xl font-bold text-text-primary mt-3 tracking-tight">{value}</p>
-                <p className="text-[11px] font-medium text-text-muted mt-0.5 uppercase tracking-wider">{label}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Class List */}
           <div className="space-y-3">
@@ -169,6 +175,7 @@ export default function LiveClassPage() {
 
 /* ── Class Card ── */
 function ClassCard({ cls, onJoin }: { cls: LiveClass; onJoin: () => void }) {
+  const { role } = useAuth();
   const isLive = cls.status === "live";
   const isEnded = cls.status === "ended";
 
@@ -201,14 +208,17 @@ function ClassCard({ cls, onJoin }: { cls: LiveClass; onJoin: () => void }) {
       {!isEnded && (
         <button
           onClick={onJoin}
+          disabled={role === 'STUDENT' && !isLive}
           className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-colors shadow-sm ${
-            isLive
+            role === 'STUDENT' && !isLive
+              ? "bg-surface-3 text-text-muted cursor-not-allowed"
+              : isLive
               ? "bg-brand-red hover:bg-brand-red-dark text-white"
               : "bg-brand-blue hover:bg-brand-blue-dark text-white"
           }`}
         >
           <Play className="h-3.5 w-3.5" />
-          {isLive ? "Join Live" : "Start Class"}
+          {role === 'STUDENT' ? "Join" : (isLive ? "Join Live" : "Start Class")}
         </button>
       )}
     </div>

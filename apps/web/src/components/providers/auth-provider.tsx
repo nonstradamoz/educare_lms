@@ -4,9 +4,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext<{ role: string | null; email: string | null }>({ role: null, email: null });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [role, setRole] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null);
+export function AuthProvider({ children, initialRole = null, initialEmail = null }: { children: React.ReactNode, initialRole?: string | null, initialEmail?: string | null }) {
+  const [role, setRole] = useState<string | null>(initialRole);
+  const [email, setEmail] = useState<string | null>(initialEmail);
 
   useEffect(() => {
     const match = document.cookie.match(/(^| )AccessToken=([^;]+)/);

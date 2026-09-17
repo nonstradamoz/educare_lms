@@ -9,16 +9,19 @@ const inter = Inter({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+import { getUserFromToken } from "@/lib/auth-server";
+
 export const metadata: Metadata = {
   title: "Educare LMS — Learning Management System",
   description: "A professional learning management system for educational centres.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getUserFromToken();
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-inter">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider initialRole={user?.role} initialEmail={user?.email}>{children}</AuthProvider>
       </body>
     </html>
   );

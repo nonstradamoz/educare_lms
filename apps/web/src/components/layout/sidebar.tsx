@@ -57,6 +57,7 @@ export function Sidebar() {
     } catch (e) {
       console.error(e);
     } finally {
+      document.cookie = `AccessToken=; path=/; max-age=0`;
       window.location.href = "/login";
     }
   };

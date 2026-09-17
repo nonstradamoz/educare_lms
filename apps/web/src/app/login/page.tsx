@@ -18,11 +18,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await fetchApi("/auth/login", {
+      const response: any = await fetchApi("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      // The cookie is set automatically by the backend via HttpOnly
+      // Set the cookie on the frontend domain so proxy.ts can read it
+      document.cookie = `AccessToken=${response.access_token}; path=/; max-age=86400; samesite=lax`;
       window.location.href = "/";
     } catch (err: any) {
       setError(err.message || "Invalid credentials");

@@ -2,15 +2,10 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ExamTabs } from "@/components/exam/exam-tabs";
 import { Trophy, TrendingUp, Users, CheckCircle2 } from "lucide-react";
 
-const RESULTS = [
-  { id: 1, student: "Akshay K.",   exam: "Math Mid-Term",    score: 78, total: 100, pct: 78, status: "Passed",  date: "Sep 14, 2026" },
-  { id: 2, student: "Priya M.",    exam: "Physics Test #1",  score: 32, total: 80,  pct: 40, status: "Passed",  date: "Sep 14, 2026" },
-  { id: 3, student: "Rahul S.",    exam: "Chemistry Practice",score: 18, total: 60, pct: 30, status: "Failed",  date: "Sep 15, 2026" },
-];
-
 export default function ResultsPage() {
-  const avgPct = Math.round(RESULTS.reduce((a, r) => a + r.pct, 0) / RESULTS.length);
-  const passed = RESULTS.filter((r) => r.status === "Passed").length;
+  const RESULTS: any[] = [];
+  const avgPct = 0;
+  const passed = 0;
 
   return (
     <DashboardLayout title="Results">
@@ -64,28 +59,36 @@ export default function ResultsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-soft">
-                {RESULTS.map((r) => (
-                  <tr key={r.id} className="hover:bg-surface-2/50 transition-colors">
-                    <td className="px-5 py-3.5 text-xs text-text-muted">{r.id}</td>
-                    <td className="px-5 py-3.5 text-sm font-medium text-text-primary">{r.student}</td>
-                    <td className="px-5 py-3.5 text-xs text-text-secondary">{r.exam}</td>
-                    <td className="px-5 py-3.5 text-xs font-semibold text-text-primary">{r.score}/{r.total}</td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 max-w-[80px] h-1.5 rounded-full bg-surface-2 overflow-hidden">
-                          <div className={`h-full rounded-full ${r.pct >= 40 ? "bg-success" : "bg-brand-red"}`} style={{ width: `${r.pct}%` }} />
-                        </div>
-                        <span className="text-xs font-semibold text-text-primary">{r.pct}%</span>
-                      </div>
+                {RESULTS.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-20 text-center text-sm text-text-muted">
+                      No results found.
                     </td>
-                    <td className="px-5 py-3.5">
-                      <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${r.status === "Passed" ? "bg-success/8 text-success border-success/20" : "bg-brand-red/8 text-brand-red border-brand-red/20"}`}>
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-xs text-text-muted">{r.date}</td>
                   </tr>
-                ))}
+                ) : (
+                  RESULTS.map((r) => (
+                    <tr key={r.id} className="hover:bg-surface-2/50 transition-colors">
+                      <td className="px-5 py-3.5 text-xs text-text-muted">{r.id}</td>
+                      <td className="px-5 py-3.5 text-sm font-medium text-text-primary">{r.student}</td>
+                      <td className="px-5 py-3.5 text-xs text-text-secondary">{r.exam}</td>
+                      <td className="px-5 py-3.5 text-xs font-semibold text-text-primary">{r.score}/{r.total}</td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 max-w-[80px] h-1.5 rounded-full bg-surface-2 overflow-hidden">
+                            <div className={`h-full rounded-full ${r.pct >= 40 ? "bg-success" : "bg-brand-red"}`} style={{ width: `${r.pct}%` }} />
+                          </div>
+                          <span className="text-xs font-semibold text-text-primary">{r.pct}%</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${r.status === "Passed" ? "bg-success/8 text-success border-success/20" : "bg-brand-red/8 text-brand-red border-brand-red/20"}`}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-xs text-text-muted">{r.date}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

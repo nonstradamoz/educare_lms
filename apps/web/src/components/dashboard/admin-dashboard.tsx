@@ -86,7 +86,7 @@ export function AdminDashboard({ user }: { user: any }) {
 
 /* ── Data ── */
 const stats = [
-  { title: "Total Students",     value: "1",        icon: Users,        accent: "blue"   },
+  { title: "Total Students",     value: "0",        icon: Users,        accent: "blue"   },
   { title: "Today Inquiry",      value: "0",        icon: FileText,     accent: "blue"   },
   { title: "Today Absent",       value: "0",        icon: UserX,        accent: "red"    },
   { title: "Today Income",       value: "₹0",       icon: TrendingUp,   accent: "green"  },
@@ -95,9 +95,9 @@ const stats = [
   { title: "Today Fee Due",      value: "₹0",       icon: AlertCircle,  accent: "orange" },
   { title: "Fee Overdue",        value: "₹0",       icon: AlertCircle,  accent: "red"    },
   { title: "Upcoming Fee Due",   value: "₹0",       icon: Clock,        accent: "blue"   },
-  { title: "Pending Fees",       value: "₹20,000",  icon: FileText,     accent: "red"    },
+  { title: "Pending Fees",       value: "₹0",       icon: FileText,     accent: "red"    },
   { title: "eStudy Materials",   value: "0",        icon: BookOpen,     accent: "blue"   },
-  { title: "SMS Balance",        value: "1,000",    icon: MessageSquare,accent: "green"  },
+  { title: "SMS Balance",        value: "0",        icon: MessageSquare,accent: "green"  },
 ];
 
 type Accent = "blue" | "red" | "green" | "orange";

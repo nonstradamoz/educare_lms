@@ -1,14 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ExamTabs } from "@/components/exam/exam-tabs";
 import { Database, Plus, Search, Pencil, Trash2, X, ChevronDown, Image as ImageIcon } from "lucide-react";
 import { FileUploader } from "@/components/upload/file-uploader";
+import { fetchApi } from "@/lib/api";
 
-const SUBJECTS = ["Mathematics", "Physics", "Chemistry", "Biology", "English", "History"];
-const CLASSES = ["Class 10", "Class 11", "Class 12"];
-const TOPICS = ["Algebra", "Calculus", "Mechanics", "Optics", "Organic Chemistry", "Grammar"];
 const DIFFICULTY = ["Easy", "Medium", "Hard"];
 
 interface Question {
@@ -23,36 +21,53 @@ interface Question {
   difficulty: string;
 }
 
-const SAMPLE_QUESTIONS: Question[] = [
-  {
-    id: "q1",
-    question: "What is the value of π (pi) to 2 decimal places?",
-    options: ["3.12", "3.14", "3.16", "3.18"],
-    correct: 1,
-    classLevel: "Class 10",
-    subject: "Mathematics",
-    topic: "Algebra",
-    difficulty: "Easy",
-  },
-  {
-    id: "q2",
-    question: "Which law states that force equals mass times acceleration?",
-    options: ["Newton's 1st Law", "Newton's 2nd Law", "Newton's 3rd Law", "Hooke's Law"],
-    correct: 1,
-    classLevel: "Class 11",
-    subject: "Physics",
-    topic: "Mechanics",
-    difficulty: "Easy",
-  },
-];
-
 export default function QuestionBankPage() {
-  const [questions, setQuestions] = useState<Question[]>(SAMPLE_QUESTIONS);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState("All");
   const [filterSubject, setFilterSubject] = useState("All");
   const [filterTopic, setFilterTopic] = useState("All");
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [qRes, subRes, clsRes, topRes] = await Promise.all([
+          fetchApi<any[]>("/exams/questions/mcq").catch(() => []), 
+          fetchApi<any[]>("/setup/subjects").catch(() => []),
+          fetchApi<any[]>("/setup/standards").catch(() => []),
+          fetchApi<any[]>("/setup/topics").catch(() => [])
+        ]);
+        
+        const mappedQuestions = qRes.map((q: any) => ({
+          id: q.id,
+          question: q.question,
+          imageUrl: q.imageUrl,
+          options: q.options || [],
+          correct: q.correctOption,
+          classLevel: "Class", // Need relation
+          subject: "Subject", 
+          topic: "Topic",
+          difficulty: "Medium"
+        }));
+        
+        setQuestions(mappedQuestions);
+        setSubjects(subRes);
+        setClasses(clsRes);
+        setTopics(topRes);
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const filtered = questions.filter((q) => {
     const matchSearch = q.question.toLowerCase().includes(search.toLowerCase());
@@ -62,7 +77,14 @@ export default function QuestionBankPage() {
     return matchSearch && matchClass && matchSubject && matchTopic;
   });
 
-  const deleteQ = (id: string) => setQuestions((prev) => prev.filter((q) => q.id !== id));
+  const deleteQ = async (id: string) => {
+    try {
+      await fetchApi(`/exams/questions/mcq/${id}`, { method: 'DELETE' });
+      setQuestions((prev) => prev.filter((q) => q.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <DashboardLayout title="Question Bank">
@@ -109,7 +131,7 @@ export default function QuestionBankPage() {
                 className="h-9 w-32 appearance-none rounded-lg border border-border-soft bg-white pl-3 pr-8 text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
               >
                 <option>Class (All)</option>
-                {CLASSES.map((c) => <option key={c} value={c}>{c}</option>)}
+                {classes.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-text-muted" />
             </div>
@@ -120,7 +142,7 @@ export default function QuestionBankPage() {
                 className="h-9 w-32 appearance-none rounded-lg border border-border-soft bg-white pl-3 pr-8 text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
               >
                 <option>Subject (All)</option>
-                {SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
+                {subjects.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-text-muted" />
             </div>
@@ -131,7 +153,7 @@ export default function QuestionBankPage() {
                 className="h-9 w-32 appearance-none rounded-lg border border-border-soft bg-white pl-3 pr-8 text-sm text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-blue/25"
               >
                 <option>Topic (All)</option>
-                {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
+                {topics.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-text-muted" />
             </div>
@@ -200,19 +222,19 @@ export default function QuestionBankPage() {
         </div>
       </div>
 
-      {showModal && <AddQuestionModal onClose={() => setShowModal(false)} onAdd={(q) => { setQuestions((p) => [...p, q]); setShowModal(false); }} />}
+      {showModal && <AddQuestionModal onClose={() => setShowModal(false)} onAdd={(q) => { setQuestions((p) => [...p, q]); setShowModal(false); }} subjects={subjects} classes={classes} topics={topics} />}
     </DashboardLayout>
   );
 }
 
 /* ── Add Question Modal ── */
-function AddQuestionModal({ onClose, onAdd }: { onClose: () => void; onAdd: (q: Question) => void }) {
+function AddQuestionModal({ onClose, onAdd, subjects, classes, topics }: { onClose: () => void; onAdd: (q: Question) => void; subjects: any[]; classes: any[]; topics: any[] }) {
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correct, setCorrect] = useState(0);
-  const [classLevel, setClassLevel] = useState(CLASSES[0]);
-  const [subject, setSubject] = useState(SUBJECTS[0]);
-  const [topic, setTopic] = useState(TOPICS[0]);
+  const [classLevel, setClassLevel] = useState(classes[0]?.name || "");
+  const [subject, setSubject] = useState(subjects[0]?.name || "");
+  const [topic, setTopic] = useState(topics[0]?.name || "");
   const [difficulty, setDifficulty] = useState(DIFFICULTY[0]);
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -251,19 +273,19 @@ function AddQuestionModal({ onClose, onAdd }: { onClose: () => void; onAdd: (q: 
             <div>
               <label className="block text-xs font-semibold text-text-secondary mb-1.5">Class</label>
               <select value={classLevel} onChange={(e) => setClassLevel(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                {CLASSES.map((c) => <option key={c}>{c}</option>)}
+                {classes.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-text-secondary mb-1.5">Subject</label>
               <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                {SUBJECTS.map((s) => <option key={s}>{s}</option>)}
+                {subjects.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-text-secondary mb-1.5">Topic</label>
               <select value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                {TOPICS.map((t) => <option key={t}>{t}</option>)}
+                {topics.map((t) => <option key={t.id} value={t.name}>{t.name}</option>)}
               </select>
             </div>
             <div>

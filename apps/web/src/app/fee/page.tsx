@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CreditCard, Plus, Search, Filter, X, ChevronRight, BookOpen, ChevronDown, CheckCircle2, FileText, Download, User } from "lucide-react";
 import Link from "next/link";
+import { fetchApi } from "@/lib/api";
 
 interface FeeRecord {
   id: string;
@@ -13,41 +14,45 @@ interface FeeRecord {
   course: string;
   amount: number;
   date: string;
-  status: "Paid" | "Pending" | "Overdue";
+  status: "PAID" | "PENDING" | "OVERDUE";
   paymentMode: string;
 }
 
-const SAMPLE_FEES: FeeRecord[] = [
-  {
-    id: "1",
-    receiptNo: "FEE-2026-001",
-    studentName: "Sreejith S",
-    course: "Class 11",
-    amount: 5000,
-    date: "Sep 15, 2026",
-    status: "Paid",
-    paymentMode: "Online",
-  },
-  {
-    id: "2",
-    receiptNo: "FEE-2026-002",
-    studentName: "Taarush H",
-    course: "Class 12 (A)",
-    amount: 4500,
-    date: "Sep 10, 2026",
-    status: "Pending",
-    paymentMode: "-",
-  }
-];
-
 export default function FeePage() {
-  const [fees, setFees] = useState<FeeRecord[]>(SAMPLE_FEES);
+  const [fees, setFees] = useState<FeeRecord[]>([]);
   const [search, setSearch] = useState("");
   const [filterCourse, setFilterCourse] = useState("All Classes");
   const [filterStatus, setFilterStatus] = useState("All Status");
   const [filterMode, setFilterMode] = useState("All Modes");
   const [showModal, setShowModal] = useState(false);
   const { role } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchFees = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchApi<any[]>("/fee");
+      const mapped = data.map((d: any) => ({
+        id: d.id,
+        receiptNo: d.receiptNo,
+        studentName: d.student?.user?.name || "Unknown",
+        course: "Student", // we can map from enrollments if available
+        amount: d.amount,
+        date: new Date(d.date).toLocaleDateString(),
+        status: d.status,
+        paymentMode: d.paymentMode || "-"
+      }));
+      setFees(mapped);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFees();
+  }, []);
 
   const filtered = fees.filter(f => {
     const matchSearch = f.studentName.toLowerCase().includes(search.toLowerCase()) || 
@@ -225,15 +230,15 @@ export default function FeePage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${
-                          f.status === "Paid" ? "bg-success/10 border-success/20 text-success" : 
-                          f.status === "Pending" ? "bg-warning/10 border-warning/20 text-warning" :
+                          f.status === "PAID" ? "bg-success/10 border-success/20 text-success" : 
+                          f.status === "PENDING" ? "bg-warning/10 border-warning/20 text-warning" :
                           "bg-brand-red/10 border-brand-red/20 text-brand-red"
                         }`}>
                           {f.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {f.status === "Paid" && (
+                        {f.status === "PAID" && (
                           <button className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
                             <Download className="h-3.5 w-3.5" /> Receipt
                           </button>

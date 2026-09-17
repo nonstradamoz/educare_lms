@@ -133,3 +133,7 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #d4d4d0; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #a8a8a0; }
+/* Live Class form utility */
+.input-base {
+  @apply w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50;
+}

@@ -13,6 +13,7 @@ import { SetupModule } from './setup/setup.module';
 import { ExamsModule } from './exams/exams.module';
 import { CloudflareModule } from './cloudflare/cloudflare.module';
 import { EstudyModule } from './estudy/estudy.module';
+import { LiveClassModule } from './live-class/live-class.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { EstudyModule } from './estudy/estudy.module';
     ExamsModule,
     CloudflareModule,
     EstudyModule,
+    LiveClassModule,
   ],
   controllers: [AppController],
   providers: [AppService],

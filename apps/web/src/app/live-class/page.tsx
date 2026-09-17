@@ -1,82 +1,96 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { JitsiMeet } from "@/components/live-class/jitsi-meet";
+import { fetchApi } from "@/lib/api";
 import {
-  Video,
-  Plus,
-  Calendar,
-  Clock,
-  Users,
-  Play,
-  X,
-  Wifi,
-  BookOpen,
+  Video, Plus, Calendar, Clock, Users, Play, X, Wifi, BookOpen,
+  RefreshCw, Trash2, Radio, CheckCircle2, AlertCircle,
 } from "lucide-react";
 
 /* ── Types ── */
-interface LiveClass {
+interface ApiLiveClass {
   id: string;
   title: string;
   subject: string;
-  teacher: string;
+  teacherName: string;
+  status: "SCHEDULED" | "LIVE" | "ENDED";
   scheduledAt: string;
-  duration: string;
-  students: number;
-  status: "scheduled" | "live" | "ended";
-  board?: string;
-  standard?: string;
-  centre?: string;
+  duration: number;
+  roomId: string;
+  board?: { id: string; name: string } | null;
+  standard?: { id: string; name: string } | null;
+  centre?: { id: string; name: string } | null;
 }
 
-/* ── Dummy data (will come from API in Phase 2) ── */
-const SAMPLE_CLASSES: LiveClass[] = [
-  {
-    id: "math-101",
-    title: "Introduction to Algebra",
-    subject: "Mathematics",
-    teacher: "Akshay",
-    scheduledAt: "Today, 4:00 PM",
-    duration: "60 min",
-    students: 12,
-    status: "live",
-  },
-  {
-    id: "phy-201",
-    title: "Newton's Laws of Motion",
-    subject: "Physics",
-    teacher: "Akshay",
-    scheduledAt: "Today, 6:00 PM",
-    duration: "45 min",
-    students: 8,
-    status: "scheduled",
-  },
-  {
-    id: "chem-301",
-    title: "Periodic Table Overview",
-    subject: "Chemistry",
-    teacher: "Akshay",
-    scheduledAt: "Tomorrow, 10:00 AM",
-    duration: "90 min",
-    students: 15,
-    status: "scheduled",
-  },
-];
+interface SetupOption { id: string; name: string }
 
 /* ── Page ── */
 export default function LiveClassPage() {
-  const [classes, setClasses] = useState<LiveClass[]>(SAMPLE_CLASSES);
-  const [activeRoom, setActiveRoom] = useState<LiveClass | null>(null);
+  const [classes, setClasses] = useState<ApiLiveClass[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeRoom, setActiveRoom] = useState<ApiLiveClass | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
-  const { role } = useAuth();
+  const [stats, setStats] = useState({ total: 0, live: 0 });
+  const { role, email } = useAuth();
 
-  /* ── Active Room (full-screen meeting) ── */
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [data, s] = await Promise.all([
+        fetchApi<ApiLiveClass[]>("/live-class"),
+        fetchApi<{ total: number; live: number }>("/live-class/stats"),
+      ]);
+      setClasses(data);
+      setStats(s);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleStatusChange = async (id: string, status: "SCHEDULED" | "LIVE" | "ENDED") => {
+    try {
+      await fetchApi(`/live-class/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      await load();
+    } catch (e: any) {
+      alert(`Failed to update status: ${e.message}`);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this class?")) return;
+    try {
+      await fetchApi(`/live-class/${id}`, { method: "DELETE" });
+      setClasses(prev => prev.filter(c => c.id !== id));
+      setStats(prev => ({ ...prev, total: prev.total - 1 }));
+    } catch (e: any) {
+      alert(`Failed to delete: ${e.message}`);
+    }
+  };
+
+  const handleScheduled = (cls: ApiLiveClass) => {
+    setClasses(prev => [...prev, cls]);
+    setStats(prev => ({ ...prev, total: prev.total + 1 }));
+    setShowSchedule(false);
+  };
+
+  const displayName = email ? `${email.split("@")[0]}` : (role === "STUDENT" ? "Student" : "Teacher");
+
+  /* ── Active Room ── */
   if (activeRoom) {
     return (
       <div className="fixed inset-0 z-50 bg-[#0f0f0f] flex flex-col">
-        {/* Header bar */}
         <div className="flex h-14 shrink-0 items-center justify-between px-5 border-b border-white/10 bg-[#1a1a2e]">
           <div className="flex items-center gap-3">
             <div className="flex h-7 w-7 items-center justify-center rounded bg-brand-red">
@@ -84,35 +98,53 @@ export default function LiveClassPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-white leading-none">{activeRoom.title}</p>
-              <p className="text-[10px] text-white/50 mt-0.5">{activeRoom.subject}</p>
+              <p className="text-[10px] text-white/50 mt-0.5">
+                {activeRoom.subject}
+                {activeRoom.standard && ` · ${activeRoom.standard.name}`}
+                {activeRoom.board && ` · ${activeRoom.board.name}`}
+                {activeRoom.centre && ` · ${activeRoom.centre.name}`}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 rounded-full bg-brand-red/15 border border-brand-red/30 px-3 py-1 text-[11px] font-semibold text-brand-red">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-red animate-pulse" />
-              LIVE
-            </span>
+            {role !== "STUDENT" && activeRoom.status !== "LIVE" && (
+              <button
+                onClick={() => handleStatusChange(activeRoom.id, "LIVE")}
+                className="flex items-center gap-1.5 rounded-full bg-brand-red/15 border border-brand-red/30 px-3 py-1 text-[11px] font-semibold text-brand-red hover:bg-brand-red/25 transition-colors"
+              >
+                <Radio className="h-3 w-3" /> Go Live
+              </button>
+            )}
+            {activeRoom.status === "LIVE" && (
+              <span className="flex items-center gap-1.5 rounded-full bg-brand-red/15 border border-brand-red/30 px-3 py-1 text-[11px] font-semibold text-brand-red">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-red animate-pulse" /> LIVE
+              </span>
+            )}
             <button
-              onClick={() => setActiveRoom(null)}
+              onClick={async () => {
+                if (role !== "STUDENT" && activeRoom.status === "LIVE") {
+                  await handleStatusChange(activeRoom.id, "ENDED");
+                }
+                setActiveRoom(null);
+              }}
               className="flex items-center gap-2 rounded-lg bg-brand-red/15 hover:bg-brand-red/30 border border-brand-red/30 px-3 py-1.5 text-xs font-semibold text-brand-red transition-colors"
             >
-              <X className="h-3.5 w-3.5" /> End Class
+              <X className="h-3.5 w-3.5" />
+              {role === "STUDENT" ? "Leave" : "End Class"}
             </button>
           </div>
         </div>
-
-        {/* Jitsi embed */}
         <div className="flex-1 p-3">
-          <JitsiMeet
-            roomName={activeRoom.id}
-            displayName="Akshay (Teacher)"
-          />
+          <JitsiMeet roomName={activeRoom.roomId} displayName={displayName} />
         </div>
       </div>
     );
   }
 
-  /* ── Main Live Class Dashboard ── */
+  const liveClasses = classes.filter(c => c.status === "LIVE");
+  const scheduledClasses = classes.filter(c => c.status === "SCHEDULED");
+  const endedClasses = classes.filter(c => c.status === "ENDED");
+
   return (
     <DashboardLayout title="Live Class">
       <div className="flex flex-col h-full">
@@ -127,25 +159,43 @@ export default function LiveClassPage() {
               <p className="text-xs text-text-muted mt-0.5">Powered by Jitsi Meet — no accounts required</p>
             </div>
           </div>
-          {role !== 'STUDENT' && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowSchedule(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+              onClick={load}
+              className="h-9 w-9 flex items-center justify-center rounded-lg border border-border-soft bg-surface-2 text-text-secondary hover:bg-surface-3 transition-colors"
+              title="Refresh"
             >
-              <Plus className="h-3.5 w-3.5" /> Schedule Class
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
-          )}
+            {role !== "STUDENT" && (
+              <button
+                onClick={() => setShowSchedule(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" /> Schedule Class
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
 
-          {/* Stats row */}
-          {role !== 'STUDENT' && (
+          {/* Error Banner */}
+          {error && (
+            <div className="flex items-center gap-3 rounded-xl bg-brand-red/8 border border-brand-red/20 px-4 py-3 text-sm text-brand-red">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
+              <button onClick={load} className="ml-auto text-xs font-semibold underline">Retry</button>
+            </div>
+          )}
+
+          {/* Stats row — Admin only */}
+          {role !== "STUDENT" && (
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: "Total Classes", value: "3",  icon: BookOpen, color: "text-brand-blue bg-brand-blue/8" },
-                { label: "Live Now",       value: "1",  icon: Wifi,     color: "text-brand-red  bg-brand-red/8"  },
-                { label: "Students",       value: "35", icon: Users,    color: "text-success    bg-success/8"    },
+                { label: "Total Classes",   value: String(stats.total), icon: BookOpen, color: "text-brand-blue bg-brand-blue/8" },
+                { label: "Live Now",         value: String(stats.live),  icon: Wifi,     color: "text-brand-red  bg-brand-red/8"  },
+                { label: "Scheduled Today",  value: String(scheduledClasses.length), icon: Calendar, color: "text-success bg-success/8" },
               ].map(({ label, value, icon: Icon, color }) => (
                 <div key={label} className="bg-white rounded-xl border border-border-soft p-5 shadow-sm">
                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${color}`}>
@@ -158,217 +208,365 @@ export default function LiveClassPage() {
             </div>
           )}
 
-          {/* Class List */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-text-primary">Today&apos;s Schedule</h3>
-            {classes.map((cls) => (
-              <ClassCard key={cls.id} cls={cls} onJoin={() => setActiveRoom(cls)} />
-            ))}
-          </div>
+          {/* Loading skeleton */}
+          {loading && (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-xl border border-border-soft p-5 h-20 animate-pulse" />
+              ))}
+            </div>
+          )}
 
+          {!loading && (
+            <>
+              {/* Live Now */}
+              {liveClasses.length > 0 && (
+                <Section title="🔴 Live Now">
+                  {liveClasses.map(cls => (
+                    <ClassCard
+                      key={cls.id}
+                      cls={cls}
+                      role={role}
+                      onJoin={() => setActiveRoom(cls)}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </Section>
+              )}
+
+              {/* Scheduled */}
+              <Section title="Upcoming Classes">
+                {scheduledClasses.length === 0 ? (
+                  <EmptyState
+                    text={role === "STUDENT" ? "No upcoming classes scheduled." : "No upcoming classes. Schedule one above!"}
+                  />
+                ) : (
+                  scheduledClasses.map(cls => (
+                    <ClassCard
+                      key={cls.id}
+                      cls={cls}
+                      role={role}
+                      onJoin={() => setActiveRoom(cls)}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDelete}
+                    />
+                  ))
+                )}
+              </Section>
+
+              {/* Ended */}
+              {endedClasses.length > 0 && (
+                <Section title="Past Classes">
+                  {endedClasses.map(cls => (
+                    <ClassCard
+                      key={cls.id}
+                      cls={cls}
+                      role={role}
+                      onJoin={() => setActiveRoom(cls)}
+                      onStatusChange={handleStatusChange}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </Section>
+              )}
+            </>
+          )}
         </div>
       </div>
 
       {/* Schedule Modal */}
       {showSchedule && (
-        <ScheduleModal 
-          onClose={() => setShowSchedule(false)} 
-          onSchedule={(newClass) => {
-            setClasses(prev => [...prev, newClass]);
-            setShowSchedule(false);
-          }}
+        <ScheduleModal
+          onClose={() => setShowSchedule(false)}
+          onScheduled={handleScheduled}
+          email={email}
         />
       )}
     </DashboardLayout>
   );
 }
 
+/* ── Section wrapper ── */
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="bg-white rounded-xl border border-border-soft p-10 text-center">
+      <Video className="h-8 w-8 text-text-muted mx-auto mb-2" />
+      <p className="text-sm text-text-muted">{text}</p>
+    </div>
+  );
+}
+
 /* ── Class Card ── */
-function ClassCard({ cls, onJoin }: { cls: LiveClass; onJoin: () => void }) {
-  const { role } = useAuth();
-  const isLive = cls.status === "live";
-  const isEnded = cls.status === "ended";
+function ClassCard({
+  cls, role, onJoin, onStatusChange, onDelete,
+}: {
+  cls: ApiLiveClass;
+  role: string | null;
+  onJoin: () => void;
+  onStatusChange: (id: string, status: "SCHEDULED" | "LIVE" | "ENDED") => void;
+  onDelete: (id: string) => void;
+}) {
+  const isLive = cls.status === "LIVE";
+  const isEnded = cls.status === "ENDED";
+  const isStudent = role === "STUDENT";
+
+  const scheduledDate = new Date(cls.scheduledAt);
+  const dateStr = scheduledDate.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+  const timeStr = scheduledDate.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
 
   return (
-    <div className={`bg-white rounded-xl border shadow-sm p-5 flex items-center gap-5 transition-all ${isLive ? "border-brand-red/30 shadow-brand-red/5" : "border-border-soft"}`}>
-      {/* Status dot */}
-      <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center ${isLive ? "bg-brand-red/10" : "bg-brand-blue/8"}`}>
-        {isLive ? <Wifi className="h-5 w-5 text-brand-red" /> : <Video className="h-5 w-5 text-brand-blue" />}
+    <div className={`bg-white rounded-xl border shadow-sm p-5 flex items-center gap-5 transition-all ${
+      isLive ? "border-brand-red/30" : isEnded ? "border-border-soft opacity-60" : "border-border-soft"
+    }`}>
+      {/* Icon */}
+      <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center ${
+        isLive ? "bg-brand-red/10" : isEnded ? "bg-surface-3" : "bg-brand-blue/8"
+      }`}>
+        {isLive ? <Wifi className="h-5 w-5 text-brand-red" /> :
+         isEnded ? <CheckCircle2 className="h-5 w-5 text-text-muted" /> :
+         <Video className="h-5 w-5 text-brand-blue" />}
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-semibold text-text-primary truncate">{cls.title}</p>
           {isLive && (
             <span className="flex items-center gap-1 rounded-full bg-brand-red/10 border border-brand-red/25 px-2 py-0.5 text-[10px] font-bold text-brand-red shrink-0">
               <span className="h-1 w-1 rounded-full bg-brand-red animate-pulse" /> LIVE
             </span>
           )}
+          {isEnded && (
+            <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[10px] font-semibold text-text-muted">ENDED</span>
+          )}
         </div>
         <p className="text-xs text-text-muted mt-0.5">{cls.subject}</p>
-        <div className="flex items-center gap-4 mt-2 text-[11px] text-text-muted">
-          <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{cls.scheduledAt}</span>
-          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cls.duration}</span>
-          <span className="flex items-center gap-1"><Users className="h-3 w-3" />{cls.students} students</span>
+        <div className="flex items-center gap-3 mt-1.5 flex-wrap text-[11px] text-text-muted">
+          <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{dateStr}, {timeStr}</span>
+          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{cls.duration} min</span>
+          {cls.board && <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />{cls.board.name}</span>}
+          {cls.standard && <span className="rounded bg-brand-blue/8 text-brand-blue px-1.5 py-0.5 font-semibold">{cls.standard.name}</span>}
+          {cls.centre && <span className="rounded bg-success/8 text-success px-1.5 py-0.5 font-semibold">{cls.centre.name}</span>}
         </div>
       </div>
 
-      {/* Action */}
-      {!isEnded && (
-        <button
-          onClick={onJoin}
-          disabled={role === 'STUDENT' && !isLive}
-          className={`shrink-0 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-colors shadow-sm ${
-            role === 'STUDENT' && !isLive
-              ? "bg-surface-3 text-text-muted cursor-not-allowed"
-              : isLive
-              ? "bg-brand-red hover:bg-brand-red-dark text-white"
-              : "bg-brand-blue hover:bg-brand-blue-dark text-white"
-          }`}
-        >
-          <Play className="h-3.5 w-3.5" />
-          {role === 'STUDENT' ? "Join" : (isLive ? "Join Live" : "Start Class")}
-        </button>
-      )}
+      {/* Actions */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Admin controls */}
+        {!isStudent && (
+          <>
+            {cls.status === "SCHEDULED" && (
+              <button
+                onClick={() => onStatusChange(cls.id, "LIVE")}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-brand-red/8 hover:bg-brand-red/15 border border-brand-red/20 px-3 py-1.5 text-xs font-semibold text-brand-red transition-colors"
+              >
+                <Radio className="h-3.5 w-3.5" /> Go Live
+              </button>
+            )}
+            {cls.status === "LIVE" && (
+              <button
+                onClick={() => onStatusChange(cls.id, "ENDED")}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border-soft px-3 py-1.5 text-xs font-semibold text-text-secondary transition-colors"
+              >
+                <X className="h-3.5 w-3.5" /> End
+              </button>
+            )}
+            <button
+              onClick={() => onDelete(cls.id)}
+              className="h-8 w-8 flex items-center justify-center rounded-lg border border-border-soft bg-surface-2 hover:border-brand-red/30 hover:text-brand-red text-text-muted transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </>
+        )}
+
+        {/* Join button */}
+        {!isEnded && (
+          <button
+            onClick={onJoin}
+            disabled={isStudent && !isLive}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-colors shadow-sm ${
+              isStudent && !isLive
+                ? "bg-surface-3 text-text-muted cursor-not-allowed"
+                : isLive
+                ? "bg-brand-red hover:bg-brand-red-dark text-white"
+                : "bg-brand-blue hover:bg-brand-blue-dark text-white"
+            }`}
+          >
+            <Play className="h-3.5 w-3.5" />
+            {isStudent ? (isLive ? "Join" : "Waiting...") : (isLive ? "Join Live" : "Start Class")}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
 /* ── Schedule Modal ── */
-function ScheduleModal({ onClose, onSchedule }: { onClose: () => void, onSchedule: (cls: LiveClass) => void }) {
+function ScheduleModal({
+  onClose, onScheduled, email,
+}: {
+  onClose: () => void;
+  onScheduled: (cls: ApiLiveClass) => void;
+  email: string | null;
+}) {
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
-  const [board, setBoard] = useState("");
-  const [standard, setStandard] = useState("");
-  const [centre, setCentre] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [duration, setDuration] = useState("60");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSchedule = () => {
-    if (!title || !subject || !dateTime) return;
-    
-    // Format date string beautifully (just a rough mockup for local state)
-    const dt = new Date(dateTime);
-    const timeString = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    const dateString = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // Setup options loaded from API
+  const [boards, setBoards] = useState<SetupOption[]>([]);
+  const [standards, setStandards] = useState<SetupOption[]>([]);
+  const [centres, setCentres] = useState<SetupOption[]>([]);
+  const [boardId, setBoardId] = useState("");
+  const [standardId, setStandardId] = useState("");
+  const [centreId, setCentreId] = useState("");
 
-    onSchedule({
-      id: `room-${Date.now()}`,
-      title,
-      subject,
-      teacher: "Admin", // dummy
-      board,
-      standard,
-      centre,
-      scheduledAt: `${dateString}, ${timeString}`,
-      duration: `${duration} min`,
-      students: 0,
-      status: "scheduled",
-    });
+  useEffect(() => {
+    Promise.all([
+      fetchApi<SetupOption[]>("/setup/boards"),
+      fetchApi<SetupOption[]>("/setup/standards"),
+      fetchApi<SetupOption[]>("/setup/centres"),
+    ]).then(([b, s, c]) => {
+      setBoards(b);
+      setStandards(s);
+      setCentres(c);
+    }).catch(() => {});
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!title.trim() || !subject.trim() || !dateTime) {
+      setError("Please fill in Title, Subject and Date & Time.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const teacherName = email ? email.split("@")[0] : "Admin";
+      const created = await fetchApi<ApiLiveClass>("/live-class", {
+        method: "POST",
+        body: JSON.stringify({
+          title: title.trim(),
+          subject: subject.trim(),
+          teacherName,
+          scheduledAt: dateTime,
+          duration: Number(duration) || 60,
+          boardId: boardId || undefined,
+          standardId: standardId || undefined,
+          centreId: centreId || undefined,
+        }),
+      });
+      onScheduled(created);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-border-soft overflow-hidden">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-border-soft overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft">
           <h3 className="text-sm font-semibold text-text-primary">Schedule New Class</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Class Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
+
+        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          {error && (
+            <p className="text-xs text-brand-red bg-brand-red/8 border border-brand-red/20 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          {/* Title */}
+          <Field label="Class Title *">
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Introduction to Algebra"
-              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Subject</label>
-            <input
-              type="text"
-              value={subject}
-              onChange={e => setSubject(e.target.value)}
+              className="input-base" />
+          </Field>
+
+          {/* Subject */}
+          <Field label="Subject *">
+            <input type="text" value={subject} onChange={e => setSubject(e.target.value)}
               placeholder="e.g. Mathematics"
-              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-            />
-          </div>
+              className="input-base" />
+          </Field>
+
+          {/* Board / Class / Centre */}
           <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Board</label>
-              <select
-                value={board}
-                onChange={e => setBoard(e.target.value)}
-                className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-              >
-                <option value="">Select Board</option>
-                <option value="CBSE">CBSE</option>
-                <option value="ICSE">ICSE</option>
-                <option value="State">State Board</option>
+            <Field label="Board">
+              <select value={boardId} onChange={e => setBoardId(e.target.value)} className="input-base">
+                <option value="">All Boards</option>
+                {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Class</label>
-              <select
-                value={standard}
-                onChange={e => setStandard(e.target.value)}
-                className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-              >
-                <option value="">Select Class</option>
-                <option value="Class 10">Class 10</option>
-                <option value="Class 11">Class 11</option>
-                <option value="Class 12">Class 12</option>
+            </Field>
+            <Field label="Class">
+              <select value={standardId} onChange={e => setStandardId(e.target.value)} className="input-base">
+                <option value="">All Classes</option>
+                {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Centre</label>
-              <select
-                value={centre}
-                onChange={e => setCentre(e.target.value)}
-                className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-              >
-                <option value="">Select Centre</option>
-                <option value="Kalathipady">Kalathipady</option>
-                <option value="Kanjikuzhy">Kanjikuzhy</option>
-                <option value="Online">Online Only</option>
+            </Field>
+            <Field label="Centre">
+              <select value={centreId} onChange={e => setCentreId(e.target.value)} className="input-base">
+                <option value="">All Centres</option>
+                {centres.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-            </div>
+            </Field>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Date & Time</label>
-            <input
-              type="datetime-local"
-              value={dateTime}
-              onChange={e => setDateTime(e.target.value)}
-              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Duration (min)</label>
-            <input
-              type="number"
-              value={duration}
-              onChange={e => setDuration(e.target.value)}
-              placeholder="60"
-              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-            />
+
+          {/* Date & Duration */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Date & Time *">
+              <input type="datetime-local" value={dateTime} onChange={e => setDateTime(e.target.value)}
+                className="input-base" />
+            </Field>
+            <Field label="Duration (min)">
+              <input type="number" value={duration} onChange={e => setDuration(e.target.value)}
+                min="10" placeholder="60"
+                className="input-base" />
+            </Field>
           </div>
         </div>
+
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-soft bg-surface-2">
-          <button onClick={onClose} className="text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors">Cancel</button>
-          <button 
-            onClick={handleSchedule}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+          <button onClick={onClose} className="text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
-            <Calendar className="h-3.5 w-3.5" /> Schedule Class
+            {submitting ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Calendar className="h-3.5 w-3.5" />}
+            {submitting ? "Scheduling..." : "Schedule Class"}
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-text-secondary mb-1.5">{label}</label>
+      {children}
     </div>
   );
 }

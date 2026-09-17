@@ -82,6 +82,7 @@ model Centre {
 
   userCentres UserCentre[]
   batches     Batch[]
+  liveClasses LiveClass[]
 
   @@map("centres")
 }
@@ -128,8 +129,9 @@ model Board {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  batches   Batch[]
-  syllabi   Syllabus[]
+  batches     Batch[]
+  syllabi     Syllabus[]
+  liveClasses LiveClass[]
 
   @@map("boards")
 }
@@ -140,8 +142,9 @@ model Standard {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  batches   Batch[]
-  syllabi   Syllabus[]
+  batches     Batch[]
+  syllabi     Syllabus[]
+  liveClasses LiveClass[]
 
   @@map("standards")
 }
@@ -372,4 +375,38 @@ model McqQuestion {
   
   examId        String
   exam          Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+// -----------------------------------------------------------------------------
+// LIVE CLASSES
+// -----------------------------------------------------------------------------
+
+model LiveClass {
+  id          String          @id @default(uuid())
+  title       String
+  subject     String
+  teacherName String
+  status      LiveClassStatus @default(SCHEDULED)
+  scheduledAt DateTime
+  duration    Int             // in minutes
+  roomId      String          @unique @default(uuid())
+
+  boardId     String?
+  standardId  String?
+  centreId    String?
+
+  board       Board?    @relation(fields: [boardId],    references: [id])
+  standard    Standard? @relation(fields: [standardId], references: [id])
+  centre      Centre?   @relation(fields: [centreId],   references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("live_classes")
+}
+
+enum LiveClassStatus {
+  SCHEDULED
+  LIVE
+  ENDED
 }

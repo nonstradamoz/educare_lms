@@ -26,6 +26,9 @@ interface LiveClass {
   duration: string;
   students: number;
   status: "scheduled" | "live" | "ended";
+  board?: string;
+  standard?: string;
+  centre?: string;
 }
 
 /* ── Dummy data (will come from API in Phase 2) ── */
@@ -236,6 +239,9 @@ function ClassCard({ cls, onJoin }: { cls: LiveClass; onJoin: () => void }) {
 function ScheduleModal({ onClose, onSchedule }: { onClose: () => void, onSchedule: (cls: LiveClass) => void }) {
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
+  const [board, setBoard] = useState("");
+  const [standard, setStandard] = useState("");
+  const [centre, setCentre] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [duration, setDuration] = useState("60");
 
@@ -252,6 +258,9 @@ function ScheduleModal({ onClose, onSchedule }: { onClose: () => void, onSchedul
       title,
       subject,
       teacher: "Admin", // dummy
+      board,
+      standard,
+      centre,
       scheduledAt: `${dateString}, ${timeString}`,
       duration: `${duration} min`,
       students: 0,
@@ -288,6 +297,47 @@ function ScheduleModal({ onClose, onSchedule }: { onClose: () => void, onSchedul
               placeholder="e.g. Mathematics"
               className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
             />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Board</label>
+              <select
+                value={board}
+                onChange={e => setBoard(e.target.value)}
+                className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
+              >
+                <option value="">Select Board</option>
+                <option value="CBSE">CBSE</option>
+                <option value="ICSE">ICSE</option>
+                <option value="State">State Board</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Class</label>
+              <select
+                value={standard}
+                onChange={e => setStandard(e.target.value)}
+                className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
+              >
+                <option value="">Select Class</option>
+                <option value="Class 10">Class 10</option>
+                <option value="Class 11">Class 11</option>
+                <option value="Class 12">Class 12</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Centre</label>
+              <select
+                value={centre}
+                onChange={e => setCentre(e.target.value)}
+                className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
+              >
+                <option value="">Select Centre</option>
+                <option value="Kalathipady">Kalathipady</option>
+                <option value="Kanjikuzhy">Kanjikuzhy</option>
+                <option value="Online">Online Only</option>
+              </select>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-1.5">Date & Time</label>

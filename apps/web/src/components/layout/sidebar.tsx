@@ -47,7 +47,7 @@ const systemNav = [
   { label: "Help",     href: "/help",     icon: HelpCircle },
 ];
 
-export function Sidebar() {
+export function Sidebar({ role }: { role?: string }) {
   const path = usePathname();
   const router = useRouter();
 
@@ -75,9 +75,17 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
-        <NavSection label="Main" items={mainNav} activePath={path} />
-        <NavSection label="Management" items={managementNav} activePath={path} />
-        <NavSection label="System" items={systemNav} activePath={path} />
+        <NavSection 
+          label="Main" 
+          items={role === 'STUDENT' ? mainNav.filter(item => ['Dashboard', 'Live Class', 'Fee', 'Exam', 'eStudy'].includes(item.label)) : mainNav} 
+          activePath={path} 
+        />
+        {role !== 'STUDENT' && (
+          <>
+            <NavSection label="Management" items={managementNav} activePath={path} />
+            <NavSection label="System" items={systemNav} activePath={path} />
+          </>
+        )}
       </nav>
 
       {/* Footer */}

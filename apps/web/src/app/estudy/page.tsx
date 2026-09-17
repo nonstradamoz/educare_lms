@@ -6,7 +6,7 @@ import { fetchApi } from "@/lib/api";
 import { useState } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { BookOpen, Plus, Search, Filter, ChevronRight, ChevronDown, FileText, Video, Link as LinkIcon, Download, X, Upload, Play, ExternalLink } from "lucide-react";
+import { BookOpen, Plus, Search, Filter, ChevronRight, ChevronDown, FileText, Video, Link as LinkIcon, Download, X, Upload, Play, ExternalLink, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 interface Material {
@@ -297,67 +297,40 @@ export default function EStudyPage() {
   );
 }
 
+import { FileUploader } from "@/components/upload/file-uploader";
+
 function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [title, setTitle] = useState("");
-  const [type, setType] = useState("Video Lesson");
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [type, setType] = useState<"PDF" | "VIDEO" | "DOCUMENT">("PDF");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
 
-  const handleSave = async () => {
-    if (!title) return alert("Please enter a title");
-    
-    setUploading(true);
-    let finalUrl = "";
-
+  const handleUploadSuccess = async (url: string, videoId?: string) => {
+    setSaving(true);
     try {
-      if (type === "Video Lesson" && file) {
-        const { uploadURL, uid } = await fetchApi<any>('/cloudflare/upload-url', { method: 'POST' });
-        
-        const formData = new FormData();
-        formData.append("file", file);
-        
-        await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", uploadURL, true);
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              setProgress(Math.round((e.loaded / e.total) * 100));
-            }
-          };
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
-            else reject(new Error("Upload failed"));
-          };
-          xhr.onerror = () => reject(new Error("Network error"));
-          xhr.send(formData);
-        });
-
-        finalUrl = uid;
-      }
-
-      await fetchApi('/estudy', {
+      await fetchApi('/study-materials', {
         method: 'POST',
         body: JSON.stringify({
           title,
-          type: type === "Video Lesson" ? "VIDEO" : "PDF",
-          url: finalUrl
+          type: type === "VIDEO" ? "VIDEO" : type,
+          url: type === "VIDEO" ? videoId : url,
+          academicYearId: "dummy-academic-year", // Update when dropdowns are added
+          syllabusId: "dummy-syllabus-id"
         })
       });
-
       onSuccess();
       onClose();
     } catch (e: any) {
       console.error(e);
-      alert("Error uploading material");
-    } finally {
-      setUploading(false);
+      setError("Error saving material to database");
+      setSaving(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-full overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft shrink-0">
           <h2 className="text-base font-bold text-text-primary">Add Study Material</h2>
           <button onClick={onClose} className="h-8 w-8 rounded-full bg-surface-2 flex items-center justify-center text-text-muted hover:bg-surface-3 transition-colors">
@@ -365,44 +338,70 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 bg-surface">
-          <div className="bg-white rounded-xl border border-border-soft p-6 space-y-6">
-            <div>
-              <label className="block text-xs font-bold text-text-secondary mb-1.5">Material Title</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Thermodynamics Video" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-text-secondary mb-1.5">Material Type</label>
-              <div className="grid grid-cols-3 gap-3">
-                {["PDF Document", "Video Lesson", "External Link"].map(t => (
-                  <label key={t} className={`flex items-center justify-center gap-2 rounded-lg border py-3 px-2 cursor-pointer transition-colors ${type === t ? 'border-brand-blue bg-brand-blue/5' : 'border-border-soft bg-surface-2'}`}>
-                    <input type="radio" name="materialType" checked={type === t} onChange={() => setType(t)} className="hidden" />
-                    <span className={`text-xs font-bold ${type === t ? 'text-brand-blue' : 'text-text-primary'}`}>{t}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            {type === "Video Lesson" && (
-              <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5">Upload Video</label>
-                <div className="border-2 border-dashed border-border-soft rounded-xl p-8 flex flex-col items-center justify-center bg-surface-2/50 relative">
-                  <input type="file" accept="video/*" onChange={(e) => e.target.files && setFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  <Upload className="h-6 w-6 text-brand-blue mb-2" />
-                  <p className="text-sm font-bold text-text-primary">{file ? file.name : "Click to select video"}</p>
-                </div>
-              </div>
+          <div className="bg-white rounded-xl border border-border-soft p-6 space-y-4">
+            {error && (
+              <p className="text-xs text-brand-red bg-brand-red/8 border border-brand-red/20 rounded-lg px-3 py-2">
+                {error}
+              </p>
             )}
-            {uploading && (
-              <div className="w-full bg-surface-2 rounded-full h-2.5 mt-2 overflow-hidden">
-                <div className="bg-brand-blue h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+
+            {step === 1 ? (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-text-secondary mb-1.5">Material Title *</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Thermodynamics Video"
+                    className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-text-secondary mb-1.5">Material Type *</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: "PDF", label: "PDF Document" },
+                      { value: "VIDEO", label: "Video Lesson" }
+                    ].map(t => (
+                      <label key={t.value} className={`flex items-center justify-center gap-2 rounded-lg border py-3 px-2 cursor-pointer transition-colors ${type === t.value ? 'border-brand-blue bg-brand-blue/5' : 'border-border-soft bg-surface-2'}`}>
+                        <input type="radio" name="materialType" checked={type === t.value} onChange={() => setType(t.value as any)} className="hidden" />
+                        <span className={`text-xs font-bold ${type === t.value ? 'text-brand-blue' : 'text-text-primary'}`}>{t.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => title.trim() ? setStep(2) : setError("Title is required")}
+                  className="w-full py-2.5 text-sm font-bold text-white bg-brand-blue hover:bg-brand-blue-dark rounded-lg mt-2 transition-colors"
+                >
+                  Next: Upload File
+                </button>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-text-secondary">Uploading: <strong className="text-text-primary">{title}</strong></span>
+                  <button onClick={() => setStep(1)} className="text-[10px] text-brand-blue font-bold hover:underline">Edit details</button>
+                </div>
+                
+                {saving ? (
+                  <div className="py-12 flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="h-6 w-6 animate-spin text-brand-blue" />
+                    <p className="text-xs font-bold text-text-secondary">Saving to database...</p>
+                  </div>
+                ) : (
+                  <FileUploader
+                    type={type === "VIDEO" ? "VIDEO" : "FILE"}
+                    onUploadSuccess={handleUploadSuccess}
+                    onUploadError={setError}
+                    onCancel={onClose}
+                  />
+                )}
               </div>
             )}
           </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border-soft flex items-center justify-end gap-4 shrink-0 bg-white">
-          <button onClick={onClose} disabled={uploading} className="text-sm font-bold text-text-secondary">Cancel</button>
-          <button onClick={handleSave} disabled={uploading} className="inline-flex items-center gap-2 rounded-lg bg-text-primary px-6 py-2.5 text-sm font-bold text-white">
-            {uploading ? `Uploading ${progress}%` : "Save Material"}
-          </button>
         </div>
       </div>
     </div>

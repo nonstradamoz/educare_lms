@@ -14,6 +14,7 @@ import { ExamsModule } from './exams/exams.module';
 import { CloudflareModule } from './cloudflare/cloudflare.module';
 import { EstudyModule } from './estudy/estudy.module';
 import { LiveClassModule } from './live-class/live-class.module';
+import { StudyMaterialModule } from './study-materials/study-materials.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { LiveClassModule } from './live-class/live-class.module';
     CloudflareModule,
     EstudyModule,
     LiveClassModule,
+    StudyMaterialModule,
   ],
   controllers: [AppController],
   providers: [AppService],

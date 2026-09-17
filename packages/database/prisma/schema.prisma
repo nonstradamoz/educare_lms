@@ -83,6 +83,7 @@ model Centre {
   userCentres UserCentre[]
   batches     Batch[]
   liveClasses LiveClass[]
+  exams       Exam[]
 
   @@map("centres")
 }
@@ -132,6 +133,7 @@ model Board {
   batches     Batch[]
   syllabi     Syllabus[]
   liveClasses LiveClass[]
+  exams       Exam[]
 
   @@map("boards")
 }
@@ -145,6 +147,7 @@ model Standard {
   batches     Batch[]
   syllabi     Syllabus[]
   liveClasses LiveClass[]
+  exams       Exam[]
 
   @@map("standards")
 }
@@ -315,25 +318,41 @@ model TeacherAssignment {
 // -----------------------------------------------------------------------------
 
 model Exam {
-  id             String   @id @default(uuid())
+  id             String     @id @default(uuid())
   title          String
+  type           ExamType   @default(QUESTION_BANK)
   academicYearId String
-  batchId        String
+  batchId        String?    // Made optional to support general class/board exams
   subjectId      String
   chapterId      String?
   topicId        String?
+  
+  boardId        String?
+  standardId     String?
+  centreId       String?
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
-  batch          Batch        @relation(fields: [batchId], references: [id])
+  batch          Batch?       @relation(fields: [batchId], references: [id])
   subject        Subject      @relation(fields: [subjectId], references: [id])
   chapter        Chapter?     @relation(fields: [chapterId], references: [id])
   topic          Topic?       @relation(fields: [topicId], references: [id])
+  
+  board          Board?       @relation(fields: [boardId], references: [id])
+  standard       Standard?    @relation(fields: [standardId], references: [id])
+  centre         Centre?      @relation(fields: [centreId], references: [id])
 
   mcqQuestions   McqQuestion[]
 
   @@map("exams")
+}
+
+enum ExamType {
+  QUESTION_BANK
+  MOCK_TEST
+  MCQ_EXAM
 }
 
 model StudyMaterial {
@@ -367,14 +386,18 @@ enum MaterialType {
 model McqQuestion {
   id            String   @id @default(uuid())
   questionText  String
+  imageUrl      String?
   options       Json
   correctOption String
+  explanation   String?
   marks         Int      @default(1)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
   examId        String
   exam          Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  @@map("mcq_questions")
 }
 
 // -----------------------------------------------------------------------------

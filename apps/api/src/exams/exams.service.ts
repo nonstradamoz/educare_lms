@@ -20,7 +20,7 @@ export class ExamsService {
   }
 
   async createExam(data: any) {
-    let { title, academicYearId, batchId, subjectId, chapterId, topicId } = data;
+    let { title, type, academicYearId, batchId, subjectId, chapterId, topicId, boardId, standardId, centreId } = data;
     
     // Ensure we have a valid academicYear
     if (academicYearId === "dummy") {
@@ -28,37 +28,18 @@ export class ExamsService {
       if (year) academicYearId = year.id;
     }
     
-    // Ensure we have a valid batch
+    // Ensure we have a valid batch if requested
     if (batchId === "dummy") {
       let batch = await this.prisma.batch.findFirst();
-      if (!batch) {
-        // create one
-        const year = await this.prisma.academicYear.findFirst();
-        const centre = await this.prisma.centre.findFirst();
-        const standard = await this.prisma.standard.findFirst();
-        const board = await this.prisma.board.findFirst();
-        
-        batch = await this.prisma.batch.create({
-          data: {
-            name: "Dummy Batch",
-            academicYearId: year?.id || (await this.prisma.academicYear.create({data:{name:"2026"}})).id,
-            centreId: centre?.id || (await this.prisma.centre.create({data:{name:"Dummy", code:"DUM"}})).id,
-            standardId: standard?.id || (await this.prisma.standard.create({data:{name:"Dummy Class"}})).id,
-            boardId: board?.id || (await this.prisma.board.create({data:{name:"Dummy Board"}})).id,
-          }
-        });
-      }
-      batchId = batch.id;
+      if (batch) batchId = batch.id;
+      else batchId = null;
     }
     
     // Ensure we have a valid subject
     if (subjectId === "dummy") {
       let subject = await this.prisma.subject.findFirst();
       if (!subject) {
-        const standard = await this.prisma.standard.findFirst();
-        subject = await this.prisma.subject.create({
-          data: { name: "Dummy Subject" }
-        });
+        subject = await this.prisma.subject.create({ data: { name: "Dummy Subject" } });
       }
       subjectId = subject.id;
     }
@@ -66,11 +47,15 @@ export class ExamsService {
     return this.prisma.exam.create({
       data: {
         title,
+        type: type || 'QUESTION_BANK',
         academicYearId,
-        batchId,
+        batchId: batchId || undefined,
         subjectId,
         chapterId: chapterId || undefined,
         topicId: topicId || undefined,
+        boardId: boardId || undefined,
+        standardId: standardId || undefined,
+        centreId: centreId || undefined,
       }
     });
   }
@@ -83,12 +68,14 @@ export class ExamsService {
   }
 
   async createMcqQuestion(data: any): Promise<any> {
-    const { questionText, options, correctOption, marks, examId } = data;
+    const { questionText, imageUrl, options, correctOption, explanation, marks, examId } = data;
     return this.prisma.mcqQuestion.create({
       data: {
         questionText,
+        imageUrl,
         options,
         correctOption,
+        explanation,
         marks,
         examId,
       }

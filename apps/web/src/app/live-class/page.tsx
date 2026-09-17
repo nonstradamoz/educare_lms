@@ -64,6 +64,7 @@ const SAMPLE_CLASSES: LiveClass[] = [
 
 /* ── Page ── */
 export default function LiveClassPage() {
+  const [classes, setClasses] = useState<LiveClass[]>(SAMPLE_CLASSES);
   const [activeRoom, setActiveRoom] = useState<LiveClass | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
   const { role } = useAuth();
@@ -157,7 +158,7 @@ export default function LiveClassPage() {
           {/* Class List */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-text-primary">Today&apos;s Schedule</h3>
-            {SAMPLE_CLASSES.map((cls) => (
+            {classes.map((cls) => (
               <ClassCard key={cls.id} cls={cls} onJoin={() => setActiveRoom(cls)} />
             ))}
           </div>
@@ -167,7 +168,13 @@ export default function LiveClassPage() {
 
       {/* Schedule Modal */}
       {showSchedule && (
-        <ScheduleModal onClose={() => setShowSchedule(false)} />
+        <ScheduleModal 
+          onClose={() => setShowSchedule(false)} 
+          onSchedule={(newClass) => {
+            setClasses(prev => [...prev, newClass]);
+            setShowSchedule(false);
+          }}
+        />
       )}
     </DashboardLayout>
   );
@@ -226,7 +233,32 @@ function ClassCard({ cls, onJoin }: { cls: LiveClass; onJoin: () => void }) {
 }
 
 /* ── Schedule Modal ── */
-function ScheduleModal({ onClose }: { onClose: () => void }) {
+function ScheduleModal({ onClose, onSchedule }: { onClose: () => void, onSchedule: (cls: LiveClass) => void }) {
+  const [title, setTitle] = useState("");
+  const [subject, setSubject] = useState("");
+  const [dateTime, setDateTime] = useState("");
+  const [duration, setDuration] = useState("60");
+
+  const handleSchedule = () => {
+    if (!title || !subject || !dateTime) return;
+    
+    // Format date string beautifully (just a rough mockup for local state)
+    const dt = new Date(dateTime);
+    const timeString = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    const dateString = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    onSchedule({
+      id: `room-${Date.now()}`,
+      title,
+      subject,
+      teacher: "Admin", // dummy
+      scheduledAt: `${dateString}, ${timeString}`,
+      duration: `${duration} min`,
+      students: 0,
+      status: "scheduled",
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-border-soft overflow-hidden">
@@ -237,25 +269,52 @@ function ScheduleModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <div className="p-6 space-y-4">
-          {[
-            { label: "Class Title",    type: "text",           placeholder: "e.g. Introduction to Algebra" },
-            { label: "Subject",        type: "text",           placeholder: "e.g. Mathematics"             },
-            { label: "Date & Time",    type: "datetime-local", placeholder: ""                             },
-            { label: "Duration (min)", type: "number",         placeholder: "60"                           },
-          ].map((f) => (
-            <div key={f.label}>
-              <label className="block text-xs font-semibold text-text-secondary mb-1.5">{f.label}</label>
-              <input
-                type={f.type}
-                placeholder={f.placeholder}
-                className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
-              />
-            </div>
-          ))}
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Class Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. Introduction to Algebra"
+              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Subject</label>
+            <input
+              type="text"
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              placeholder="e.g. Mathematics"
+              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Date & Time</label>
+            <input
+              type="datetime-local"
+              value={dateTime}
+              onChange={e => setDateTime(e.target.value)}
+              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5">Duration (min)</label>
+            <input
+              type="number"
+              value={duration}
+              onChange={e => setDuration(e.target.value)}
+              placeholder="60"
+              className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-brand-blue/25 focus:border-brand-blue/50"
+            />
+          </div>
         </div>
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-soft bg-surface-2">
           <button onClick={onClose} className="text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors">Cancel</button>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors">
+          <button 
+            onClick={handleSchedule}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+          >
             <Calendar className="h-3.5 w-3.5" /> Schedule Class
           </button>
         </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { JitsiMeet } from "@/components/live-class/jitsi-meet";
+import { LiveKitClassRoom } from "@/components/live-class/livekit-room";
 import { fetchApi } from "@/lib/api";
 import {
   Video, Plus, Calendar, Clock, Users, Play, X, Wifi, BookOpen,
@@ -134,8 +134,14 @@ export default function LiveClassPage() {
             </button>
           </div>
         </div>
-        <div className="flex-1 p-3">
-          <JitsiMeet roomName={activeRoom.roomId} displayName={displayName} />
+        <div className="flex-1 overflow-hidden">
+          <LiveKitClassRoom
+            roomId={activeRoom.roomId}
+            identity={email || "user"}
+            name={displayName}
+            role={role || "STUDENT"}
+            onLeave={() => setActiveRoom(null)}
+          />
         </div>
       </div>
     );

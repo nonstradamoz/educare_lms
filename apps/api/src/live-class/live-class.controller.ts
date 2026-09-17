@@ -1,10 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UsePipes, ValidationPipe, Query } from '@nestjs/common';
 import { LiveClassService } from './live-class.service';
+import { LiveKitService } from './livekit.service';
 
 @UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false }))
 @Controller('live-class')
 export class LiveClassController {
-  constructor(private readonly liveClassService: LiveClassService) {}
+  constructor(
+    private readonly liveClassService: LiveClassService,
+    private readonly liveKitService: LiveKitService,
+  ) {}
 
   @Get()
   getAll() {
@@ -14,6 +18,22 @@ export class LiveClassController {
   @Get('stats')
   getStats() {
     return this.liveClassService.getStats();
+  }
+
+  /**
+   * Generate a LiveKit join token.
+   * Query params: roomId, identity, name, role (ADMIN|STAFF|STUDENT)
+   */
+  @Get('token')
+  async getToken(
+    @Query('roomId') roomId: string,
+    @Query('identity') identity: string,
+    @Query('name') name: string,
+    @Query('role') role: string,
+  ) {
+    // Students can subscribe only; admins/staff can publish
+    const canPublish = role !== 'STUDENT';
+    return this.liveKitService.generateToken(roomId, identity, name, canPublish);
   }
 
   @Post()

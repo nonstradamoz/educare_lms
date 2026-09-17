@@ -23,41 +23,8 @@ interface Student {
   password?: string;
 }
 
-const SAMPLE_STUDENTS: Student[] = [
-  {
-    id: "1",
-    admissionNo: "2",
-    name: "Sreejith S",
-    email: "sreejithsreegiri@gmail.com",
-    phone: "9778787003",
-    parentName: "Sreekumaran Nair P",
-    parentEmail: "sreejithalert@gmail.com",
-    parentPhone: "956545655",
-    academicYear: "2025-26",
-    board: "State",
-    classLevel: "Class 11",
-    centre: "Neyyattinkara",
-    division: "Division A",
-  },
-  {
-    id: "2",
-    admissionNo: "4",
-    name: "Taarush H",
-    email: "taarush@bodhiplus.com",
-    phone: "898778878",
-    parentName: "Hemanth",
-    parentEmail: "jabf@keralauniversity.ac.in",
-    parentPhone: "5689855888",
-    academicYear: "2026-27",
-    board: "CBSE",
-    classLevel: "Class 12 (A)",
-    centre: "Manacaud",
-    division: "Division B",
-  }
-];
-
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(SAMPLE_STUDENTS);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterYear, setFilterYear] = useState("All Years");
@@ -253,7 +220,13 @@ export default function StudentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-soft">
-                  {filtered.length === 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={10} className="py-20 text-center text-sm text-text-muted">
+                        Loading students...
+                      </td>
+                    </tr>
+                  ) : filtered.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="py-20 text-center text-sm text-text-muted">
                         No students match your filters.

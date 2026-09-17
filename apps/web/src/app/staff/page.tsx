@@ -27,43 +27,8 @@ interface Staff {
   password?: string;
 }
 
-const SAMPLE_STAFF: Staff[] = [
-  {
-    id: "1",
-    empId: "EMP-001",
-    name: "Ajith Kumar",
-    email: "ajith.kumar@bodhiplus.com",
-    phone: "9876543210",
-    role: "Teacher",
-    centre: "Neyyattinkara",
-    status: "Active",
-    assignments: [
-      {
-        id: "a1",
-        academicYear: "2025-26",
-        board: "CBSE",
-        classLevel: "Class 11",
-        centre: "Neyyattinkara",
-        division: "Division A",
-        subject: "Physics"
-      }
-    ]
-  },
-  {
-    id: "2",
-    empId: "EMP-002",
-    name: "Meera Menon",
-    email: "meera.m@bodhiplus.com",
-    phone: "9876543211",
-    role: "Coordinator",
-    centre: "Manacaud",
-    status: "Active",
-    assignments: []
-  }
-];
-
 export default function StaffPage() {
-  const [staffList, setStaffList] = useState<Staff[]>(SAMPLE_STAFF);
+  const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterCentre, setFilterCentre] = useState("All Centres");
@@ -243,7 +208,13 @@ export default function StaffPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-soft">
-                  {filtered.length === 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={10} className="py-20 text-center text-sm text-text-muted">
+                        Loading staff...
+                      </td>
+                    </tr>
+                  ) : filtered.length === 0 ? (
                     <tr>
                       <td colSpan={10} className="py-20 text-center text-sm text-text-muted">
                         No staff match your filters.

@@ -20,47 +20,19 @@ interface Material {
   url?: string;
 }
 
-const SAMPLE_MATERIALS: Material[] = [
-  {
-    id: "1",
-    title: "Thermodynamics Chapter Notes",
-    type: "PDF",
-    subject: "Physics",
-    classLevel: "Class 11",
-    dateAdded: "Sep 14, 2026",
-    size: "2.4 MB",
-  },
-  {
-    id: "2",
-    title: "Algebra Crash Course Video",
-    type: "Video",
-    subject: "Mathematics",
-    classLevel: "Class 10",
-    dateAdded: "Sep 15, 2026",
-    size: "45 mins",
-  },
-  {
-    id: "3",
-    title: "Previous Year Question Paper 2025",
-    type: "PDF",
-    subject: "Chemistry",
-    classLevel: "Class 12",
-    dateAdded: "Sep 10, 2026",
-    size: "1.1 MB",
-  }
-];
-
 export default function EStudyPage() {
-  const [materials, setMaterials] = useState<Material[]>(SAMPLE_MATERIALS);
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState("All Classes");
   const [filterSubject, setFilterSubject] = useState("All Subjects");
   const [filterType, setFilterType] = useState("All Types");
   const [sortBy, setSortBy] = useState("Date Added (Newest First)");
   const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { role } = useAuth();
 
   useEffect(() => {
+    setIsLoading(true);
     fetchApi('/estudy')
       .then((data: any) => {
         const mapped = data.map((m: any) => ({
@@ -72,9 +44,10 @@ export default function EStudyPage() {
           dateAdded: new Date(m.createdAt).toLocaleDateString(),
           url: m.url
         }));
-        setMaterials(mapped.length > 0 ? mapped : SAMPLE_MATERIALS);
+        setMaterials(mapped);
       })
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
   }, []);
 
   const filtered = materials.filter(m => {
@@ -231,7 +204,13 @@ export default function EStudyPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-soft">
-                  {sortedMaterials.length === 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6} className="py-20 text-center text-sm text-text-muted">
+                        Loading study materials...
+                      </td>
+                    </tr>
+                  ) : sortedMaterials.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-20 text-center text-sm text-text-muted">
                         No materials match your filters.

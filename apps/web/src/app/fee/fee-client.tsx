@@ -37,6 +37,17 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
     return matchSearch && matchCourse && matchStatus && matchMode;
   });
 
+  const totalCollected = fees.filter(f => f.status === 'PAID').reduce((sum, f) => sum + Number(f.amount), 0);
+  const pendingFees = fees.filter(f => f.status === 'PENDING').reduce((sum, f) => sum + Number(f.amount), 0);
+  const overdue = fees.filter(f => f.status === 'OVERDUE').reduce((sum, f) => sum + Number(f.amount), 0);
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const thisMonth = fees.filter(f => {
+    if (f.status !== 'PAID') return false;
+    const d = new Date(f.date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  }).reduce((sum, f) => sum + Number(f.amount), 0);
+
   return (
     <DashboardLayout title="Fee Management">
       <div className="flex flex-col h-full bg-surface">
@@ -77,10 +88,10 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
           {role !== 'STUDENT' && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: "Total Collected", value: "₹5,000",  color: "text-brand-blue bg-brand-blue/10" },
-                { label: "Pending Fees",    value: "₹4,500",  color: "text-warning bg-warning/10"       },
-                { label: "Overdue",         value: "₹0",      color: "text-brand-red bg-brand-red/10"   },
-                { label: "This Month",      value: "₹5,000",  color: "text-success bg-success/10"       },
+                { label: "Total Collected", value: `₹${totalCollected.toLocaleString()}`,  color: "text-brand-blue bg-brand-blue/10" },
+                { label: "Pending Fees",    value: `₹${pendingFees.toLocaleString()}`,  color: "text-warning bg-warning/10"       },
+                { label: "Overdue",         value: `₹${overdue.toLocaleString()}`,      color: "text-brand-red bg-brand-red/10"   },
+                { label: "This Month",      value: `₹${thisMonth.toLocaleString()}`,  color: "text-success bg-success/10"       },
               ].map((c) => (
                 <div key={c.label} className="bg-white rounded-2xl border border-border-soft p-6 shadow-sm">
                   <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${c.color} mb-4`}>

@@ -350,7 +350,18 @@ export default function StudentsPage() {
                   method: 'POST',
                   body: JSON.stringify(savedStudent)
                 });
-                setStudents([savedStudent, ...students]);
+                
+                const newProfile = created.profile;
+                const newUser = created.user;
+                const newBatch = created.batch;
+                const newStudentFromDb = {
+                  ...savedStudent,
+                  id: newProfile.id,
+                  admissionNo: newProfile.admissionNo,
+                  name: newUser.firstName + " " + (newUser.lastName || ""),
+                  email: newUser.email,
+                };
+                setStudents([newStudentFromDb, ...students]);
               }
               setShowModal(false);
               setEditItem(null);
@@ -368,7 +379,8 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
   const [activeTab, setActiveTab] = useState("Admission");
   
   const [admissionNo, setAdmissionNo] = useState(student?.admissionNo || "74");
-  const [name, setName] = useState(student?.name || "");
+  const [firstName, setFirstName] = useState(student?.name?.split(" ")[0] || "");
+  const [lastName, setLastName] = useState(student?.name?.split(" ").slice(1).join(" ") || "");
   const [email, setEmail] = useState(student?.email || "");
   const [phone, setPhone] = useState(student?.phone || "");
   const [parentName, setParentName] = useState(student?.parentName || "");
@@ -439,7 +451,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                   Admission No <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <input type="text" defaultValue={student?.admissionNo || "74"} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="text" value={admissionNo} onChange={(e) => setAdmissionNo(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1 cursor-pointer" />
                     <ChevronDown className="h-3 w-3 text-text-muted cursor-pointer" />
@@ -598,11 +610,11 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">First Name <span className="text-brand-red">*</span></label>
-                  <input type="text" placeholder="e.g. Rahul" defaultValue={student?.name.split(" ")[0] || ""} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="text" placeholder="e.g. Rahul" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Last Name</label>
-                  <input type="text" placeholder="e.g. Kumar" defaultValue={student?.name.split(" ").slice(1).join(" ") || ""} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="text" placeholder="e.g. Kumar" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Date of Birth</label>
@@ -623,11 +635,11 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Phone Number <span className="text-brand-red">*</span></label>
-                  <input type="tel" placeholder="+91 XXXXX XXXXX" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="tel" placeholder="+91 XXXXX XXXXX" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Email Address</label>
-                  <input type="email" placeholder="student@example.com" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="email" placeholder="student@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Residential Address</label>
@@ -642,7 +654,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Father's / Guardian's Name <span className="text-brand-red">*</span></label>
-                  <input type="text" placeholder="Name" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="text" placeholder="Name" value={parentName} onChange={(e) => setParentName(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Mother's Name</label>
@@ -650,11 +662,11 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Parent's Primary Phone (Login ID) <span className="text-brand-red">*</span></label>
-                  <input type="tel" placeholder="+91 XXXXX XXXXX" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="tel" placeholder="+91 XXXXX XXXXX" value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Parent's Email</label>
-                  <input type="email" placeholder="parent@example.com" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input type="email" placeholder="parent@example.com" value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Occupation</label>
@@ -737,8 +749,8 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                   // Final save
                   const newStudentData: Student = {
                     id: student?.id || Math.random().toString(36).substr(2, 9),
-                    name: student?.name || "New Student",
-                    admissionNo: student?.admissionNo || "ADM-999",
+                    name: `${firstName} ${lastName}`.trim() || "New Student",
+                    admissionNo: admissionNo || "ADM-999",
                     email: email || "student@example.com",
                     phone: phone || "+91 9999999999",
                     parentName: parentName || "Parent",

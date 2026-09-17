@@ -20,7 +20,6 @@ export default function ExamOverviewPage() {
               <p className="text-xs text-text-muted mt-0.5">Manage question banks, MCQ exams, mock tests and results</p>
             </div>
           </div>
-          </div>
           {role !== 'STUDENT' && (
             <Link
               href="/exam/mcq/create"

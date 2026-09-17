@@ -1,3 +1,5 @@
+"use client";
+
 import { Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,8 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/components/providers/auth-provider";
 
 export function TopNav({ title = "Dashboard" }: { title?: string }) {
+  const { email, role } = useAuth();
+  
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border-soft bg-white px-6">
       {/* Left — Page title */}
@@ -45,12 +50,16 @@ export function TopNav({ title = "Dashboard" }: { title?: string }) {
           <DropdownMenuTrigger
             render={<button className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-surface-2 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/30" />}
           >
-            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-dark flex items-center justify-center text-white text-xs font-bold shadow-sm">
-              A
+            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-brand-blue to-brand-blue-dark flex items-center justify-center text-white text-xs font-bold shadow-sm uppercase">
+              {email ? email.charAt(0) : 'A'}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold text-text-primary leading-none">Akshay</p>
-              <p className="text-[10px] text-text-muted mt-0.5 leading-none">Admin</p>
+              <p className="text-xs font-semibold text-text-primary leading-none truncate max-w-[120px]">
+                {email ? email.split('@')[0] : 'Akshay'}
+              </p>
+              <p className="text-[10px] text-text-muted mt-0.5 leading-none capitalize">
+                {role ? role.toLowerCase() : 'Admin'}
+              </p>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">

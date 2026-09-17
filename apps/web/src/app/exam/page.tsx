@@ -1,3 +1,5 @@
+"use client";
+
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ExamTabs } from "@/components/exam/exam-tabs";
 import { Trophy, Plus, TrendingUp, Users, CheckCircle2, Database, Layers, FileText } from "lucide-react";

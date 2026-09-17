@@ -20,6 +20,7 @@ interface Student {
   classLevel: string;
   centre: string;
   division: string;
+  password?: string;
 }
 
 const SAMPLE_STUDENTS: Student[] = [
@@ -373,6 +374,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
   const [parentName, setParentName] = useState(student?.parentName || "");
   const [parentEmail, setParentEmail] = useState(student?.parentEmail || "");
   const [parentPhone, setParentPhone] = useState(student?.parentPhone || "");
+  const [password, setPassword] = useState("");
 
   // Interactive state for hierarchy
   const [year, setYear] = useState(student?.academicYear || "");
@@ -442,6 +444,15 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1 cursor-pointer" />
                     <ChevronDown className="h-3 w-3 text-text-muted cursor-pointer" />
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1.5">
+                  Account Password <span className="text-brand-red">*</span>
+                </label>
+                <div className="relative">
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password for student" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
               </div>
 
@@ -738,6 +749,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     classLevel: classLevel || "Class 11",
                     division: division || "Division A",
                     centre: centre || "Educare Kalathipady",
+                    password: password || undefined,
                   };
                   onSave(newStudentData);
                 } else {

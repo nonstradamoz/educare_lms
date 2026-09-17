@@ -1,7 +1,6 @@
 import { Controller, Post, Body, Res, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { SignupDto } from './dto/signup.dto';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
@@ -43,21 +42,5 @@ export class AuthController {
     return { message: 'Logout successful' };
   }
 
-  @Post('signup')
-  @ApiOperation({ summary: 'Register a new admin user and login' })
-  @ApiResponse({ status: 201, description: 'Signup successful' })
-  async signup(@Body() signupDto: SignupDto, @Res({ passthrough: true }) res: Response) {
-    const { access_token, user } = await this.authService.signup(signupDto);
-    
-    res.cookie('AccessToken', access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-    });
-
-    return { message: 'Signup successful', user };
-  }
 
 }

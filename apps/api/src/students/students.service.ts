@@ -50,7 +50,7 @@ export class StudentsService {
 
       // 3. Generate credentials
       const email = data.email || `student.${Date.now()}@educare.com`;
-      const password = await argon2.hash('password123'); // Default password
+      const password = await argon2.hash(data.password || 'password123');
 
       // 4. Create User, StudentProfile, and Enrollment in a transaction
       const newStudent = await this.prisma.$transaction(async (prisma) => {

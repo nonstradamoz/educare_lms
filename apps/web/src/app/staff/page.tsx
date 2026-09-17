@@ -24,6 +24,7 @@ interface Staff {
     division: string;
     subject: string;
   }[];
+  password?: string;
 }
 
 const SAMPLE_STAFF: Staff[] = [
@@ -369,7 +370,8 @@ function AddStaffModal({ staff, onClose, onSave }: { staff: Staff | null, onClos
     role: staff?.role || "Teacher",
     centre: staff?.centre || "Educare Kalathipady",
     status: staff?.status || "Active",
-    assignments: staff?.assignments || []
+    assignments: staff?.assignments || [],
+    password: ""
   });
 
   const [newAssignment, setNewAssignment] = useState({ academicYear: "2025-26", board: "CBSE", classLevel: "Class 11", division: "Division A", subject: "" });
@@ -584,6 +586,10 @@ function AddStaffModal({ staff, onClose, onSave }: { staff: Staff | null, onClos
                     <option value="Inactive">Inactive</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-text-secondary mb-1.5">Account Password <span className="text-brand-red">*</span></label>
+                  <input type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} placeholder="Enter password for staff" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                </div>
               </div>
             </div>
           )}
@@ -644,7 +650,8 @@ function AddStaffModal({ staff, onClose, onSave }: { staff: Staff | null, onClos
                     role: formData.role || "Teacher",
                     centre: formData.centre || "Educare Kalathipady",
                     status: formData.status as "Active" | "Inactive",
-                    assignments: formData.assignments
+                    assignments: formData.assignments,
+                    password: formData.password || undefined
                   };
                   onSave(newStaffData);
                 } else {

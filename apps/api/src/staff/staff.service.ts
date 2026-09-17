@@ -18,7 +18,7 @@ export class StaffService {
 
       // 3. Generate credentials
       const email = data.email || `staff.${Date.now()}@educare.com`;
-      const password = await argon2.hash('password123'); // Default password
+      const password = await argon2.hash(data.password || 'password123');
 
       // 4. Create User, TeacherProfile, and UserCentre in a transaction
       const newStaff = await this.prisma.$transaction(async (prisma) => {

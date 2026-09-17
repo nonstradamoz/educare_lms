@@ -3,8 +3,8 @@ import { AdminDashboard } from "@/components/dashboard/admin-dashboard";
 import { StudentDashboard } from "@/components/dashboard/student-dashboard";
 import { getUserFromToken } from "@/lib/auth-server";
 
-export default function Home() {
-  const user = getUserFromToken();
+export default async function Home() {
+  const user = await getUserFromToken();
 
   return (
     <DashboardLayout title="Dashboard" role={user?.role}>

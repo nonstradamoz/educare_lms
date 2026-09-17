@@ -5,7 +5,8 @@ import {
   FileText,
   Clock,
   Award,
-  ArrowRight
+  ArrowRight,
+  Bell
 } from "lucide-react";
 import Link from "next/link";
 

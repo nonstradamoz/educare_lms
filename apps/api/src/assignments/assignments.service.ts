@@ -5,7 +5,7 @@ import { PrismaService } from '../database/prisma.service';
 export class AssignmentsService {
   constructor(private prisma: PrismaService) {}
 
-  async getAll(userId: string, role: string) {
+  async getAll(userId: string, role: string): Promise<any> {
     try {
       if (role === 'STUDENT') {
         // Students see assignments for their batches
@@ -49,7 +49,7 @@ export class AssignmentsService {
     }
   }
 
-  async getOne(id: string) {
+  async getOne(id: string): Promise<any> {
     return await this.prisma.assignment.findUnique({
       where: { id },
       include: {
@@ -67,7 +67,7 @@ export class AssignmentsService {
     });
   }
 
-  async create(data: any, uploaderId: string) {
+  async create(data: any, uploaderId: string): Promise<any> {
     try {
       return await this.prisma.assignment.create({
         data: {
@@ -86,7 +86,7 @@ export class AssignmentsService {
     }
   }
 
-  async submit(assignmentId: string, studentUserId: string, data: any) {
+  async submit(assignmentId: string, studentUserId: string, data: any): Promise<any> {
     try {
       const profile = await this.prisma.studentProfile.findUnique({
         where: { userId: studentUserId }
@@ -120,7 +120,7 @@ export class AssignmentsService {
     }
   }
 
-  async gradeSubmission(submissionId: string, data: any) {
+  async gradeSubmission(submissionId: string, data: any): Promise<any> {
     try {
       return await this.prisma.assignmentSubmission.update({
         where: { id: submissionId },

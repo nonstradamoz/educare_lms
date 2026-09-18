@@ -28,6 +28,15 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
   const [selectedReceipt, setSelectedReceipt] = useState<FeeRecord | null>(null);
   const { role } = useAuth();
 
+  const refresh = async () => {
+    try {
+      const data = await fetchApi('/fee');
+      setFees(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const filtered = fees.filter(f => {
     const matchSearch = f.studentName.toLowerCase().includes(search.toLowerCase()) || 
                         f.receiptNo.toLowerCase().includes(search.toLowerCase()) ||
@@ -242,7 +251,7 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
       </div>
 
       {/* Collect Fee Modal */}
-      {showModal && <CollectFeeModal onClose={() => setShowModal(false)} />}
+      {showModal && <CollectFeeModal onClose={() => setShowModal(false)} onSuccess={() => { setShowModal(false); refresh(); }} />}
       
       {/* Print Receipt Modal */}
       {selectedReceipt && <PrintReceiptModal receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />}
@@ -250,8 +259,43 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
   );
 }
 
-function CollectFeeModal({ onClose }: { onClose: () => void }) {
+function CollectFeeModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [activeTab, setActiveTab] = useState("Payment Details");
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [studentId, setStudentId] = useState("");
+  const [feeHead, setFeeHead] = useState("Tuition Fee");
+  const [amount, setAmount] = useState("");
+  const [paymentMode, setPaymentMode] = useState("Cash");
+  const [targetTrack, setTargetTrack] = useState("BOTH");
+
+  useEffect(() => {
+    fetchApi('/students').then(data => {
+      setStudents(data);
+    }).catch(console.error);
+  }, []);
+
+  const handleSave = async () => {
+    if (!studentId || !amount) return;
+    setLoading(true);
+    try {
+      await fetchApi('/fee', {
+        method: 'POST',
+        body: JSON.stringify({
+          studentId,
+          feeHead,
+          amount: Number(amount),
+          paymentMode,
+          targetTrack
+        })
+      });
+      onSuccess();
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+    }
+  };
 
   const TABS = [
     { id: "Payment Details", icon: CreditCard },
@@ -307,8 +351,15 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
                   Select Student <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <select className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-muted focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20">
-                    <option>---Select Student---</option>
+                  <select 
+                    value={studentId} 
+                    onChange={e => setStudentId(e.target.value)}
+                    className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  >
+                    <option value="">---Select Student---</option>
+                    {students.map(s => (
+                      <option key={s.id} value={s.id}>{s.user?.firstName} {s.user?.lastName} ({s.admissionNo})</option>
+                    ))}
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
@@ -322,10 +373,13 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
                   Fee Head <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <select className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-muted focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20">
-                    <option>---Select Fee Head---</option>
-                    <option>Tuition Fee</option>
-                    <option>Admission Fee</option>
+                  <select 
+                    value={feeHead}
+                    onChange={e => setFeeHead(e.target.value)}
+                    className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  >
+                    <option value="Tuition Fee">Tuition Fee</option>
+                    <option value="Admission Fee">Admission Fee</option>
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
@@ -339,7 +393,13 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
                   Amount (₹) <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <input type="number" placeholder="0" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
+                  <input 
+                    type="number" 
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    placeholder="0" 
+                    className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" 
+                  />
                 </div>
               </div>
 
@@ -348,10 +408,14 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
                   Payment Mode <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <select className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20">
-                    <option>Cash</option>
-                    <option>Online / UPI</option>
-                    <option>Bank Transfer</option>
+                  <select 
+                    value={paymentMode}
+                    onChange={e => setPaymentMode(e.target.value)}
+                    className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Online / UPI">Online / UPI</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
@@ -365,7 +429,11 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
                   Target Track <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <select className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20">
+                  <select 
+                    value={targetTrack}
+                    onChange={e => setTargetTrack(e.target.value)}
+                    className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  >
                     <option value="BOTH">Both (Tuition & Entrance)</option>
                     <option value="TUITION">Tuition Only</option>
                     <option value="ENTRANCE">Entrance Only</option>
@@ -386,8 +454,12 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} className="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
             Cancel
           </button>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-text-primary px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-black transition-colors">
-            <CheckCircle2 className="h-4 w-4" /> Record Payment
+          <button 
+            onClick={handleSave} 
+            disabled={loading || !studentId || !amount}
+            className="inline-flex items-center gap-2 rounded-lg bg-text-primary px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-black transition-colors disabled:opacity-50"
+          >
+            <CheckCircle2 className="h-4 w-4" /> {loading ? "Saving..." : "Record Payment"}
           </button>
         </div>
 

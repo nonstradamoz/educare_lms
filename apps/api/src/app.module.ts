@@ -16,6 +16,7 @@ import { EstudyModule } from './estudy/estudy.module';
 import { LiveClassModule } from './live-class/live-class.module';
 import { StudyMaterialModule } from './study-materials/study-materials.module';
 import { FeeModule } from './fee/fee.module';
+import { AssignmentsModule } from './assignments/assignments.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { FeeModule } from './fee/fee.module';
     LiveClassModule,
     StudyMaterialModule,
     FeeModule,
+    AssignmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

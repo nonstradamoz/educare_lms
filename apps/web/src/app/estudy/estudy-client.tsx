@@ -11,17 +11,31 @@ import { fetchApi } from "@/lib/api";
 export interface Material {
   id: string;
   title: string;
-  type: "PDF" | "Video" | "Link";
-  subject: string;
-  classLevel: string;
-  dateAdded: string;
-  size?: string;
+  type: "PDF" | "VIDEO" | "LINK" | "DOCUMENT" | "FILE";
   url?: string;
+  academicYear?: { name: string };
+  syllabus?: { 
+    board: { name: string },
+    standard: { name: string },
+    subject: { name: string }
+  };
+  chapter?: { name: string };
+  topic?: { name: string };
+  uploader?: { firstName: string, lastName: string, email: string };
+  createdAt: string;
 }
 
 export function EStudyClient({ initialMaterials }: { initialMaterials: Material[] }) {
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
   const [search, setSearch] = useState("");
+  
+  // Hierarchy Data
+  const [boards, setBoards] = useState<any[]>([]);
+  const [standards, setStandards] = useState<any[]>([]);
+  const [subjectsList, setSubjectsList] = useState<any[]>([]);
+
+  // Selected Filters
+  const [filterBoard, setFilterBoard] = useState("All Boards");
   const [filterClass, setFilterClass] = useState("All Classes");
   const [filterSubject, setFilterSubject] = useState("All Subjects");
   const [filterType, setFilterType] = useState("All Types");
@@ -29,34 +43,51 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
   const [showModal, setShowModal] = useState(false);
   const { role } = useAuth();
 
+  useEffect(() => {
+    fetchApi('/setup/boards').then((data: any) => setBoards(data)).catch(console.error);
+    fetchApi('/setup/standards').then((data: any) => setStandards(data)).catch(console.error);
+    fetchApi('/setup/subjects').then((data: any) => setSubjectsList(data)).catch(console.error);
+    
+    // Refresh materials
+    fetchApi('/study-materials').then((data: any) => setMaterials(data)).catch(console.error);
+  }, []);
+
   const filtered = materials.filter(m => {
+    const subjName = m.syllabus?.subject?.name || "";
+    const className = m.syllabus?.standard?.name || "";
+    const boardName = m.syllabus?.board?.name || "";
+
     const matchSearch = m.title.toLowerCase().includes(search.toLowerCase()) || 
-                        m.subject.toLowerCase().includes(search.toLowerCase());
-    const matchClass = filterClass === "All Classes" || m.classLevel === filterClass;
-    const matchSubject = filterSubject === "All Subjects" || m.subject === filterSubject;
+                        subjName.toLowerCase().includes(search.toLowerCase());
+    
+    const matchBoard = filterBoard === "All Boards" || boardName === filterBoard;
+    const matchClass = filterClass === "All Classes" || className === filterClass;
+    const matchSubject = filterSubject === "All Subjects" || subjName === filterSubject;
     const matchType = filterType === "All Types" || m.type === filterType;
-    return matchSearch && matchClass && matchSubject && matchType;
+    return matchSearch && matchBoard && matchClass && matchSubject && matchType;
   });
 
   const sortedMaterials = [...filtered].sort((a, b) => {
     switch (sortBy) {
       case "Date Added (Oldest First)":
-        return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       case "Title (A-Z)":
         return a.title.localeCompare(b.title);
       case "Title (Z-A)":
         return b.title.localeCompare(a.title);
       case "Date Added (Newest First)":
       default:
-        return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
 
   const getIconForType = (type: string) => {
     switch (type) {
-      case "PDF": return <FileText className="h-4 w-4 text-brand-red" />;
-      case "Video": return <Video className="h-4 w-4 text-brand-blue" />;
-      case "Link": return <LinkIcon className="h-4 w-4 text-warning" />;
+      case "PDF": 
+      case "DOCUMENT":
+      case "FILE": return <FileText className="h-4 w-4 text-brand-red" />;
+      case "VIDEO": return <Video className="h-4 w-4 text-brand-blue" />;
+      case "LINK": return <LinkIcon className="h-4 w-4 text-warning" />;
       default: return <BookOpen className="h-4 w-4 text-text-secondary" />;
     }
   };
@@ -128,25 +159,25 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
               </button>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {[
-                { label: "Class", state: filterClass, set: setFilterClass, options: ["All Classes", "Class 10", "Class 11", "Class 12"] },
-                { label: "Subject", state: filterSubject, set: setFilterSubject, options: ["All Subjects", "Mathematics", "Physics", "Chemistry"] },
-                { label: "Type", state: filterType, set: setFilterType, options: ["All Types", "PDF", "Video", "Link"] },
+                { label: "Board", state: filterBoard, set: setFilterBoard, options: ["All Boards", ...boards.map(b => b.name)] },
+                { label: "Class", state: filterClass, set: setFilterClass, options: ["All Classes", ...standards.map(s => s.name)] },
+                { label: "Subject", state: filterSubject, set: setFilterSubject, options: ["All Subjects", ...subjectsList.map(s => s.name)] },
+                { label: "Type", state: filterType, set: setFilterType, options: ["All Types", "PDF", "VIDEO", "LINK", "DOCUMENT"] },
                 { label: "Sort By", state: sortBy, set: setSortBy, options: ["Date Added (Newest First)", "Date Added (Oldest First)", "Title (A-Z)", "Title (Z-A)"] },
               ].map((f) => (
-                <div key={f.label}>
-                  <label className="block text-xs font-semibold text-text-secondary mb-1.5">{f.label}</label>
-                  <div className="relative">
-                    <select
-                      value={f.state}
-                      onChange={(e) => f.set && f.set(e.target.value)}
-                      className="w-full h-9 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
-                    >
-                      {f.options.map(o => <option key={o}>{o}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                  </div>
+                <div key={f.label} className="relative">
+                  <select
+                    value={f.state}
+                    onChange={(e) => f.set(e.target.value)}
+                    className="w-full h-10 appearance-none rounded-xl border border-border-soft bg-white px-3 pr-8 text-[13px] font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
+                  >
+                    {f.options.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 </div>
               ))}
             </div>
@@ -199,26 +230,28 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
                       )}
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${getTypeStyle(m.type)}`}>
+                          <div className={`h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${m.type === 'VIDEO' ? 'bg-brand-blue/10' : 'bg-surface-2'}`}>
                             {getIconForType(m.type)}
                           </div>
                           <div>
                             <p className="font-bold text-text-primary">{m.title}</p>
-                            <p className="text-[11px] text-text-muted mt-0.5">{m.size}</p>
+                            <p className="text-[11px] text-text-muted mt-0.5">
+                              {m.uploader ? `Uploaded by ${m.uploader.firstName} ${m.uploader.lastName}` : "System Admin"}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${getTypeStyle(m.type)}`}>
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${m.type === 'VIDEO' ? 'border-brand-blue bg-brand-blue/10 text-brand-blue' : 'border-border-soft bg-surface-2 text-text-secondary'}`}>
                           {m.type}
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-xs font-bold text-brand-blue">{m.subject}</p>
-                        <p className="text-[11px] text-text-muted mt-0.5">{m.classLevel}</p>
+                        <p className="text-xs font-bold text-brand-blue">{m.syllabus?.subject?.name || "N/A"}</p>
+                        <p className="text-[11px] text-text-muted mt-0.5">{m.syllabus?.standard?.name || "General"} | {m.syllabus?.board?.name || "No Board"}</p>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-xs font-medium text-text-primary">{m.dateAdded}</p>
+                        <p className="text-xs font-medium text-text-primary">{new Date(m.createdAt).toLocaleDateString()}</p>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button 

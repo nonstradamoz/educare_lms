@@ -23,6 +23,9 @@ model User {
 
   studentProfile StudentProfile?
   teacherProfile TeacherProfile?
+  
+  uploadedMaterials StudyMaterial[]
+  assignmentsUploaded Assignment[]
 
   @@map("users")
 }
@@ -230,6 +233,7 @@ model Batch {
   boardId        String
   standardId     String
   centreId       String
+  track          TrackType @default(BOTH)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -241,6 +245,7 @@ model Batch {
   enrollments    Enrollment[]
   assignments    TeacherAssignment[]
   exams          Exam[]
+  homeworks      Assignment[]
 
   @@map("batches")
 }
@@ -262,6 +267,7 @@ model StudentProfile {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   enrollments Enrollment[]
   feeRecords  FeeRecord[]
+  submissions AssignmentSubmission[]
 
   @@map("student_profiles")
 }
@@ -270,6 +276,7 @@ model Enrollment {
   id               String   @id @default(uuid())
   studentProfileId String
   batchId          String
+  track            TrackType @default(BOTH)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -331,6 +338,8 @@ model Exam {
   boardId        String?
   standardId     String?
   centreId       String?
+  
+  targetTrack    TrackType  @default(BOTH)
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -365,6 +374,9 @@ model StudyMaterial {
   syllabusId     String
   chapterId      String?
   topicId        String?
+  uploaderId     String?
+  
+  targetTrack    TrackType  @default(BOTH)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -372,6 +384,7 @@ model StudyMaterial {
   syllabus       Syllabus     @relation(fields: [syllabusId], references: [id])
   chapter        Chapter?     @relation(fields: [chapterId], references: [id])
   topic          Topic?       @relation(fields: [topicId], references: [id])
+  uploader       User?        @relation(fields: [uploaderId], references: [id])
 
   @@map("study_materials")
 }
@@ -459,3 +472,62 @@ enum FeeStatus {
   PENDING
   OVERDUE
 }
+
+// -----------------------------------------------------------------------------
+// ASSIGNMENTS
+// -----------------------------------------------------------------------------
+
+model Assignment {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?
+  dueDate        DateTime?
+  attachments    Json?    // Optional JSON containing array of { url: string, filename: string }
+  
+  batchId        String?
+  subjectId      String?
+  uploaderId     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  batch          Batch?   @relation(fields: [batchId], references: [id])
+  subject        Subject? @relation(fields: [subjectId], references: [id])
+  uploader       User     @relation(fields: [uploaderId], references: [id])
+  
+  submissions    AssignmentSubmission[]
+
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id             String   @id @default(uuid())
+  assignmentId   String
+  studentId      String
+  attachments    Json?    // Optional JSON containing array of { url: string, filename: string }
+  notes          String?
+  status         SubmissionStatus @default(SUBMITTED)
+  grade          Float?
+  feedback       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  assignment     Assignment     @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@map("assignment_submissions")
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  LATE
+  GRADED
+  RETURNED
+}
+
+enum TrackType {
+  TUITION
+  ENTRANCE
+  BOTH
+}
+

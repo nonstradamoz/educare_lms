@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Delete, Body, Param, UsePipes, ValidationPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UsePipes, ValidationPipe, Query, UseGuards, Req } from '@nestjs/common';
 import { StudyMaterialService } from './study-materials.service';
 import { StorageService } from '../storage/storage.service';
 import { CloudflareService } from '../cloudflare/cloudflare.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false }))
 @Controller('study-materials')
@@ -12,14 +13,17 @@ export class StudyMaterialController {
     private readonly cloudflareService: CloudflareService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  getAll() {
+  getAll(@Req() req: any) {
+    // Optionally filter by req.user.id or roles in the service
     return this.studyMaterialService.getAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() data: any) {
-    return this.studyMaterialService.create(data);
+  create(@Body() data: any, @Req() req: any) {
+    return this.studyMaterialService.create({ ...data, uploaderId: req.user.id });
   }
 
   @Delete(':id')

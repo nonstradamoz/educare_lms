@@ -13,6 +13,9 @@ export class StudyMaterialService {
           syllabus: true,
           chapter: true,
           topic: true,
+          uploader: {
+            select: { id: true, firstName: true, lastName: true, email: true }
+          }
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -53,6 +56,8 @@ export class StudyMaterialService {
           syllabusId,
           chapterId: data.chapterId,
           topicId: data.topicId,
+          uploaderId: data.uploaderId,
+          targetTrack: data.targetTrack || 'BOTH',
         },
       });
     } catch (error) {

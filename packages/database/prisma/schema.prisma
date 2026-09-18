@@ -161,9 +161,10 @@ model Subject {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  syllabi     Syllabus[]
-  assignments TeacherAssignment[]
-  exams       Exam[]
+  syllabi             Syllabus[]
+  teacherAssignments  TeacherAssignment[]
+  studentAssignments  Assignment[]
+  exams               Exam[]
 
   @@map("subjects")
 }

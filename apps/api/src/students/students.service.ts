@@ -78,6 +78,7 @@ export class StudentsService {
           data: {
             studentProfileId: profile.id,
             batchId: batch.id,
+            track: data.track || 'BOTH',
           }
         });
 
@@ -164,12 +165,16 @@ export class StudentsService {
         }
       });
 
-      if (batch) {
+      if (batch || data.track) {
         const enrollment = await prisma.enrollment.findFirst({ where: { studentProfileId: id } });
         if (enrollment) {
+          const updateData: any = {};
+          if (batch) updateData.batchId = batch.id;
+          if (data.track) updateData.track = data.track;
+          
           await prisma.enrollment.update({
             where: { id: enrollment.id },
-            data: { batchId: batch.id }
+            data: updateData
           });
         }
       }

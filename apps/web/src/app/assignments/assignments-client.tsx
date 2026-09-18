@@ -105,6 +105,7 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
   const [subjectId, setSubjectId] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [targetTrack, setTargetTrack] = useState<"TUITION" | "ENTRANCE" | "BOTH">("BOTH");
   
   const [batches, setBatches] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -132,7 +133,7 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
       await fetchApi('/assignments', {
         method: 'POST',
         body: JSON.stringify({
-          title, description, dueDate, batchId, subjectId, attachments: attachments.length > 0 ? attachments : null
+          title, description, dueDate, batchId, subjectId, targetTrack, attachments: attachments.length > 0 ? attachments : null
         })
       });
       onSuccess();
@@ -180,9 +181,28 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5">Due Date</label>
-                <input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-white px-3 text-sm focus:ring-2 focus:ring-brand-blue/20" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-text-secondary mb-1.5">Due Date</label>
+                  <input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-white px-3 text-sm focus:ring-2 focus:ring-brand-blue/20" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-text-secondary mb-1.5">Target Track *</label>
+                  <div className="relative">
+                    <select 
+                      value={targetTrack} 
+                      onChange={(e) => setTargetTrack(e.target.value as any)}
+                      className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-white pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
+                    >
+                      <option value="BOTH">Both (Tuition & Entrance)</option>
+                      <option value="TUITION">Tuition Only</option>
+                      <option value="ENTRANCE">Entrance Only</option>
+                    </select>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown className="h-4 w-4 text-text-muted" />
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="pt-4 flex gap-3">
                 <button onClick={() => setStep(2)} className="w-full py-2.5 text-sm font-bold text-brand-blue bg-brand-blue/10 rounded-lg">Add Attachments</button>

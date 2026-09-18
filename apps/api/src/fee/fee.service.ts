@@ -26,7 +26,8 @@ export class FeeService {
         amount: Number(data.amount),
         status: data.status || 'PAID',
         paymentMode: data.paymentMode,
-        feeHead: data.feeHead
+        feeHead: data.feeHead,
+        targetTrack: data.targetTrack || 'BOTH'
       }
     });
   }

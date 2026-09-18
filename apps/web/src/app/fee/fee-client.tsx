@@ -354,6 +354,23 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1.5">
+                  Target Track <span className="text-brand-red">*</span>
+                </label>
+                <div className="relative">
+                  <select className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20">
+                    <option value="BOTH">Both (Tuition & Entrance)</option>
+                    <option value="TUITION">Tuition Only</option>
+                    <option value="ENTRANCE">Entrance Only</option>
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
+                    <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
+                    <ChevronDown className="h-3 w-3 text-text-muted" />
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

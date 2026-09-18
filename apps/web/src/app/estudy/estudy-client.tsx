@@ -271,9 +271,9 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
 
   // Fetch initial data
   useEffect(() => {
-    fetchApi('/setup/boards').then(setBoards).catch(console.error);
-    fetchApi('/setup/standards').then(setStandards).catch(console.error);
-    fetchApi('/setup/subjects').then(res => {
+    fetchApi('/setup/boards').then((data: any) => setBoards(data)).catch(console.error);
+    fetchApi('/setup/standards').then((data: any) => setStandards(data)).catch(console.error);
+    fetchApi('/setup/subjects').then((res: any) => {
       setSubjectsList(res);
       if (res.length > 0) setSubject(res[0].id);
     }).catch(console.error);
@@ -282,7 +282,7 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
   // Fetch chapters when subject changes
   useEffect(() => {
     if (subject) {
-      fetchApi(`/setup/chapters?subjectId=${subject}`).then(setChapters).catch(console.error);
+      fetchApi(`/setup/chapters?subjectId=${subject}`).then((data: any) => setChapters(data)).catch(console.error);
       setSelectedChapter("");
       setSelectedTopic("");
     } else {
@@ -293,7 +293,7 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
   // Fetch topics when chapter changes
   useEffect(() => {
     if (selectedChapter) {
-      fetchApi(`/setup/topics?chapterId=${selectedChapter}`).then(setTopics).catch(console.error);
+      fetchApi(`/setup/topics?chapterId=${selectedChapter}`).then((data: any) => setTopics(data)).catch(console.error);
       setSelectedTopic("");
     } else {
       setTopics([]);

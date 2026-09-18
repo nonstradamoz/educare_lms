@@ -24,13 +24,33 @@ export class StudyMaterialService {
 
   async create(data: any) {
     try {
+      let { academicYearId, syllabusId } = data;
+
+      // Handle dummy values for testing
+      if (academicYearId === "dummy-academic-year" || !academicYearId) {
+        const year = await this.prisma.academicYear.findFirst();
+        academicYearId = year?.id;
+      }
+      
+      if (syllabusId === "dummy-syllabus-id" || !syllabusId) {
+        let syllabus = await this.prisma.syllabus.findFirst();
+        if (!syllabus) {
+           // create a dummy board, standard, subject, and syllabus if none exist
+           const board = await this.prisma.board.findFirst() || await this.prisma.board.create({ data: { name: 'Dummy Board' } });
+           const standard = await this.prisma.standard.findFirst() || await this.prisma.standard.create({ data: { name: 'Dummy Standard' } });
+           const subject = await this.prisma.subject.findFirst() || await this.prisma.subject.create({ data: { name: 'Dummy Subject' } });
+           syllabus = await this.prisma.syllabus.create({ data: { boardId: board.id, standardId: standard.id, subjectId: subject.id } });
+        }
+        syllabusId = syllabus.id;
+      }
+
       return await this.prisma.studyMaterial.create({
         data: {
           title: data.title,
           type: data.type,
           url: data.url,
-          academicYearId: data.academicYearId,
-          syllabusId: data.syllabusId,
+          academicYearId,
+          syllabusId,
           chapterId: data.chapterId,
           topicId: data.topicId,
         },

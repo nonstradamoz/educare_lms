@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { BookOpen, Plus, Search, Filter, ChevronRight, ChevronDown, FileText, Video, Link as LinkIcon, Download, X, Play, ExternalLink, Loader2 } from "lucide-react";
@@ -256,6 +256,50 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
+  // Hierarchy State
+  const [boards, setBoards] = useState<any[]>([]);
+  const [standards, setStandards] = useState<any[]>([]);
+  const [subjectsList, setSubjectsList] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
+
+  const [selectedBoard, setSelectedBoard] = useState("");
+  const [selectedStandard, setSelectedStandard] = useState("");
+  const [subject, setSubject] = useState("");
+  const [selectedChapter, setSelectedChapter] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("");
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchApi('/setup/boards').then(setBoards).catch(console.error);
+    fetchApi('/setup/standards').then(setStandards).catch(console.error);
+    fetchApi('/setup/subjects').then(res => {
+      setSubjectsList(res);
+      if (res.length > 0) setSubject(res[0].id);
+    }).catch(console.error);
+  }, []);
+
+  // Fetch chapters when subject changes
+  useEffect(() => {
+    if (subject) {
+      fetchApi(`/setup/chapters?subjectId=${subject}`).then(setChapters).catch(console.error);
+      setSelectedChapter("");
+      setSelectedTopic("");
+    } else {
+      setChapters([]);
+    }
+  }, [subject]);
+
+  // Fetch topics when chapter changes
+  useEffect(() => {
+    if (selectedChapter) {
+      fetchApi(`/setup/topics?chapterId=${selectedChapter}`).then(setTopics).catch(console.error);
+      setSelectedTopic("");
+    } else {
+      setTopics([]);
+    }
+  }, [selectedChapter]);
+
   const handleUploadSuccess = async (url: string, videoId?: string) => {
     setSaving(true);
     try {
@@ -265,8 +309,13 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
           title,
           type: type === "VIDEO" ? "VIDEO" : type,
           url: type === "VIDEO" ? videoId : url,
-          academicYearId: "dummy-academic-year", // Update when dropdowns are added
-          syllabusId: "dummy-syllabus-id"
+          boardId: selectedBoard || undefined,
+          standardId: selectedStandard || undefined,
+          subjectId: subject || undefined,
+          chapterId: selectedChapter || undefined,
+          topicId: selectedTopic || undefined,
+          // Remove dummy syllabus/academicYear ids so backend handles fallback,
+          // or ideally, these should also be selected by the user.
         })
       });
       onSuccess();
@@ -322,6 +371,53 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                     ))}
                   </div>
                 </div>
+
+                <div className="p-4 rounded-xl border border-border-soft bg-surface-2/30 space-y-4">
+                  <h4 className="text-xs font-bold text-text-primary">Target Audience</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Board (Optional)</label>
+                      <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                        <option value="">Select Board</option>
+                        {boards.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Class (Optional)</label>
+                      <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                        <option value="">Select Class</option>
+                        {standards.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-border-soft bg-brand-blue/5 space-y-4">
+                  <h4 className="text-xs font-bold text-text-primary text-brand-blue">Subject Matter</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Subject *</label>
+                      <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                        {subjectsList.length === 0 ? <option value="">Loading...</option> : subjectsList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Chapter</label>
+                      <select value={selectedChapter} onChange={(e) => setSelectedChapter(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                        <option value="">Select Chapter</option>
+                        {chapters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Topic</label>
+                      <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                        <option value="">Select Topic</option>
+                        {topics.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   onClick={() => title.trim() ? setStep(2) : setError("Title is required")}
                   className="w-full py-2.5 text-sm font-bold text-white bg-brand-blue hover:bg-brand-blue-dark rounded-lg mt-2 transition-colors"

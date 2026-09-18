@@ -223,9 +223,17 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
                       <td className="px-6 py-4 text-right">
                         <button 
                           onClick={() => {
-                            if (m.type === "Video" && m.url) {
-                              window.open(`https://customer-${process.env.NEXT_PUBLIC_CLOUDFLARE_CUSTOMER_CODE || "your-code"}.cloudflarestream.com/${m.url}/iframe`, '_blank');
-                            } else if (m.type === "Link" && m.url) {
+                            if (!m.url) return;
+                            if (m.type === "Video") {
+                              if (m.url.includes('http')) {
+                                // Fallback if video is stored in R2 directly
+                                window.open(m.url, '_blank');
+                              } else {
+                                // Cloudflare Stream ID
+                                window.open(`https://customer-${process.env.NEXT_PUBLIC_CLOUDFLARE_CUSTOMER_CODE || "your-code"}.cloudflarestream.com/${m.url}/iframe`, '_blank');
+                              }
+                            } else {
+                              // PDFs, Links, Documents
                               window.open(m.url, '_blank');
                             }
                           }}

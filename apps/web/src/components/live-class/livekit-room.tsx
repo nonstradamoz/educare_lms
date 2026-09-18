@@ -16,6 +16,8 @@ import { Track } from "livekit-client";
 import "@livekit/components-styles";
 import { fetchApi } from "@/lib/api";
 import { Loader2, WifiOff } from "lucide-react";
+import { Tldraw } from 'tldraw'
+import 'tldraw/tldraw.css'
 
 interface LiveKitRoomProps {
   roomId: string;
@@ -49,6 +51,8 @@ export function LiveKitClassRoom({ roomId, identity, name, role, onLeave }: Live
     fetchToken();
   }, [fetchToken]);
 
+  const [showWhiteboard, setShowWhiteboard] = useState(false);
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-white">
@@ -81,11 +85,31 @@ export function LiveKitClassRoom({ roomId, identity, name, role, onLeave }: Live
       video={role !== "STUDENT"}
       audio={role !== "STUDENT"}
       onDisconnected={onLeave}
-      className="h-full w-full"
+      className="h-full w-full relative flex"
       style={{ "--lk-bg": "#0f0f1a" } as React.CSSProperties}
     >
-      <VideoConference />
-      <RoomAudioRenderer />
+      <div className={`flex-1 transition-all ${showWhiteboard ? 'w-1/3 border-r border-white/10' : 'w-full'}`}>
+        <VideoConference />
+        <RoomAudioRenderer />
+      </div>
+      
+      {showWhiteboard && (
+        <div className="w-2/3 h-full bg-white relative">
+          <Tldraw persistenceKey={`educare-whiteboard-${roomId}`} />
+        </div>
+      )}
+
+      {/* Custom Control overlay for Teacher */}
+      {role !== 'STUDENT' && (
+        <div className="absolute top-4 right-4 z-50">
+          <button 
+            onClick={() => setShowWhiteboard(!showWhiteboard)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold shadow-lg transition-colors ${showWhiteboard ? 'bg-brand-red text-white hover:bg-brand-red/90' : 'bg-brand-blue text-white hover:bg-brand-blue/90'}`}
+          >
+            {showWhiteboard ? 'Close Whiteboard' : 'Open Whiteboard'}
+          </button>
+        </div>
+      )}
     </LiveKitRoom>
   );
 }

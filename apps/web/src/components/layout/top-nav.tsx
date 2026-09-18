@@ -11,10 +11,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTrack } from "@/components/providers/track-provider";
 import { useAuth } from "@/components/providers/auth-provider";
 
 export function TopNav({ title = "Dashboard" }: { title?: string }) {
   const { email, role } = useAuth();
+  const { track, setTrack } = useTrack();
   
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border-soft bg-white px-6">
@@ -22,6 +24,22 @@ export function TopNav({ title = "Dashboard" }: { title?: string }) {
       <div>
         <h1 className="text-base font-semibold text-text-primary tracking-tight">{title}</h1>
         <p className="text-xs text-text-muted mt-0.5">Educare Kalathipady</p>
+      </div>
+
+      {/* Center - Track Toggle */}
+      <div className="hidden md:flex items-center bg-surface-2 p-1 rounded-lg border border-border-soft">
+        <button
+          onClick={() => setTrack('TUITION')}
+          className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${track === 'TUITION' ? 'bg-white text-brand-blue shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
+        >
+          Tuition
+        </button>
+        <button
+          onClick={() => setTrack('ENTRANCE')}
+          className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${track === 'ENTRANCE' ? 'bg-white text-brand-blue shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
+        >
+          Entrance
+        </button>
       </div>
 
       {/* Right */}

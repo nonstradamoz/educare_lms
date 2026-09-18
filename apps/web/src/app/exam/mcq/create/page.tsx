@@ -34,6 +34,8 @@ export default function CreateExamPage() {
     correct: 0, 
     imageUrl: "", 
     explanation: "",
+    marks: 4,
+    negativeMarks: 1,
     isUploadingImage: false 
   }]);
 
@@ -50,6 +52,8 @@ export default function CreateExamPage() {
     correct: 0, 
     imageUrl: "", 
     explanation: "", 
+    marks: 4,
+    negativeMarks: 1,
     isUploadingImage: false 
   }]);
   const removeQuestion = (i: number) => setQuestions((p) => p.filter((_, idx) => idx !== i));
@@ -132,13 +136,14 @@ export default function CreateExamPage() {
             explanation: q.explanation || undefined,
             options: q.options.map(o => ({ text: o.text, imageUrl: o.imageUrl || undefined })),
             correctOption: q.options[q.correct].text,
-            marks: 1,
+            marks: Number(q.marks),
+            negativeMarks: Number(q.negativeMarks),
             examId: exam.id
           })
         });
       }
       alert('Exam saved successfully!');
-      router.push('/exam');
+      router.push('/exams');
     } catch (e) {
       console.error(e);
       alert('Failed to save exam');
@@ -375,13 +380,35 @@ export default function CreateExamPage() {
                     ))}
                   </div>
 
-                  <div>
-                    <input 
-                      value={q.explanation || ''} 
-                      onChange={(e) => updateQ(qi, "explanation", e.target.value)} 
-                      placeholder="Explanation (Optional - shown after test)" 
-                      className="w-full h-8 rounded-lg border border-border-soft bg-surface-2 px-3 text-xs placeholder:text-text-muted/60 focus:outline-none focus:ring-1 focus:ring-brand-blue/25" 
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                    <div className="md:col-span-2">
+                      <input 
+                        value={q.explanation || ''} 
+                        onChange={(e) => updateQ(qi, "explanation", e.target.value)} 
+                        placeholder="Explanation (Optional - shown after test)" 
+                        className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-xs placeholder:text-text-muted/60 focus:outline-none focus:ring-1 focus:ring-brand-blue/25" 
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-bold text-text-muted mb-1 uppercase">Marks (+)</label>
+                        <input 
+                          type="number"
+                          value={q.marks} 
+                          onChange={(e) => updateQ(qi, "marks", e.target.value)} 
+                          className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm font-bold text-brand-green focus:outline-none focus:ring-1 focus:ring-brand-blue/25" 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-bold text-text-muted mb-1 uppercase">Negative (-)</label>
+                        <input 
+                          type="number"
+                          value={q.negativeMarks} 
+                          onChange={(e) => updateQ(qi, "negativeMarks", e.target.value)} 
+                          className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm font-bold text-brand-red focus:outline-none focus:ring-1 focus:ring-brand-blue/25" 
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

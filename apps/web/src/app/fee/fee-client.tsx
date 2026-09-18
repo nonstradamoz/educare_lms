@@ -31,7 +31,7 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
   const refresh = async () => {
     try {
       const data = await fetchApi('/fee');
-      setFees(data);
+      setFees(data as FeeRecord[]);
     } catch (e) {
       console.error(e);
     }
@@ -272,7 +272,7 @@ function CollectFeeModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
   useEffect(() => {
     fetchApi('/students').then(data => {
-      setStudents(data);
+      setStudents(data as any[]);
     }).catch(console.error);
   }, []);
 

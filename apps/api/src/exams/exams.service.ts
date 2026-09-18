@@ -68,7 +68,7 @@ export class ExamsService {
   }
 
   async createMcqQuestion(data: any): Promise<any> {
-    const { questionText, imageUrl, options, correctOption, explanation, marks, examId } = data;
+    const { questionText, imageUrl, options, correctOption, explanation, marks, negativeMarks, examId } = data;
     return this.prisma.mcqQuestion.create({
       data: {
         questionText,
@@ -76,7 +76,8 @@ export class ExamsService {
         options,
         correctOption,
         explanation,
-        marks,
+        marks: marks !== undefined ? Number(marks) : 4.0,
+        negativeMarks: negativeMarks !== undefined ? Number(negativeMarks) : 1.0,
         examId,
       }
     });

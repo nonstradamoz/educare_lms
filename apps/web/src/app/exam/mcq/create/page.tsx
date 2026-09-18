@@ -25,7 +25,12 @@ export default function CreateExamPage() {
   const [instructions, setInstructions] = useState("Read all questions carefully.");
   const [questions, setQuestions] = useState([{ 
     text: "", 
-    options: ["", "", "", ""], 
+    options: [
+      { text: "", imageUrl: "", isUploading: false },
+      { text: "", imageUrl: "", isUploading: false },
+      { text: "", imageUrl: "", isUploading: false },
+      { text: "", imageUrl: "", isUploading: false }
+    ], 
     correct: 0, 
     imageUrl: "", 
     explanation: "",
@@ -34,24 +39,69 @@ export default function CreateExamPage() {
 
   const [saving, setSaving] = useState(false);
 
-  const addQuestion = () => setQuestions((p) => [...p, { text: "", options: ["", "", "", ""], correct: 0, imageUrl: "", explanation: "", isUploadingImage: false }]);
+  const addQuestion = () => setQuestions((p) => [...p, { 
+    text: "", 
+    options: [
+      { text: "", imageUrl: "", isUploading: false },
+      { text: "", imageUrl: "", isUploading: false },
+      { text: "", imageUrl: "", isUploading: false },
+      { text: "", imageUrl: "", isUploading: false }
+    ], 
+    correct: 0, 
+    imageUrl: "", 
+    explanation: "", 
+    isUploadingImage: false 
+  }]);
   const removeQuestion = (i: number) => setQuestions((p) => p.filter((_, idx) => idx !== i));
   const updateQ = (i: number, field: string, val: unknown) => {
     setQuestions((prev) => prev.map((q, idx) => idx === i ? { ...q, [field]: val } : q));
   };
-  const updateOption = (qi: number, oi: number, val: string) => {
+  const updateOption = (qi: number, oi: number, field: 'text' | 'imageUrl' | 'isUploading', val: any) => {
     setQuestions((prev) => prev.map((q, idx) => {
       if (idx !== qi) return q;
       const opts = [...q.options];
-      opts[oi] = val;
+      opts[oi] = { ...opts[oi], [field]: val };
       return { ...q, options: opts };
     }));
   };
 
   const [years, setYears] = useState<any[]>([]);
+  const [boards, setBoards] = useState<any[]>([]);
+  const [standards, setStandards] = useState<any[]>([]);
+  const [centres, setCentres] = useState<any[]>([]);
+  const [subjectsList, setSubjectsList] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<any[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
+
+  const [selectedBoard, setSelectedBoard] = useState("");
+  const [selectedStandard, setSelectedStandard] = useState("");
+  const [selectedCentre, setSelectedCentre] = useState("");
+  const [selectedChapter, setSelectedChapter] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("");
+
   useEffect(() => {
-    fetchApi<any[]>('/setup/academic-years').then(setYears).catch(console.error);
+    Promise.all([
+      fetchApi<any[]>('/setup/academic-years'),
+      fetchApi<any[]>('/setup/boards'),
+      fetchApi<any[]>('/setup/standards'),
+      fetchApi<any[]>('/setup/centres'),
+      fetchApi<any[]>('/setup/subjects')
+    ]).then(([y, b, st, c, su]) => {
+      setYears(y);
+      setBoards(b);
+      setStandards(st);
+      setCentres(c);
+      setSubjectsList(su);
+      if (su.length > 0) setSubject(su[0].name);
+    }).catch(console.error);
   }, []);
+
+  // When subject, board, standard change, we could theoretically fetch the specific syllabus and then chapters
+  // For simplicity, we just fetch all chapters and topics, but in a real app this would cascade based on syllabusId
+  useEffect(() => {
+    fetchApi<any[]>('/setup/chapters').then(setChapters).catch(console.error);
+    fetchApi<any[]>('/setup/topics').then(setTopics).catch(console.error);
+  }, [subject, selectedBoard, selectedStandard]);
 
   const handleSave = async () => {
     if (!title) return alert("Please enter a title");
@@ -63,8 +113,12 @@ export default function CreateExamPage() {
           title,
           type,
           academicYearId: years[0]?.id || "dummy",
-          subjectId: "dummy"
-          // We can attach centreId, boardId, etc here if selected in UI
+          subjectId: subject || "dummy",
+          centreId: selectedCentre || undefined,
+          boardId: selectedBoard || undefined,
+          standardId: selectedStandard || undefined,
+          chapterId: selectedChapter || undefined,
+          topicId: selectedTopic || undefined,
         })
       });
       
@@ -76,8 +130,8 @@ export default function CreateExamPage() {
             questionText: q.text,
             imageUrl: q.imageUrl || undefined,
             explanation: q.explanation || undefined,
-            options: q.options,
-            correctOption: q.options[q.correct],
+            options: q.options.map(o => ({ text: o.text, imageUrl: o.imageUrl || undefined })),
+            correctOption: q.options[q.correct].text,
             marks: 1,
             examId: exam.id
           })
@@ -122,8 +176,9 @@ export default function CreateExamPage() {
           <div className="max-w-3xl mx-auto space-y-6">
 
             {/* Exam Details */}
-            <div className="bg-white rounded-xl border border-border-soft shadow-sm p-6 space-y-4">
+            <div className="bg-white rounded-xl border border-border-soft shadow-sm p-6 space-y-6">
               <h3 className="text-sm font-semibold text-text-primary border-b border-border-soft pb-3">Exam Details</h3>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-text-secondary mb-1.5">Exam Title</label>
@@ -136,13 +191,63 @@ export default function CreateExamPage() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-text-secondary mb-1.5">Subject</label>
-                  <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                    {SUBJECTS.map((s) => <option key={s}>{s}</option>)}
-                  </select>
+
+              {/* Target Audience Hierarchy */}
+              <div className="p-4 rounded-xl border border-border-soft bg-surface-2/30 space-y-4">
+                <h4 className="text-xs font-bold text-text-primary">Target Audience</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Centre</label>
+                    <select value={selectedCentre} onChange={(e) => setSelectedCentre(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                      <option value="">All Centres</option>
+                      {centres.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Board</label>
+                    <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                      <option value="">All Boards</option>
+                      {boards.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Class / Standard</label>
+                    <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                      <option value="">All Classes</option>
+                      {standards.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
                 </div>
+              </div>
+
+              {/* Subject Matter Hierarchy */}
+              <div className="p-4 rounded-xl border border-border-soft bg-brand-blue/5 space-y-4">
+                <h4 className="text-xs font-bold text-text-primary text-brand-blue">Subject Matter</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Subject</label>
+                    <select value={subject} onChange={(e) => setSubject(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                      {subjectsList.length === 0 ? <option value="dummy">Loading...</option> : subjectsList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Chapter (Optional)</label>
+                    <select value={selectedChapter} onChange={(e) => setSelectedChapter(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                      <option value="">Entire Subject</option>
+                      {chapters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Topic (Optional)</label>
+                    <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                      <option value="">Entire Chapter</option>
+                      {topics.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-text-secondary mb-1.5">Duration (minutes)</label>
                   <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" />
@@ -217,21 +322,55 @@ export default function CreateExamPage() {
                     {q.options.map((opt, oi) => (
                       <div
                         key={oi}
-                        className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 transition-colors ${q.correct === oi ? "border-success/40 bg-success/5 shadow-[0_0_0_1px_rgba(var(--success-rgb),0.1)]" : "border-border-soft bg-surface-2"}`}
+                        className={`flex flex-col gap-2 rounded-lg border px-3 py-2.5 transition-colors ${q.correct === oi ? "border-success/40 bg-success/5 shadow-[0_0_0_1px_rgba(var(--success-rgb),0.1)]" : "border-border-soft bg-surface-2"}`}
                       >
-                        <button
-                          type="button"
-                          onClick={() => updateQ(qi, "correct", oi)}
-                          className={`h-5 w-5 rounded-full border-2 shrink-0 flex items-center justify-center text-[9px] font-bold transition-all ${q.correct === oi ? "border-success bg-success text-white" : "border-border-soft text-text-muted hover:border-success/50"}`}
-                        >
-                          {String.fromCharCode(65 + oi)}
-                        </button>
-                        <input
-                          value={opt}
-                          onChange={(e) => updateOption(qi, oi, e.target.value)}
-                          placeholder={`Option ${String.fromCharCode(65 + oi)}`}
-                          className="flex-1 bg-transparent text-sm placeholder:text-text-muted focus:outline-none"
-                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => updateQ(qi, "correct", oi)}
+                            className={`h-5 w-5 rounded-full border-2 shrink-0 flex items-center justify-center text-[9px] font-bold transition-all ${q.correct === oi ? "border-success bg-success text-white" : "border-border-soft text-text-muted hover:border-success/50"}`}
+                          >
+                            {String.fromCharCode(65 + oi)}
+                          </button>
+                          <input
+                            value={opt.text}
+                            onChange={(e) => updateOption(qi, oi, 'text', e.target.value)}
+                            placeholder={`Option ${String.fromCharCode(65 + oi)}`}
+                            className="flex-1 bg-transparent text-sm placeholder:text-text-muted focus:outline-none"
+                          />
+                          <button 
+                            onClick={() => updateOption(qi, oi, 'isUploading', true)}
+                            className={`p-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1 ${opt.imageUrl || opt.isUploading ? 'bg-brand-blue/10 text-brand-blue' : 'text-text-muted hover:bg-surface-2'}`}
+                          >
+                            <ImageIcon className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        
+                        {opt.isUploading && !opt.imageUrl && (
+                          <div className="mt-2">
+                            <FileUploader 
+                              type="FILE"
+                              onUploadSuccess={(url) => {
+                                updateOption(qi, oi, 'imageUrl', url);
+                                updateOption(qi, oi, 'isUploading', false);
+                              }}
+                              onUploadError={(e) => alert(e)}
+                              onCancel={() => updateOption(qi, oi, 'isUploading', false)}
+                            />
+                          </div>
+                        )}
+
+                        {opt.imageUrl && (
+                          <div className="relative rounded-lg border border-border-soft p-1 w-max mt-2 ml-7 group">
+                            <img src={opt.imageUrl} alt={`Option ${String.fromCharCode(65 + oi)}`} className="h-20 object-contain rounded" />
+                            <button 
+                              onClick={() => updateOption(qi, oi, 'imageUrl', "")}
+                              className="absolute top-1 right-1 p-1 bg-white rounded shadow-sm text-brand-red opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

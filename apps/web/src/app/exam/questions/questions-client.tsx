@@ -13,12 +13,14 @@ interface Question {
   id: string;
   question: string;
   imageUrl?: string;
-  options: string[];
+  options: any[];
   correct: number;
   classLevel: string;
   subject: string;
   topic: string;
   difficulty: string;
+  marks?: number;
+  negativeMarks?: number;
 }
 
 export function QuestionsClient({ initialQuestions, initialSubjects, initialClasses, initialTopics }: { initialQuestions: Question[], initialSubjects: any[], initialClasses: any[], initialTopics: any[] }) {
@@ -152,23 +154,34 @@ export function QuestionsClient({ initialQuestions, initialSubjects, initialClas
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-2">
-                      {q.options.map((opt, j) => (
-                        <div
-                          key={j}
-                          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
-                            j === q.correct
-                              ? "bg-success/8 border border-success/20 text-success font-semibold"
-                              : "bg-surface-2 border border-border-soft text-text-secondary"
-                          }`}
-                        >
-                          <span className={`h-4 w-4 rounded-full border text-[9px] flex items-center justify-center font-bold shrink-0 ${
-                            j === q.correct ? "border-success bg-success text-white" : "border-border-soft"
-                          }`}>
-                            {String.fromCharCode(65 + j)}
-                          </span>
-                          {opt}
-                        </div>
-                      ))}
+                      {q.options.map((opt, j) => {
+                        const optText = typeof opt === 'string' ? opt : opt.text;
+                        const optImg = typeof opt === 'string' ? null : opt.imageUrl;
+                        return (
+                          <div
+                            key={j}
+                            className={`flex flex-col gap-2 rounded-lg px-3 py-2 text-xs ${
+                              j === q.correct
+                                ? "bg-success/8 border border-success/20 text-success font-semibold"
+                                : "bg-surface-2 border border-border-soft text-text-secondary"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={`h-4 w-4 rounded-full border text-[9px] flex items-center justify-center font-bold shrink-0 ${
+                                j === q.correct ? "border-success bg-success text-white" : "border-border-soft"
+                              }`}>
+                                {String.fromCharCode(65 + j)}
+                              </span>
+                              {optText}
+                            </div>
+                            {optImg && (
+                              <div className="ml-6">
+                                <img src={optImg} alt={`Option ${String.fromCharCode(65 + j)}`} className="h-16 object-contain rounded" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -194,7 +207,12 @@ export function QuestionsClient({ initialQuestions, initialSubjects, initialClas
 /* ── Add Question Modal ── */
 function AddQuestionModal({ onClose, onAdd, subjects, classes, topics }: { onClose: () => void; onAdd: (q: Question) => void; subjects: any[]; classes: any[]; topics: any[] }) {
   const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", "", "", ""]);
+  const [options, setOptions] = useState([
+    { text: "", imageUrl: "", isUploading: false },
+    { text: "", imageUrl: "", isUploading: false },
+    { text: "", imageUrl: "", isUploading: false },
+    { text: "", imageUrl: "", isUploading: false }
+  ]);
   const [correct, setCorrect] = useState(0);
   const [classLevel, setClassLevel] = useState(classes[0]?.name || "");
   const [subject, setSubject] = useState(subjects[0]?.name || "");
@@ -202,25 +220,29 @@ function AddQuestionModal({ onClose, onAdd, subjects, classes, topics }: { onClo
   const [difficulty, setDifficulty] = useState(DIFFICULTY[0]);
   const [imageUrl, setImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [marks, setMarks] = useState(4);
+  const [negativeMarks, setNegativeMarks] = useState(1);
 
-  const updateOption = (i: number, val: string) => {
+  const updateOption = (i: number, field: 'text' | 'imageUrl' | 'isUploading', val: any) => {
     const next = [...options];
-    next[i] = val;
+    next[i] = { ...next[i], [field]: val };
     setOptions(next);
   };
 
   const handleSave = () => {
-    if (!question || options.some((o) => !o)) return;
+    if (!question || options.some((o) => typeof o === 'string' ? !o : !o.text)) return;
     onAdd({
       id: `q${Date.now()}`,
       question,
       imageUrl: imageUrl || undefined,
-      options,
+      options: options.map(o => ({ text: o.text, imageUrl: o.imageUrl || undefined })),
       correct,
       classLevel,
       subject,
       topic,
       difficulty,
+      marks,
+      negativeMarks,
     });
   };
 
@@ -257,6 +279,14 @@ function AddQuestionModal({ onClose, onAdd, subjects, classes, topics }: { onClo
               <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
                 {DIFFICULTY.map((d) => <option key={d}>{d}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Marks (+)</label>
+              <input type="number" step="0.5" value={marks} onChange={(e) => setMarks(Number(e.target.value))} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">Negative (-)</label>
+              <input type="number" step="0.5" value={negativeMarks} onChange={(e) => setNegativeMarks(Number(e.target.value))} className="w-full h-9 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" />
             </div>
           </div>
           {/* Question */}
@@ -302,11 +332,43 @@ function AddQuestionModal({ onClose, onAdd, subjects, classes, topics }: { onClo
             <label className="block text-xs font-semibold text-text-secondary mb-2">Answer Options <span className="text-text-muted font-normal">(select the correct one)</span></label>
             <div className="space-y-2">
               {options.map((opt, i) => (
-                <div key={i} className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${correct === i ? "border-success/40 bg-success/5" : "border-border-soft bg-surface-2"}`}>
-                  <button type="button" onClick={() => setCorrect(i)} className={`h-5 w-5 rounded-full border-2 shrink-0 flex items-center justify-center text-[9px] font-bold transition-colors ${correct === i ? "border-success bg-success text-white" : "border-border-soft text-text-muted"}`}>
-                    {String.fromCharCode(65 + i)}
-                  </button>
-                  <input value={opt} onChange={(e) => updateOption(i, e.target.value)} placeholder={`Option ${String.fromCharCode(65 + i)}`} className="flex-1 bg-transparent text-sm placeholder:text-text-muted focus:outline-none" />
+                <div key={i} className={`flex flex-col gap-2 rounded-lg border px-3 py-2 ${correct === i ? "border-success/40 bg-success/5" : "border-border-soft bg-surface-2"}`}>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setCorrect(i)} className={`h-5 w-5 rounded-full border-2 shrink-0 flex items-center justify-center text-[9px] font-bold transition-colors ${correct === i ? "border-success bg-success text-white" : "border-border-soft text-text-muted"}`}>
+                      {String.fromCharCode(65 + i)}
+                    </button>
+                    <input value={opt.text} onChange={(e) => updateOption(i, 'text', e.target.value)} placeholder={`Option ${String.fromCharCode(65 + i)}`} className="flex-1 bg-transparent text-sm placeholder:text-text-muted focus:outline-none" />
+                    <button 
+                      onClick={() => updateOption(i, 'isUploading', true)}
+                      className={`p-1.5 rounded-lg transition-colors text-xs font-medium flex items-center gap-1 ${opt.imageUrl || opt.isUploading ? 'bg-brand-blue/10 text-brand-blue' : 'text-text-muted hover:bg-surface-2'}`}
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  
+                  {opt.isUploading && !opt.imageUrl && (
+                    <FileUploader 
+                      type="FILE"
+                      onUploadSuccess={(url) => {
+                        updateOption(i, 'imageUrl', url);
+                        updateOption(i, 'isUploading', false);
+                      }}
+                      onUploadError={(e) => alert(e)}
+                      onCancel={() => updateOption(i, 'isUploading', false)}
+                    />
+                  )}
+
+                  {opt.imageUrl && (
+                    <div className="relative rounded-lg border border-border-soft p-1 w-max group ml-7">
+                      <img src={opt.imageUrl} alt={`Option ${String.fromCharCode(65 + i)}`} className="h-20 object-contain rounded" />
+                      <button 
+                        onClick={() => updateOption(i, 'imageUrl', "")}
+                        className="absolute top-1 right-1 p-1 bg-white rounded shadow-sm text-brand-red opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

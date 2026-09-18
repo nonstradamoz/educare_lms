@@ -391,7 +391,8 @@ model McqQuestion {
   options       Json
   correctOption String
   explanation   String?
-  marks         Int      @default(1)
+  marks         Float    @default(4)
+  negativeMarks Float    @default(1)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   

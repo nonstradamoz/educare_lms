@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { SetupService } from './setup.service';
 
 @Controller('setup')
@@ -46,5 +46,45 @@ export class SetupController {
   createStandard(@Body() data: any) {
     if (data.level) data.level = Number(data.level);
     return this.setupService.createStandard(data);
+  }
+
+  @Get('subjects')
+  getSubjects() {
+    return this.setupService.getSubjects();
+  }
+
+  @Post('subjects')
+  createSubject(@Body() data: any) {
+    return this.setupService.createSubject(data);
+  }
+
+  @Get('syllabi')
+  getSyllabi() {
+    return this.setupService.getSyllabi();
+  }
+
+  @Post('syllabi')
+  createSyllabus(@Body() data: any) {
+    return this.setupService.createSyllabus(data);
+  }
+
+  @Get('chapters')
+  getChapters(@Query('syllabusId') syllabusId?: string) {
+    return this.setupService.getChapters(syllabusId);
+  }
+
+  @Post('chapters')
+  createChapter(@Body() data: any) {
+    return this.setupService.createChapter(data);
+  }
+
+  @Get('topics')
+  getTopics(@Query('chapterId') chapterId?: string) {
+    return this.setupService.getTopics(chapterId);
+  }
+
+  @Post('topics')
+  createTopic(@Body() data: any) {
+    return this.setupService.createTopic(data);
   }
 }

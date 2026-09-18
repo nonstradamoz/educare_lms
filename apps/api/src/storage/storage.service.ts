@@ -10,10 +10,14 @@ export class StorageService {
 
   constructor() {
     const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-    this.bucketName = process.env.R2_BUCKET_NAME || 'educare-materials';
-    this.publicUrl = process.env.R2_PUBLIC_URL || '';
+    const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
+    this.bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME || 'educare-materials';
+    this.publicUrl = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN || '';
+    
+    if (this.publicUrl && !this.publicUrl.startsWith('http')) {
+      this.publicUrl = `https://${this.publicUrl}`;
+    }
 
     if (!accountId || !accessKeyId || !secretAccessKey) {
       console.warn('⚠️ Cloudflare R2 credentials are not fully configured. File uploads will fail.');

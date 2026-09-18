@@ -20,7 +20,7 @@ export class ExamsService {
   }
 
   async createExam(data: any) {
-    let { title, type, academicYearId, batchId, subjectId, chapterId, topicId, boardId, standardId, centreId } = data;
+    let { title, type, academicYearId, batchId, subjectId, chapterId, topicId, boardId, standardId, centreId, targetTrack } = data;
     
     // Ensure we have a valid academicYear
     if (academicYearId === "dummy") {
@@ -56,6 +56,7 @@ export class ExamsService {
         boardId: boardId || undefined,
         standardId: standardId || undefined,
         centreId: centreId || undefined,
+        targetTrack: targetTrack || 'BOTH',
       }
     });
   }

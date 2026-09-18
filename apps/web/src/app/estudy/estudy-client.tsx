@@ -22,6 +22,7 @@ export interface Material {
   chapter?: { name: string };
   topic?: { name: string };
   uploader?: { firstName: string, lastName: string, email: string };
+  targetTrack?: string;
   createdAt: string;
 }
 
@@ -39,6 +40,7 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
   const [filterClass, setFilterClass] = useState("All Classes");
   const [filterSubject, setFilterSubject] = useState("All Subjects");
   const [filterType, setFilterType] = useState("All Types");
+  const [filterTrack, setFilterTrack] = useState("All Tracks");
   const [sortBy, setSortBy] = useState("Date Added (Newest First)");
   const [showModal, setShowModal] = useState(false);
   const { role } = useAuth();
@@ -64,7 +66,8 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
     const matchClass = filterClass === "All Classes" || className === filterClass;
     const matchSubject = filterSubject === "All Subjects" || subjName === filterSubject;
     const matchType = filterType === "All Types" || m.type === filterType;
-    return matchSearch && matchBoard && matchClass && matchSubject && matchType;
+    const matchTrack = filterTrack === "All Tracks" || m.targetTrack === filterTrack;
+    return matchSearch && matchBoard && matchClass && matchSubject && matchType && matchTrack;
   });
 
   const sortedMaterials = [...filtered].sort((a, b) => {
@@ -161,6 +164,7 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {[
+                { label: "Track", state: filterTrack, set: setFilterTrack, options: ["All Tracks", "TUITION", "ENTRANCE"] },
                 { label: "Board", state: filterBoard, set: setFilterBoard, options: ["All Boards", ...boards.map(b => b.name)] },
                 { label: "Class", state: filterClass, set: setFilterClass, options: ["All Classes", ...standards.map(s => s.name)] },
                 { label: "Subject", state: filterSubject, set: setFilterSubject, options: ["All Subjects", ...subjectsList.map(s => s.name)] },
@@ -234,7 +238,14 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
                             {getIconForType(m.type)}
                           </div>
                           <div>
-                            <p className="font-bold text-text-primary">{m.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-text-primary">{m.title}</p>
+                              {m.targetTrack && m.targetTrack !== "BOTH" && (
+                                <span className="shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase bg-brand-blue/10 text-brand-blue border-brand-blue/20">
+                                  {m.targetTrack}
+                               </span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-text-muted mt-0.5">
                               {m.uploader ? `Uploaded by ${m.uploader.firstName} ${m.uploader.lastName}` : "System Admin"}
                             </p>
@@ -309,6 +320,7 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
   const [subject, setSubject] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
+  const [targetTrack, setTargetTrack] = useState("BOTH");
 
   // Fetch initial data
   useEffect(() => {
@@ -355,6 +367,7 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
           subjectId: subject || undefined,
           chapterId: selectedChapter || undefined,
           topicId: selectedTopic || undefined,
+          targetTrack,
           // Remove dummy syllabus/academicYear ids so backend handles fallback,
           // or ideally, these should also be selected by the user.
         })
@@ -415,7 +428,7 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
 
                 <div className="p-4 rounded-xl border border-border-soft bg-surface-2/30 space-y-4">
                   <h4 className="text-xs font-bold text-text-primary">Target Audience</h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Board (Optional)</label>
                       <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
@@ -428,6 +441,14 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                       <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
                         <option value="">Select Class</option>
                         {standards.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Track</label>
+                      <select value={targetTrack} onChange={(e) => setTargetTrack(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                        <option value="BOTH">Both (General)</option>
+                        <option value="TUITION">Tuition Only</option>
+                        <option value="ENTRANCE">Entrance Only</option>
                       </select>
                     </div>
                   </div>

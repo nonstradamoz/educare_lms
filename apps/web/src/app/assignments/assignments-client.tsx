@@ -59,7 +59,14 @@ export function AssignmentsClient({ initialAssignments }: { initialAssignments: 
                     </span>
                   )}
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-1 line-clamp-1 relative z-10">{assignment.title}</h3>
+                <div className="flex items-center gap-2 mb-1 relative z-10">
+                  <h3 className="text-lg font-bold text-text-primary line-clamp-1">{assignment.title}</h3>
+                  {assignment.batch?.track && assignment.batch.track !== "BOTH" && (
+                    <span className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase bg-brand-blue/10 text-brand-blue border-brand-blue/20">
+                      {assignment.batch.track}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-text-muted mb-4 line-clamp-2 min-h-[32px] relative z-10">{assignment.description || "No description provided."}</p>
                 
                 <div className="mt-auto pt-4 border-t border-border-soft flex items-center justify-between text-xs font-medium text-text-secondary relative z-10">

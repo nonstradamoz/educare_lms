@@ -82,6 +82,7 @@ export default function CreateExamPage() {
   const [selectedCentre, setSelectedCentre] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
+  const [targetTrack, setTargetTrack] = useState("BOTH");
 
   useEffect(() => {
     Promise.all([
@@ -123,6 +124,7 @@ export default function CreateExamPage() {
           standardId: selectedStandard || undefined,
           chapterId: selectedChapter || undefined,
           topicId: selectedTopic || undefined,
+          targetTrack,
         })
       });
       
@@ -200,7 +202,7 @@ export default function CreateExamPage() {
               {/* Target Audience Hierarchy */}
               <div className="p-4 rounded-xl border border-border-soft bg-surface-2/30 space-y-4">
                 <h4 className="text-xs font-bold text-text-primary">Target Audience</h4>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Centre</label>
                     <select value={selectedCentre} onChange={(e) => setSelectedCentre(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
@@ -220,6 +222,14 @@ export default function CreateExamPage() {
                     <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
                       <option value="">All Classes</option>
                       {standards.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Track</label>
+                    <select value={targetTrack} onChange={(e) => setTargetTrack(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
+                      <option value="BOTH">Both (General)</option>
+                      <option value="TUITION">Tuition Only</option>
+                      <option value="ENTRANCE">Entrance Only</option>
                     </select>
                   </div>
                 </div>

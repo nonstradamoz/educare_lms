@@ -89,8 +89,13 @@ export default function MCQExamPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-text-primary truncate">{exam.title}</p>
-                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${statusStyle[exam.status]}`}>
-                    {exam.status}
+                  {exam.targetTrack && exam.targetTrack !== "BOTH" && (
+                    <span className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase bg-brand-blue/10 text-brand-blue border-brand-blue/20">
+                      {exam.targetTrack}
+                    </span>
+                  )}
+                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${statusStyle[exam.status || "active"]}`}>
+                    {exam.status || "active"}
                   </span>
                 </div>
                 <p className="text-xs text-text-muted mt-0.5">{exam.subject}</p>

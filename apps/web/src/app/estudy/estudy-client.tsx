@@ -257,7 +257,7 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
                         <button 
                           onClick={() => {
                             if (!m.url) return;
-                            if (m.type === "Video") {
+                            if (m.type === "VIDEO") {
                               if (m.url.includes('http')) {
                                 // Fallback if video is stored in R2 directly
                                 window.open(m.url, '_blank');
@@ -271,7 +271,7 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
                             }
                           }}
                           className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
-                          {m.type === "Video" ? <><Play className="h-3.5 w-3.5" /> Play</> : m.type === "Link" ? <><ExternalLink className="h-3.5 w-3.5" /> Open</> : <><Download className="h-3.5 w-3.5" /> Download</>}
+                          {m.type === "VIDEO" ? <><Play className="h-3.5 w-3.5" /> Play</> : m.type === "LINK" ? <><ExternalLink className="h-3.5 w-3.5" /> Open</> : <><Download className="h-3.5 w-3.5" /> Download</>}
                         </button>
                       </td>
                     </tr>

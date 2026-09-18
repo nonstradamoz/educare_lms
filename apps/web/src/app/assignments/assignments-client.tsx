@@ -13,7 +13,7 @@ export function AssignmentsClient({ initialAssignments }: { initialAssignments: 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<any | null>(null);
 
-  const refresh = () => fetchApi('/assignments').then(setAssignments).catch(console.error);
+  const refresh = () => fetchApi('/assignments').then((data: any) => setAssignments(data)).catch(console.error);
 
   return (
     <DashboardLayout title="Assignments">
@@ -103,8 +103,8 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
   const [subjects, setSubjects] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchApi('/setup/batches').then(setBatches).catch(console.error);
-    fetchApi('/setup/subjects').then(setSubjects).catch(console.error);
+    fetchApi('/setup/batches').then((data: any) => setBatches(data)).catch(console.error);
+    fetchApi('/setup/subjects').then((data: any) => setSubjects(data)).catch(console.error);
   }, []);
 
   const [step, setStep] = useState<1 | 2>(1);
@@ -300,7 +300,7 @@ function SubmitAssignmentModal({ assignment, onClose, onSuccess }: { assignment:
 
             {existingSubmission?.status !== 'GRADED' && (
               <div className="pt-2 border-t border-border-soft">
-                <FileUploader type="FILE" onUploadSuccess={handleUploadSuccess} onUploadError={console.error} />
+                <FileUploader type="FILE" onUploadSuccess={handleUploadSuccess} onUploadError={console.error} onCancel={() => {}} />
                 <button 
                   onClick={handleSubmit} 
                   disabled={saving || (attachments.length === 0 && !notes.trim())} 

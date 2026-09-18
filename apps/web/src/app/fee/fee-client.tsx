@@ -25,6 +25,7 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
   const [filterStatus, setFilterStatus] = useState("All Status");
   const [filterMode, setFilterMode] = useState("All Modes");
   const [showModal, setShowModal] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<FeeRecord | null>(null);
   const { role } = useAuth();
 
   const filtered = fees.filter(f => {
@@ -223,7 +224,9 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
                       </td>
                       <td className="px-6 py-4 text-right">
                         {f.status === "PAID" && (
-                          <button className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
+                          <button 
+                            onClick={() => setSelectedReceipt(f)}
+                            className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
                             <Download className="h-3.5 w-3.5" /> Receipt
                           </button>
                         )}
@@ -240,6 +243,9 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
 
       {/* Collect Fee Modal */}
       {showModal && <CollectFeeModal onClose={() => setShowModal(false)} />}
+      
+      {/* Print Receipt Modal */}
+      {selectedReceipt && <PrintReceiptModal receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />}
     </DashboardLayout>
   );
 }
@@ -382,6 +388,103 @@ function CollectFeeModal({ onClose }: { onClose: () => void }) {
           </button>
           <button className="inline-flex items-center gap-2 rounded-lg bg-text-primary px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-black transition-colors">
             <CheckCircle2 className="h-4 w-4" /> Record Payment
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function PrintReceiptModal({ receipt, onClose }: { receipt: FeeRecord, onClose: () => void }) {
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6 print:p-0 print:bg-white print:backdrop-blur-none">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden print:shadow-none print:rounded-none">
+        
+        {/* Modal Header - Hidden on Print */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft shrink-0 print:hidden">
+          <h2 className="text-base font-bold text-text-primary">Print Receipt</h2>
+          <button onClick={onClose} className="h-8 w-8 rounded-full bg-surface-2 flex items-center justify-center text-text-muted hover:bg-surface-3 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Printable Receipt Content */}
+        <div className="p-8 print:p-4 text-text-primary">
+          {/* Header */}
+          <div className="flex justify-between items-start border-b-2 border-brand-blue pb-6 mb-6">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-brand-blue uppercase">Educare</h1>
+              <p className="text-xs font-medium text-text-secondary mt-1">Kalathipady, North Wing</p>
+              <p className="text-xs font-medium text-text-secondary">contact@educare.edu | +91 99999 99999</p>
+            </div>
+            <div className="text-right">
+              <h2 className="text-xl font-bold uppercase tracking-wider text-text-muted">Fee Receipt</h2>
+              <p className="text-sm font-bold mt-2">No: <span className="text-brand-blue">{receipt.receiptNo}</span></p>
+              <p className="text-xs font-medium text-text-secondary mt-1">Date: {receipt.date}</p>
+            </div>
+          </div>
+
+          {/* Student Info */}
+          <div className="grid grid-cols-2 gap-8 mb-8">
+            <div>
+              <p className="text-xs font-bold text-text-muted uppercase mb-1">Received From</p>
+              <p className="text-base font-bold">{receipt.studentName}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-text-muted uppercase mb-1">Course / Batch</p>
+              <p className="text-base font-bold">{receipt.course}</p>
+            </div>
+          </div>
+
+          {/* Payment Details Table */}
+          <table className="w-full mb-8">
+            <thead>
+              <tr className="border-b-2 border-text-primary">
+                <th className="py-2 text-left text-sm font-bold uppercase">Description</th>
+                <th className="py-2 text-right text-sm font-bold uppercase">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border-soft">
+                <td className="py-4">
+                  <p className="font-bold">Fee Payment</p>
+                  <p className="text-xs text-text-secondary mt-1">Paid via {receipt.paymentMode}</p>
+                </td>
+                <td className="py-4 text-right font-bold">
+                  ₹{receipt.amount.toLocaleString()}
+                </td>
+              </tr>
+              <tr className="border-b border-border-soft">
+                <td className="py-4 text-right font-bold uppercase text-text-muted">Total Paid</td>
+                <td className="py-4 text-right font-black text-lg">₹{receipt.amount.toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Footer / Signature */}
+          <div className="flex justify-between items-end mt-16 pt-8">
+            <div>
+              <p className="text-xs italic text-text-secondary">This is a computer-generated receipt and does not require a physical signature.</p>
+            </div>
+            <div className="text-center">
+              <div className="border-t border-text-primary w-40 mb-2"></div>
+              <p className="text-xs font-bold uppercase">Authorized Signatory</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Footer - Hidden on Print */}
+        <div className="px-6 py-4 border-t border-border-soft flex items-center justify-end gap-4 shrink-0 bg-surface-2 print:hidden">
+          <button onClick={onClose} className="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
+            Close
+          </button>
+          <button onClick={handlePrint} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-blue-dark transition-colors">
+            <Download className="h-4 w-4" /> Print / Save PDF
           </button>
         </div>
 

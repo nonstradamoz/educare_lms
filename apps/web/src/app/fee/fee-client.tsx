@@ -26,6 +26,7 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
   const [filterMode, setFilterMode] = useState("All Modes");
   const [showModal, setShowModal] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<FeeRecord | null>(null);
+  const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const { role } = useAuth();
 
   const refresh = async () => {
@@ -246,13 +247,22 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {f.status === "PAID" && (
-                          <button 
-                            onClick={() => setSelectedReceipt(f)}
-                            className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
-                            <Download className="h-3.5 w-3.5" /> Receipt
-                          </button>
-                        )}
+                        <div className="flex items-center justify-end gap-3">
+                          {f.status === "PAID" && (
+                            <button 
+                              onClick={() => setSelectedReceipt(f)}
+                              className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
+                              <Download className="h-3.5 w-3.5" /> Receipt
+                            </button>
+                          )}
+                          {role !== 'STUDENT' && (
+                            <button 
+                              onClick={() => setDeleteRecordId(f.id)}
+                              className="inline-flex items-center gap-1 text-text-muted hover:text-brand-red text-xs font-bold transition-colors">
+                              <X className="h-3.5 w-3.5" /> Delete
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -269,6 +279,9 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
       
       {/* Print Receipt Modal */}
       {selectedReceipt && <PrintReceiptModal receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />}
+      
+      {/* Delete Record Modal */}
+      {deleteRecordId && <DeleteRecordModal id={deleteRecordId} onClose={() => setDeleteRecordId(null)} onSuccess={() => { setDeleteRecordId(null); refresh(); }} />}
     </DashboardLayout>
   );
 }
@@ -564,6 +577,80 @@ function PrintReceiptModal({ receipt, onClose }: { receipt: FeeRecord, onClose: 
           </button>
           <button onClick={handlePrint} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-blue-dark transition-colors">
             <Download className="h-4 w-4" /> Print / Save PDF
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function DeleteRecordModal({ id, onClose, onSuccess }: { id: string, onClose: () => void, onSuccess: () => void }) {
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleDelete = async () => {
+    if (password !== "delete123") {
+      setError("Incorrect password.");
+      return;
+    }
+    
+    setLoading(true);
+    setError("");
+    try {
+      await fetchApi(`/fee/${id}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ password })
+      });
+      onSuccess();
+    } catch (e: any) {
+      setError(e.message || "Failed to delete record");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-soft shrink-0">
+          <h2 className="text-base font-bold text-brand-red">Delete Fee Record</h2>
+          <button onClick={onClose} className="h-8 w-8 rounded-full bg-surface-2 flex items-center justify-center text-text-muted hover:bg-surface-3 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-6 bg-surface text-text-primary">
+          <p className="text-sm font-medium text-text-secondary mb-4">
+            Are you sure you want to delete this fee record? This action cannot be undone. Please enter the deletion password to confirm.
+          </p>
+          
+          <div className="mb-4">
+            <label className="block text-xs font-bold text-text-secondary mb-1.5">
+              Password <span className="text-brand-red">*</span>
+            </label>
+            <input 
+              type="password" 
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Enter password..." 
+              className="w-full h-10 rounded-lg border border-border-soft bg-white pl-3 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red/20 focus:border-brand-red" 
+            />
+            {error && <p className="text-xs font-bold text-brand-red mt-1.5">{error}</p>}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-border-soft flex items-center justify-end gap-3 shrink-0 bg-white">
+          <button onClick={onClose} className="text-sm font-bold text-text-secondary hover:text-text-primary transition-colors">
+            Cancel
+          </button>
+          <button 
+            onClick={handleDelete}
+            disabled={loading || !password}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-red px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-brand-red/90 transition-colors disabled:opacity-50"
+          >
+            {loading ? "Deleting..." : "Confirm Delete"}
           </button>
         </div>
 

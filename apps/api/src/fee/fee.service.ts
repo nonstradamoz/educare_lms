@@ -31,4 +31,10 @@ export class FeeService {
       }
     });
   }
+
+  async delete(id: string) {
+    return this.prisma.feeRecord.delete({
+      where: { id }
+    });
+  }
 }

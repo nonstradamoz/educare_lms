@@ -5,6 +5,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { CreditCard, Plus, Search, Filter, X, ChevronRight, BookOpen, ChevronDown, CheckCircle2, FileText, Download, User } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api";
 
 interface FeeRecord {
@@ -19,6 +20,7 @@ interface FeeRecord {
 }
 
 export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[], students: any[] }) {
+  const router = useRouter();
   const [fees, setFees] = useState<FeeRecord[]>(initialFees);
   const [search, setSearch] = useState("");
   const [filterCourse, setFilterCourse] = useState("All Classes");
@@ -31,7 +33,9 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
 
   const refresh = async () => {
     try {
-      const data = await fetchApi('/fee');
+      const data = await fetchApi(`/fee?t=${Date.now()}`, { 
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } 
+      });
       const mapped = (data as any[]).map(d => ({
         id: d.id,
         receiptNo: d.receiptNo,
@@ -43,6 +47,10 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
         paymentMode: d.paymentMode || "-"
       }));
       setFees(mapped as FeeRecord[]);
+      
+      // Force Next.js to re-fetch Server Components if needed
+      // Force Next.js to re-fetch Server Components
+      router.refresh();
     } catch (e) {
       console.error(e);
     }

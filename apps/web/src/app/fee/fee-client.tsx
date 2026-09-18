@@ -31,16 +31,30 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
   const refresh = async () => {
     try {
       const data = await fetchApi('/fee');
-      setFees(data as FeeRecord[]);
+      const mapped = (data as any[]).map(d => ({
+        id: d.id,
+        receiptNo: d.receiptNo,
+        studentName: d.student?.user?.firstName ? `${d.student.user.firstName} ${d.student.user.lastName}` : "Unknown",
+        course: "Student",
+        amount: d.amount,
+        date: new Date(d.createdAt || d.date || Date.now()).toLocaleDateString(),
+        status: d.status,
+        paymentMode: d.paymentMode || "-"
+      }));
+      setFees(mapped as FeeRecord[]);
     } catch (e) {
       console.error(e);
     }
   };
 
   const filtered = fees.filter(f => {
-    const matchSearch = f.studentName.toLowerCase().includes(search.toLowerCase()) || 
-                        f.receiptNo.toLowerCase().includes(search.toLowerCase()) ||
-                        f.course.toLowerCase().includes(search.toLowerCase());
+    const studentName = f.studentName || "";
+    const receiptNo = f.receiptNo || "";
+    const course = f.course || "";
+    
+    const matchSearch = studentName.toLowerCase().includes(search.toLowerCase()) || 
+                        receiptNo.toLowerCase().includes(search.toLowerCase()) ||
+                        course.toLowerCase().includes(search.toLowerCase());
     const matchCourse = filterCourse === "All Classes" || f.course === filterCourse;
     const matchStatus = filterStatus === "All Status" || f.status === filterStatus;
     const matchMode = filterMode === "All Modes" || f.paymentMode === filterMode;

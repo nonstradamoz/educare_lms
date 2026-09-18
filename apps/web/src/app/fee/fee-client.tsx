@@ -18,7 +18,7 @@ interface FeeRecord {
   paymentMode: string;
 }
 
-export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
+export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[], students: any[] }) {
   const [fees, setFees] = useState<FeeRecord[]>(initialFees);
   const [search, setSearch] = useState("");
   const [filterCourse, setFilterCourse] = useState("All Classes");
@@ -265,7 +265,7 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
       </div>
 
       {/* Collect Fee Modal */}
-      {showModal && <CollectFeeModal onClose={() => setShowModal(false)} onSuccess={() => { setShowModal(false); refresh(); }} />}
+      {showModal && <CollectFeeModal onClose={() => setShowModal(false)} onSuccess={() => { setShowModal(false); refresh(); }} students={students} />}
       
       {/* Print Receipt Modal */}
       {selectedReceipt && <PrintReceiptModal receipt={selectedReceipt} onClose={() => setSelectedReceipt(null)} />}
@@ -273,9 +273,8 @@ export function FeeClient({ initialFees }: { initialFees: FeeRecord[] }) {
   );
 }
 
-function CollectFeeModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
+function CollectFeeModal({ onClose, onSuccess, students }: { onClose: () => void, onSuccess: () => void, students: any[] }) {
   const [activeTab, setActiveTab] = useState("Payment Details");
-  const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [studentId, setStudentId] = useState("");
@@ -283,12 +282,6 @@ function CollectFeeModal({ onClose, onSuccess }: { onClose: () => void, onSucces
   const [amount, setAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("Cash");
   const [targetTrack, setTargetTrack] = useState("BOTH");
-
-  useEffect(() => {
-    fetchApi('/students').then(data => {
-      setStudents(data as any[]);
-    }).catch(console.error);
-  }, []);
 
   const handleSave = async () => {
     if (!studentId || !amount) return;

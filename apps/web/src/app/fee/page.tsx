@@ -14,5 +14,7 @@ export default async function FeePage() {
     paymentMode: d.paymentMode || "-"
   }));
 
-  return <FeeClient initialFees={mapped} />;
+  const students = await fetchApiServer<any[]>("/students").catch(() => []);
+
+  return <FeeClient initialFees={mapped} students={students} />;
 }

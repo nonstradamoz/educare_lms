@@ -59,8 +59,8 @@ export class SetupController {
   }
 
   @Get('syllabi')
-  getSyllabi() {
-    return this.setupService.getSyllabi();
+  getSyllabi(@Query('boardId') boardId?: string, @Query('standardId') standardId?: string) {
+    return this.setupService.getSyllabi(boardId, standardId);
   }
 
   @Post('syllabi')

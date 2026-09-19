@@ -41,13 +41,46 @@ export class SetupService {
   async getSubjects() {
     return this.prisma.subject.findMany();
   }
-  async createSubject(data: { name: string }) {
-    return this.prisma.subject.create({ data });
+  
+  async createSubject(data: { name: string; boardId?: string; standardId?: string }) {
+    // Upsert the subject globally
+    const subject = await this.prisma.subject.upsert({
+      where: { name: data.name },
+      update: {},
+      create: { name: data.name },
+    });
+    
+    // If board and standard provided, map it via Syllabus immediately
+    if (data.boardId && data.standardId) {
+      await this.prisma.syllabus.upsert({
+        where: {
+          boardId_standardId_subjectId: {
+            boardId: data.boardId,
+            standardId: data.standardId,
+            subjectId: subject.id,
+          },
+        },
+        update: {},
+        create: {
+          boardId: data.boardId,
+          standardId: data.standardId,
+          subjectId: subject.id,
+        },
+      });
+    }
+    
+    return subject;
   }
 
   // Syllabi
-  async getSyllabi() {
-    return this.prisma.syllabus.findMany({ include: { subject: true, standard: true, board: true } });
+  async getSyllabi(boardId?: string, standardId?: string) {
+    return this.prisma.syllabus.findMany({
+      where: {
+        ...(boardId ? { boardId } : {}),
+        ...(standardId ? { standardId } : {}),
+      },
+      include: { subject: true, standard: true, board: true }
+    });
   }
   async createSyllabus(data: { boardId: string; standardId: string; subjectId: string }) {
     return this.prisma.syllabus.create({ data });

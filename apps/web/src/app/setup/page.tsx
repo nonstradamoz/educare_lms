@@ -280,17 +280,19 @@ function AcademicStructureTab() {
   const [boards, setBoards] = useState<any[]>([]);
   const [standards, setStandards] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [syllabi, setSyllabi] = useState<any[]>([]);
   
   const [yearForm, setYearForm] = useState({ name: "", startDate: "", endDate: "" });
   const [boardForm, setBoardForm] = useState({ name: "", code: "" });
   const [standardForm, setStandardForm] = useState({ name: "", code: "", level: 1 });
-  const [subjectForm, setSubjectForm] = useState({ name: "" });
+  const [subjectForm, setSubjectForm] = useState({ name: "", boardId: "", standardId: "" });
 
   useEffect(() => {
     fetchApi<any[]>('/setup/academic-years').then(data => setYears(data));
     fetchApi<any[]>('/setup/boards').then(data => setBoards(data));
     fetchApi<any[]>('/setup/standards').then(data => setStandards(data));
     fetchApi<any[]>('/setup/subjects').then(data => setSubjects(data));
+    fetchApi<any[]>('/setup/syllabi').then(data => setSyllabi(data));
   }, []);
 
   const addYear = async () => {
@@ -315,10 +317,17 @@ function AcademicStructureTab() {
   };
 
   const addSubject = async () => {
-    if (!subjectForm.name) return;
-    const res = await fetchApi<any>('/setup/subjects', { method: 'POST', body: JSON.stringify(subjectForm) });
-    setSubjects([...subjects, res]);
-    setSubjectForm({ name: "" });
+    if (!subjectForm.name || !subjectForm.boardId || !subjectForm.standardId) return;
+    await fetchApi<any>('/setup/subjects', { method: 'POST', body: JSON.stringify(subjectForm) });
+    
+    // Refresh both subjects and syllabi to show the new mappings
+    const [subRes, sylRes] = await Promise.all([
+      fetchApi<any[]>('/setup/subjects'),
+      fetchApi<any[]>('/setup/syllabi')
+    ]);
+    setSubjects(subRes);
+    setSyllabi(sylRes);
+    setSubjectForm({ name: "", boardId: "", standardId: "" });
   };
 
   return (
@@ -395,13 +404,25 @@ function AcademicStructureTab() {
         {activeTab === "Subjects" && (
           <div>
             <div className="flex gap-4 mb-6">
+              <select value={subjectForm.boardId} onChange={e => setSubjectForm({...subjectForm, boardId: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-48">
+                <option value="" disabled>Select Board</option>
+                {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+              <select value={subjectForm.standardId} onChange={e => setSubjectForm({...subjectForm, standardId: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-48">
+                <option value="" disabled>Select Class</option>
+                {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
               <input type="text" placeholder="Subject Name (e.g. Physics)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1" />
-              <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold">Add Subject</button>
+              <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0">Add Subject</button>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              {subjects.map(s => (
-                <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex items-center justify-between">
-                  <span className="font-bold text-sm">{s.name}</span>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {syllabi.map(s => (
+                <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex flex-col justify-between">
+                  <span className="font-bold text-sm text-brand-blue">{s.subject?.name}</span>
+                  <div className="mt-2 text-xs text-text-muted flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-white rounded border border-border-soft">{s.board?.name}</span>
+                    <span className="px-2 py-0.5 bg-white rounded border border-border-soft">{s.standard?.name}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -612,9 +633,12 @@ function CurriculumBuilderTab() {
   useEffect(() => {
     fetchApi<any[]>('/setup/boards').then(setBoards);
     fetchApi<any[]>('/setup/standards').then(setStandards);
-    fetchApi<any[]>('/setup/subjects').then(setSubjects);
     fetchApi<any[]>('/setup/syllabi').then(setSyllabi);
   }, []);
+
+  const availableSubjects = syllabi
+    .filter(s => s.boardId === selBoard && s.standardId === selStandard)
+    .map(s => s.subject);
 
   const activeSyllabus = syllabi.find(s => s.boardId === selBoard && s.standardId === selStandard && s.subjectId === selSubject);
 
@@ -625,15 +649,6 @@ function CurriculumBuilderTab() {
       setChapters([]);
     }
   }, [activeSyllabus]);
-
-  const initSyllabus = async () => {
-    if (!selBoard || !selStandard || !selSubject) return;
-    const res = await fetchApi<any>('/setup/syllabi', {
-      method: 'POST',
-      body: JSON.stringify({ boardId: selBoard, standardId: selStandard, subjectId: selSubject })
-    });
-    setSyllabi([...syllabi, res]);
-  };
 
   const toggleChapter = (id: string) => setExpandedChapters(prev => ({ ...prev, [id]: !prev[id] }));
   const toggleTopic = (id: string) => setExpandedTopics(prev => ({ ...prev, [id]: !prev[id] }));
@@ -714,29 +729,33 @@ function CurriculumBuilderTab() {
           </div>
           <div>
             <label className="block text-xs font-bold text-text-secondary mb-1.5">Subject</label>
-            <select value={selSubject} onChange={e => setSelSubject(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+            <select value={selSubject} onChange={e => setSelSubject(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20" disabled={!selBoard || !selStandard}>
               <option value="" disabled>Select Subject</option>
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {availableSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
         </div>
       </div>
 
       <div className="flex-1 p-6 bg-surface overflow-y-auto">
-        {!selBoard || !selStandard || !selSubject ? (
+        {!selBoard || !selStandard ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-60">
             <Layers className="h-12 w-12 text-brand-blue mb-4" />
-            <h3 className="text-sm font-bold text-text-primary">Select Curriculum Matrix</h3>
-            <p className="text-xs text-text-muted mt-1 max-w-sm">Please select a Board, Class, and Subject above to view or build its curriculum.</p>
+            <h3 className="text-sm font-bold text-text-primary">Select Board & Class</h3>
+            <p className="text-xs text-text-muted mt-1 max-w-sm">Please select a Board and Class above to see available subjects.</p>
           </div>
-        ) : !activeSyllabus ? (
+        ) : availableSubjects.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-white border border-dashed border-border-soft rounded-xl shadow-sm">
             <BookOpen className="h-10 w-10 text-brand-blue/50 mb-3" />
-            <h3 className="text-sm font-bold text-text-primary">No Curriculum Found</h3>
-            <p className="text-xs text-text-muted mt-1 mb-4">A syllabus mapping hasn't been initialized for this combination yet.</p>
-            <button onClick={initSyllabus} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-6 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors">
-              <Plus className="h-4 w-4" /> Initialize Syllabus
-            </button>
+            <h3 className="text-sm font-bold text-text-primary">No Subjects Found</h3>
+            <p className="text-xs text-text-muted mt-1 mb-4">You have not created any subjects for this Board and Class combination yet.</p>
+            <p className="text-xs text-text-muted">Go to the "Academic Structure" → "Subjects" tab to add one.</p>
+          </div>
+        ) : !selSubject ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-60">
+            <Book className="h-12 w-12 text-brand-blue mb-4" />
+            <h3 className="text-sm font-bold text-text-primary">Select Subject</h3>
+            <p className="text-xs text-text-muted mt-1 max-w-sm">Select a subject to build its curriculum.</p>
           </div>
         ) : (
           <div className="space-y-4 max-w-4xl mx-auto">

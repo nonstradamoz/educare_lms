@@ -287,11 +287,13 @@ function AcademicStructureTab() {
   const [standardForm, setStandardForm] = useState({ name: "", code: "", level: 1 });
   const [subjectForm, setSubjectForm] = useState({ name: "", boardId: "", standardId: "" });
   const [subjectSort, setSubjectSort] = useState("board");
+  const [filterBoard, setFilterBoard] = useState("");
+  const [filterStandard, setFilterStandard] = useState("");
 
   const sortedSyllabi = [...syllabi]
     .filter(s => {
-      if (subjectForm.boardId && s.boardId !== subjectForm.boardId) return false;
-      if (subjectForm.standardId && s.standardId !== subjectForm.standardId) return false;
+      if (filterBoard && s.boardId !== filterBoard) return false;
+      if (filterStandard && s.standardId !== filterStandard) return false;
       return true;
     })
     .sort((a, b) => {
@@ -341,7 +343,7 @@ function AcademicStructureTab() {
     ]);
     setSubjects(subRes);
     setSyllabi(sylRes);
-    setSubjectForm({ name: "", boardId: "", standardId: "" });
+    setSubjectForm({ ...subjectForm, name: "" });
   };
 
   return (
@@ -417,22 +419,36 @@ function AcademicStructureTab() {
 
         {activeTab === "Subjects" && (
           <div>
-            <div className="flex gap-4 mb-6">
-              <select value={subjectForm.boardId} onChange={e => setSubjectForm({...subjectForm, boardId: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-48">
-                <option value="">All Boards</option>
-                {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-              <select value={subjectForm.standardId} onChange={e => setSubjectForm({...subjectForm, standardId: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-48">
-                <option value="">All Classes</option>
-                {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              <input type="text" placeholder="Subject Name (e.g. Physics)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1" />
-              <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0 opacity-90 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!subjectForm.name || !subjectForm.boardId || !subjectForm.standardId}>
-                Add Subject
-              </button>
+            <div className="bg-surface-2/50 p-4 rounded-xl border border-border-soft mb-6">
+              <h4 className="text-xs font-bold text-text-primary mb-3">Add New Subject</h4>
+              <div className="flex gap-4">
+                <select value={subjectForm.boardId} onChange={e => setSubjectForm({...subjectForm, boardId: e.target.value})} className="h-10 rounded-lg border border-border-soft bg-white px-3 text-sm w-48 focus:ring-2 focus:ring-brand-blue/20 outline-none">
+                  <option value="" disabled>Select Board</option>
+                  {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+                <select value={subjectForm.standardId} onChange={e => setSubjectForm({...subjectForm, standardId: e.target.value})} className="h-10 rounded-lg border border-border-soft bg-white px-3 text-sm w-48 focus:ring-2 focus:ring-brand-blue/20 outline-none">
+                  <option value="" disabled>Select Class</option>
+                  {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <input type="text" placeholder="Subject Name (e.g. Physics)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1 focus:ring-2 focus:ring-brand-blue/20 outline-none" />
+                <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0 opacity-90 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled={!subjectForm.name || !subjectForm.boardId || !subjectForm.standardId}>
+                  Add Subject
+                </button>
+              </div>
             </div>
             
-            <div className="flex items-center justify-end mb-4">
+            <div className="flex items-center justify-between mb-4 bg-white p-3 rounded-lg border border-border-soft shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-text-secondary">Filter:</span>
+                <select value={filterBoard} onChange={e => setFilterBoard(e.target.value)} className="h-8 rounded border border-border-soft bg-surface-2 px-2 text-xs focus:outline-none">
+                  <option value="">All Boards</option>
+                  {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+                <select value={filterStandard} onChange={e => setFilterStandard(e.target.value)} className="h-8 rounded border border-border-soft bg-surface-2 px-2 text-xs focus:outline-none">
+                  <option value="">All Classes</option>
+                  {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-text-secondary">Sort by:</span>
                 <select value={subjectSort} onChange={e => setSubjectSort(e.target.value)} className="h-8 rounded border border-border-soft bg-surface-2 px-2 text-xs focus:outline-none">

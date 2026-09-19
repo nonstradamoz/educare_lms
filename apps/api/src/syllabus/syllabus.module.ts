@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { SyllabusController } from './syllabus.controller';
 import { SyllabusService } from './syllabus.service';
-import { PrismaModule } from '../database/prisma.module';
+import { DatabaseModule } from '../database/database.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [DatabaseModule],
   controllers: [SyllabusController],
   providers: [SyllabusService],
   exports: [SyllabusService],

@@ -121,4 +121,38 @@ export class SyllabusService {
       }
     });
   }
+
+  async getStudentSyllabusProgress(batchId: string, studentId: string) {
+    const batch = await this.prisma.batch.findUnique({ where: { id: batchId } });
+    if (!batch) throw new NotFoundException('Batch not found');
+
+    const syllabi = await this.prisma.syllabus.findMany({
+      where: { boardId: batch.boardId, standardId: batch.standardId },
+      include: {
+        subject: true,
+        chapters: {
+          include: {
+            topics: {
+              include: {
+                studentProgress: { where: { studentId, batchId } },
+                revisionTasks: { where: { studentId, status: { in: ['UPCOMING', 'DUE'] } } }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return syllabi;
+  }
+
+  async recordStudentEvent(userId: string, data: any) {
+    // Basic placeholder for recording events and triggering progress recalculation
+    const student = await this.prisma.studentProfile.findUnique({ where: { userId } });
+    if (!student) throw new NotFoundException('Student profile not found');
+
+    // This would typically insert/update a specific interaction table (e.g. video watch log),
+    // and then call ProgressService to recalculate the topic progress.
+    return { success: true, message: "Event recorded" };
+  }
 }

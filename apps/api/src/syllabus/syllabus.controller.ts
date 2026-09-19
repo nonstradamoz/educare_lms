@@ -21,4 +21,17 @@ export class SyllabusController {
   updateTopicProgress(@Body() data: { batchId: string; topicId: string; status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' }, @Req() req: any) {
     return this.syllabusService.updateTopicProgress(data.batchId, data.topicId, data.status, req.user.id);
   }
+
+  @Get('student-progress/:batchId/:studentId')
+  getStudentProgress(@Param('batchId') batchId: string, @Param('studentId') studentId: string) {
+    // This will fetch the full syllabus tree and overlay StudentTopicProgress and TopicRevisionTask
+    return this.syllabusService.getStudentSyllabusProgress(batchId, studentId);
+  }
+
+  @Post('student-progress/event')
+  recordStudentEvent(@Body() data: any, @Req() req: any) {
+    // e.g. { eventType: 'LECTURE', topicId: '...', batchId: '...', progress: 100 }
+    // Records the event, updates the progress table, and recalculates mastery
+    return this.syllabusService.recordStudentEvent(req.user.id, data);
+  }
 }

@@ -205,6 +205,7 @@ model Chapter {
   exams      Exam[]
   materials  StudyMaterial[]
   batchProgress BatchChapterProgress[]
+  assignments Assignment[]
 
   @@map("chapters")
 }
@@ -218,11 +219,36 @@ model Topic {
 
   chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
+  subtopics Subtopic[]
+
   exams     Exam[]
   materials StudyMaterial[]
   batchProgress BatchTopicProgress[]
+  studentProgress StudentTopicProgress[]
+  revisionTasks   TopicRevisionTask[]
+  assignments     Assignment[]
+
+  examImportance  String?
+  difficulty      String?
+  prevQnFrequency Int?
 
   @@map("topics")
+}
+
+model Subtopic {
+  id        String   @id @default(uuid())
+  name      String
+  topicId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  exams     Exam[]
+  materials StudyMaterial[]
+  assignments Assignment[]
+
+  @@map("subtopics")
 }
 
 // -----------------------------------------------------------------------------
@@ -251,6 +277,7 @@ model Batch {
   homeworks      Assignment[]
   chapterProgress BatchChapterProgress[]
   topicProgress   BatchTopicProgress[]
+  studentTopicProgress StudentTopicProgress[]
 
   @@map("batches")
 }
@@ -273,6 +300,8 @@ model StudentProfile {
   enrollments Enrollment[]
   feeRecords  FeeRecord[]
   submissions AssignmentSubmission[]
+  topicProgress StudentTopicProgress[]
+  revisionTasks TopicRevisionTask[]
 
   @@map("student_profiles")
 }
@@ -339,6 +368,7 @@ model Exam {
   subjectId      String
   chapterId      String?
   topicId        String?
+  subtopicId     String?
   
   boardId        String?
   standardId     String?
@@ -354,6 +384,7 @@ model Exam {
   subject        Subject      @relation(fields: [subjectId], references: [id])
   chapter        Chapter?     @relation(fields: [chapterId], references: [id])
   topic          Topic?       @relation(fields: [topicId], references: [id])
+  subtopic       Subtopic?    @relation(fields: [subtopicId], references: [id])
   
   board          Board?       @relation(fields: [boardId], references: [id])
   standard       Standard?    @relation(fields: [standardId], references: [id])
@@ -379,6 +410,7 @@ model StudyMaterial {
   syllabusId     String
   chapterId      String?
   topicId        String?
+  subtopicId     String?
   uploaderId     String?
   
   targetTrack    TrackType  @default(BOTH)
@@ -389,6 +421,7 @@ model StudyMaterial {
   syllabus       Syllabus     @relation(fields: [syllabusId], references: [id])
   chapter        Chapter?     @relation(fields: [chapterId], references: [id])
   topic          Topic?       @relation(fields: [topicId], references: [id])
+  subtopic       Subtopic?    @relation(fields: [subtopicId], references: [id])
   uploader       User?        @relation(fields: [uploaderId], references: [id])
 
   @@map("study_materials")
@@ -493,14 +526,20 @@ model Assignment {
   
   batchId        String?
   subjectId      String?
+  chapterId      String?
+  topicId        String?
+  subtopicId     String?
   uploaderId     String
   targetTrack    TrackType @default(BOTH)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  batch          Batch?   @relation(fields: [batchId], references: [id])
-  subject        Subject? @relation(fields: [subjectId], references: [id])
-  uploader       User     @relation(fields: [uploaderId], references: [id])
+  batch          Batch?    @relation(fields: [batchId], references: [id])
+  subject        Subject?  @relation(fields: [subjectId], references: [id])
+  chapter        Chapter?  @relation(fields: [chapterId], references: [id])
+  topic          Topic?    @relation(fields: [topicId], references: [id])
+  subtopic       Subtopic? @relation(fields: [subtopicId], references: [id])
+  uploader       User      @relation(fields: [uploaderId], references: [id])
   
   submissions    AssignmentSubmission[]
 
@@ -581,5 +620,105 @@ model BatchTopicProgress {
 
   @@unique([batchId, topicId])
   @@map("batch_topic_progress")
+}
+
+enum StudentTopicStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  MASTERED
+  REVISION_REQUIRED
+}
+
+enum RevisionStatus {
+  UPCOMING
+  DUE
+  COMPLETED
+  MISSED
+}
+
+model StudentTopicProgress {
+  id               String   @id @default(uuid())
+  studentId        String
+  topicId          String
+  batchId          String
+  
+  completionPercentage Float @default(0)
+  status           StudentTopicStatus @default(NOT_STARTED)
+  
+  lectureProgress  Float @default(0)
+  materialProgress Float @default(0)
+  practiceProgress Float @default(0)
+  testProgress     Float @default(0)
+  
+  questionsAssigned Int @default(0)
+  questionsAttempted Int @default(0)
+  questionsCorrect  Int @default(0)
+  questionsIncorrect Int @default(0)
+  practiceAccuracy  Float @default(0)
+  
+  testsAttempted    Int @default(0)
+  averageTestScore  Float @default(0)
+  latestTestScore   Float @default(0)
+  
+  lastActivityAt   DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  student          StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic            Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  batch            Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, topicId, batchId])
+  @@map("student_topic_progress")
+}
+
+model TopicRevisionTask {
+  id             String   @id @default(uuid())
+  studentId      String
+  topicId        String
+  revisionNumber Int
+  scheduledDate  DateTime
+  completedDate  DateTime?
+  revisionScore  Float?
+  status         RevisionStatus @default(UPCOMING)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic          Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@map("topic_revision_tasks")
+}
+
+model SyllabusConfiguration {
+  id                String @id @default(uuid())
+  
+  // Weightages
+  lectureWeight     Float @default(0.20)
+  materialWeight    Float @default(0.20)
+  practiceWeight    Float @default(0.30)
+  testWeight        Float @default(0.30)
+  
+  // Completion Thresholds
+  inProgressThreshold Float @default(25)
+  completedThreshold  Float @default(75)
+  
+  // Mastery Rules
+  masteryCompletionThreshold Float @default(90)
+  masteryAccuracyThreshold   Float @default(80)
+  masteryTestScoreThreshold  Float @default(80)
+  masteryMinQuestions        Int @default(20)
+  
+  // Revision Rules
+  weakPracticeThreshold Float @default(60)
+  weakTestThreshold     Float @default(60)
+  revisionIntervalsDays Json @default("[1, 3, 7, 14, 30]")
+  
+  updatedAt DateTime @updatedAt
+  
+  @@map("syllabus_configurations")
 }
 

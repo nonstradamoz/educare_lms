@@ -3,6 +3,16 @@
 import { Sidebar } from "./sidebar";
 import { TopNav } from "./top-nav";
 import { useAuth } from "@/components/providers/auth-provider";
+import {
+  LayoutDashboard,
+  BookOpenCheck,
+  MonitorPlay,
+  BookOpen,
+  ClipboardList,
+  GraduationCap,
+  CreditCard,
+} from "lucide-react";
+
 export function DashboardLayout({ children, title, role: propRole }: { children: React.ReactNode; title?: string; role?: string }) {
   const { role: authRole } = useAuth();
   const activeRole = propRole || authRole;

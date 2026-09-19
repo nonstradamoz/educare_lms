@@ -17,6 +17,7 @@ import { LiveClassModule } from './live-class/live-class.module';
 import { StudyMaterialModule } from './study-materials/study-materials.module';
 import { FeeModule } from './fee/fee.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { SyllabusModule } from './syllabus/syllabus.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { AssignmentsModule } from './assignments/assignments.module';
     StudyMaterialModule,
     FeeModule,
     AssignmentsModule,
+    SyllabusModule,
   ],
   controllers: [AppController],
   providers: [AppService],

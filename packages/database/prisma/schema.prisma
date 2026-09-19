@@ -204,6 +204,7 @@ model Chapter {
 
   exams      Exam[]
   materials  StudyMaterial[]
+  batchProgress BatchChapterProgress[]
 
   @@map("chapters")
 }
@@ -219,6 +220,7 @@ model Topic {
 
   exams     Exam[]
   materials StudyMaterial[]
+  batchProgress BatchTopicProgress[]
 
   @@map("topics")
 }
@@ -247,6 +249,8 @@ model Batch {
   assignments    TeacherAssignment[]
   exams          Exam[]
   homeworks      Assignment[]
+  chapterProgress BatchChapterProgress[]
+  topicProgress   BatchTopicProgress[]
 
   @@map("batches")
 }
@@ -533,5 +537,49 @@ enum TrackType {
   TUITION
   ENTRANCE
   BOTH
+}
+
+// -----------------------------------------------------------------------------
+// PROGRESS TRACKING
+// -----------------------------------------------------------------------------
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model BatchChapterProgress {
+  id          String   @id @default(uuid())
+  batchId     String
+  chapterId   String
+  status      ProgressStatus @default(NOT_STARTED)
+  completedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  batch       Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  chapter     Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, chapterId])
+  @@map("batch_chapter_progress")
+}
+
+model BatchTopicProgress {
+  id          String   @id @default(uuid())
+  batchId     String
+  topicId     String
+  status      ProgressStatus @default(NOT_STARTED)
+  completedAt DateTime?
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  batch       Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, topicId])
+  @@map("batch_topic_progress")
 }
 

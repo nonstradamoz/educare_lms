@@ -10,6 +10,7 @@ import {
   CreditCard,
   FileText,
   BookOpen,
+  BookOpenCheck,
   Award,
   UserCheck,
   Headset,
@@ -30,6 +31,7 @@ const mainNav = [
   { label: "Fee",         href: "/fee",         icon: CreditCard      },
   { label: "Exam",        href: "/exam",        icon: FileText        },
   { label: "eStudy",      href: "/estudy",      icon: BookOpen        },
+  { label: "Syllabus",    href: "/syllabus",    icon: BookOpenCheck   },
   { label: "Certificate", href: "/certificate", icon: Award           },
 ];
 
@@ -77,7 +79,7 @@ export function Sidebar({ role }: { role?: string }) {
       <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
         <NavSection 
           label="Main" 
-          items={role === 'STUDENT' ? mainNav.filter(item => ['Dashboard', 'Live Class', 'Fee', 'Exam', 'eStudy'].includes(item.label)) : mainNav} 
+          items={role === 'STUDENT' ? mainNav.filter(item => ['Dashboard', 'Live Class', 'Fee', 'Exam', 'eStudy', 'Syllabus'].includes(item.label)) : mainNav} 
           activePath={path} 
         />
         {role !== 'STUDENT' && (

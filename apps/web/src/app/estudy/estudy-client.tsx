@@ -431,16 +431,16 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Board (Optional)</label>
-                      <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                        <option value="">Select Board</option>
-                        {boards.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                        <option value="" disabled>Select Board</option>
+                        {boards.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Class (Optional)</label>
-                      <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                        <option value="">Select Class</option>
-                        {standards.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                        <option value="" disabled>Select Class</option>
+                        {standards.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </div>
                     <div>
@@ -468,15 +468,15 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Chapter</label>
-                      <select value={selectedChapter} onChange={(e) => setSelectedChapter(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                        <option value="">Select Chapter</option>
-                        {chapters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <select value={selectedChapter} onChange={(e) => setSelectedChapter(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                        <option value="" disabled>Select Chapter</option>
+                        {chapters.map((ch) => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Topic</label>
-                      <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                        <option value="">Select Topic</option>
+                      <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                        <option value="" disabled>Select Topic</option>
                         {topics.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                       </select>
                     </div>
@@ -487,6 +487,14 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                   onClick={() => {
                     if (!title.trim()) {
                       setError("Title is required");
+                      return;
+                    }
+                    if (!selectedChapter) {
+                      setError("Chapter is required");
+                      return;
+                    }
+                    if (!selectedTopic) {
+                      setError("Topic is required");
                       return;
                     }
                     if (!targetTrack) {

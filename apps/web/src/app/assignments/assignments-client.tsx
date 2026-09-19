@@ -168,15 +168,15 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Batch *</label>
-                  <select value={batchId} onChange={e => setBatchId(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-white px-3 text-sm focus:ring-2 focus:ring-brand-blue/20">
-                    <option value="">Select Batch</option>
+                  <select value={batchId} onChange={e => setBatchId(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-white px-3 text-sm focus:ring-2 focus:ring-brand-blue/20" required>
+                    <option value="" disabled>Select Batch</option>
                     {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Subject *</label>
-                  <select value={subjectId} onChange={e => setSubjectId(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-white px-3 text-sm focus:ring-2 focus:ring-brand-blue/20">
-                    <option value="">Select Subject</option>
+                  <select value={subjectId} onChange={e => setSubjectId(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-white px-3 text-sm focus:ring-2 focus:ring-brand-blue/20" required>
+                    <option value="" disabled>Select Subject</option>
                     {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>

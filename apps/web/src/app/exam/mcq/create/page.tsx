@@ -109,7 +109,7 @@ export default function CreateExamPage() {
   }, [subject, selectedBoard, selectedStandard]);
 
   const handleSave = async () => {
-    if (!title || !type || !subject || !targetTrack) return alert("Please fill required fields");
+    if (!title || !type || !subject || !selectedBoard || !selectedStandard || !targetTrack) return alert("Please fill required fields");
     setSaving(true);
     try {
       const exam = await fetchApi<any>('/exams', {
@@ -205,23 +205,23 @@ export default function CreateExamPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Centre</label>
-                    <select value={selectedCentre} onChange={(e) => setSelectedCentre(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                      <option value="">All Centres</option>
+                    <select value={selectedCentre} onChange={(e) => setSelectedCentre(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                      <option value="" disabled>Select Centre</option>
                       {centres.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Board</label>
-                    <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                      <option value="">All Boards</option>
+                    <select value={selectedBoard} onChange={(e) => setSelectedBoard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                      <option value="" disabled>Select Board</option>
                       {boards.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Class / Standard</label>
-                    <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                      <option value="">All Classes</option>
-                      {standards.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    <select value={selectedStandard} onChange={(e) => setSelectedStandard(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                      <option value="" disabled>Select Class</option>
+                      {standards.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
@@ -250,15 +250,15 @@ export default function CreateExamPage() {
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Chapter (Optional)</label>
-                    <select value={selectedChapter} onChange={(e) => setSelectedChapter(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                      <option value="">Entire Subject</option>
+                    <select value={selectedChapter} onChange={(e) => setSelectedChapter(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                      <option value="" disabled>Select Chapter</option>
                       {chapters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-semibold text-brand-blue/70 mb-1.5">Topic (Optional)</label>
-                    <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                      <option value="">Entire Chapter</option>
+                    <select value={selectedTopic} onChange={(e) => setSelectedTopic(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                      <option value="" disabled>Select Topic</option>
                       {topics.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
                     </select>
                   </div>

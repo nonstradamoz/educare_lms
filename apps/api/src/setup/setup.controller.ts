@@ -109,6 +109,11 @@ export class SetupController {
     return this.setupService.deleteStandard(id);
   }
 
+  @Delete('centres/:id')
+  deleteCentre(@Param('id') id: string) {
+    return this.setupService.deleteCentre(id);
+  }
+
   @Delete('subjects/:id')
   deleteSubject(@Param('id') id: string) {
     return this.setupService.deleteSubject(id);

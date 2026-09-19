@@ -126,6 +126,17 @@ function CentreSetupTab() {
     }
   };
 
+  const handleDeleteCentre = async (id: string) => {
+    if (!confirm("Are you sure? This will delete the centre and might affect users assigned to it.")) return;
+    try {
+      await fetchApi(`/setup/centres/${id}`, { method: 'DELETE' });
+      setCentres(centres.filter(c => c.id !== id));
+    } catch (e) {
+      console.error(e);
+      alert("Failed to delete centre. It might be in use.");
+    }
+  };
+
   if (isAdding) {
     return (
       <div className="bg-white rounded-xl border border-border-soft p-6 md:p-8 shadow-sm">
@@ -199,9 +210,14 @@ function CentreSetupTab() {
                 <td className="px-6 py-4 text-text-secondary font-mono">{c.code}</td>
                 <td className="px-6 py-4 text-text-secondary">{c.type}</td>
                 <td className="px-6 py-4 text-right">
-                  <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-surface-3 text-text-muted transition-colors">
-                    <Edit2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex justify-end gap-2">
+                    <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-surface-3 text-text-muted transition-colors">
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => handleDeleteCentre(c.id)} className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-danger/10 text-danger transition-colors" title="Delete Centre">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

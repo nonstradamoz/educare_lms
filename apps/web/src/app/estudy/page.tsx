@@ -2,7 +2,8 @@ import { fetchApiServer } from "@/lib/api-server";
 import { EStudyClient } from "./estudy-client";
 
 export default async function EStudyPage() {
-  const data = await fetchApiServer<any[]>('/study-materials');
+  const data = await fetchApiServer<any[]>('/study-materials').catch(() => []);
   
-  return <EStudyClient initialMaterials={data} />;
+  const safeData = Array.isArray(data) ? data : [];
+  return <EStudyClient initialMaterials={safeData} />;
 }

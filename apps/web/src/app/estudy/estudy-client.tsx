@@ -320,7 +320,7 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
   const [subject, setSubject] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
-  const [targetTrack, setTargetTrack] = useState("BOTH");
+  const [targetTrack, setTargetTrack] = useState("");
 
   // Fetch initial data
   useEffect(() => {
@@ -444,12 +444,15 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Track</label>
-                      <select value={targetTrack} onChange={(e) => setTargetTrack(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                        <option value="BOTH">Both (General)</option>
-                        <option value="TUITION">Tuition Only</option>
-                        <option value="ENTRANCE">Entrance Only</option>
-                      </select>
+                      <label className="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Target Audience <span className="text-brand-red">*</span></label>
+                      <div className="relative">
+                        <select value={targetTrack} onChange={(e) => setTargetTrack(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                          <option value="" disabled>Select Target Audience</option>
+                          <option value="BOTH">Both</option>
+                          <option value="TUITION">Tuition</option>
+                          <option value="ENTRANCE">Entrance</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -481,7 +484,18 @@ function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSucce
                 </div>
 
                 <button
-                  onClick={() => title.trim() ? setStep(2) : setError("Title is required")}
+                  onClick={() => {
+                    if (!title.trim()) {
+                      setError("Title is required");
+                      return;
+                    }
+                    if (!targetTrack) {
+                      setError("Target Audience is required");
+                      return;
+                    }
+                    setError("");
+                    setStep(2);
+                  }}
                   className="w-full py-2.5 text-sm font-bold text-white bg-brand-blue hover:bg-brand-blue-dark rounded-lg mt-2 transition-colors"
                 >
                   Next: Upload File

@@ -105,7 +105,7 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
   const [subjectId, setSubjectId] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const [targetTrack, setTargetTrack] = useState<"TUITION" | "ENTRANCE" | "BOTH">("BOTH");
+  const [targetTrack, setTargetTrack] = useState<"TUITION" | "ENTRANCE" | "BOTH" | "">("");
   
   const [batches, setBatches] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -124,8 +124,8 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
   };
 
   const handleSave = async () => {
-    if (!title || !batchId || !subjectId) {
-      setError("Title, batch, and subject are required");
+    if (!title || !batchId || !subjectId || !targetTrack) {
+      setError("Title, batch, subject, and target track are required");
       return;
     }
     setSaving(true);
@@ -187,16 +187,18 @@ function CreateAssignmentModal({ onClose, onSuccess }: { onClose: () => void, on
                   <input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-white px-3 text-sm focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5">Target Track *</label>
+                  <label className="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Target Audience <span className="text-brand-red">*</span></label>
                   <div className="relative">
                     <select 
                       value={targetTrack} 
                       onChange={(e) => setTargetTrack(e.target.value as any)}
-                      className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-white pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
+                      className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                      required
                     >
-                      <option value="BOTH">Both (Tuition & Entrance)</option>
-                      <option value="TUITION">Tuition Only</option>
-                      <option value="ENTRANCE">Entrance Only</option>
+                      <option value="" disabled>Select Target Audience</option>
+                      <option value="BOTH">Both</option>
+                      <option value="TUITION">Tuition</option>
+                      <option value="ENTRANCE">Entrance</option>
                     </select>
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
                       <ChevronDown className="h-4 w-4 text-text-muted" />

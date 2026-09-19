@@ -82,7 +82,7 @@ export default function CreateExamPage() {
   const [selectedCentre, setSelectedCentre] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
-  const [targetTrack, setTargetTrack] = useState("BOTH");
+  const [targetTrack, setTargetTrack] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -109,7 +109,7 @@ export default function CreateExamPage() {
   }, [subject, selectedBoard, selectedStandard]);
 
   const handleSave = async () => {
-    if (!title) return alert("Please enter a title");
+    if (!title || !type || !subject || !targetTrack) return alert("Please fill required fields");
     setSaving(true);
     try {
       const exam = await fetchApi<any>('/exams', {
@@ -225,12 +225,15 @@ export default function CreateExamPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-text-secondary mb-1.5">Track</label>
-                    <select value={targetTrack} onChange={(e) => setTargetTrack(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25">
-                      <option value="BOTH">Both (General)</option>
-                      <option value="TUITION">Tuition Only</option>
-                      <option value="ENTRANCE">Entrance Only</option>
-                    </select>
+                    <label className="block text-xs font-bold text-text-secondary mb-1.5 uppercase tracking-wider">Target Audience <span className="text-brand-red">*</span></label>
+                    <div className="relative">
+                      <select value={targetTrack} onChange={(e) => setTargetTrack(e.target.value)} className="w-full h-9 rounded-lg border border-border-soft bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/25" required>
+                        <option value="" disabled>Select Target Audience</option>
+                        <option value="BOTH">Both</option>
+                        <option value="TUITION">Tuition</option>
+                        <option value="ENTRANCE">Entrance</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

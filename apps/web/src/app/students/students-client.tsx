@@ -335,7 +335,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
   const [classLevel, setClassLevel] = useState(student?.classLevel || "");
   const [centre, setCentre] = useState(student?.centre || "");
   const [division, setDivision] = useState(student?.division || "");
-  const [targetTrack, setTargetTrack] = useState<"TUITION" | "ENTRANCE" | "BOTH">(student?.track || "BOTH");
+  const [targetTrack, setTargetTrack] = useState<"TUITION" | "ENTRANCE" | "BOTH" | "">(student?.track || "");
 
   const TABS = [
     { id: "Admission", icon: User },
@@ -550,7 +550,9 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     value={targetTrack} 
                     onChange={(e) => setTargetTrack(e.target.value as any)}
                     className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    required
                   >
+                    <option value="" disabled>---Select---</option>
                     <option value="BOTH">Both (Tuition & Entrance)</option>
                     <option value="TUITION">Tuition Only</option>
                     <option value="ENTRANCE">Entrance Only</option>
@@ -709,6 +711,12 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
             <button 
               onClick={() => {
                 if (activeTab === "Payments" || student) {
+                  // Validate Target Track
+                  if (!targetTrack) {
+                    alert("Please select a Target Audience (Tuition/Entrance/Both)");
+                    return;
+                  }
+
                   // Final save
                   const newStudentData: Student = {
                     id: student?.id || Math.random().toString(36).substr(2, 9),

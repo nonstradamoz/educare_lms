@@ -99,6 +99,16 @@ export class SetupController {
   }
 
   // DELETE endpoints for hierarchy
+  @Delete('boards/:id')
+  deleteBoard(@Param('id') id: string) {
+    return this.setupService.deleteBoard(id);
+  }
+
+  @Delete('standards/:id')
+  deleteStandard(@Param('id') id: string) {
+    return this.setupService.deleteStandard(id);
+  }
+
   @Delete('subjects/:id')
   deleteSubject(@Param('id') id: string) {
     return this.setupService.deleteSubject(id);

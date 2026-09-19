@@ -346,7 +346,28 @@ function AcademicStructureTab() {
     ]);
     setSubjects(subRes);
     setSyllabi(sylRes);
-    setSubjectForm({ ...subjectForm, name: "" });
+    setSubjectForm({...subjectForm, name: ""});
+  };
+
+  const deleteBoard = async (id: string) => {
+    if (!confirm("Are you sure? This will delete all classes, subjects, and data associated with this board.")) return;
+    await fetchApi(`/setup/boards/${id}`, { method: 'DELETE' });
+    setBoards(boards.filter(b => b.id !== id));
+    setStandards(standards.filter(s => s.boardId !== id));
+    setSyllabi(syllabi.filter(s => s.boardId !== id));
+  };
+
+  const deleteStandard = async (id: string) => {
+    if (!confirm("Are you sure? This will delete all subjects and data associated with this class.")) return;
+    await fetchApi(`/setup/standards/${id}`, { method: 'DELETE' });
+    setStandards(standards.filter(s => s.id !== id));
+    setSyllabi(syllabi.filter(s => s.standardId !== id));
+  };
+
+  const deleteSyllabus = async (id: string) => {
+    if (!confirm("Are you sure? This will remove the subject from this class.")) return;
+    await fetchApi(`/setup/syllabi/${id}`, { method: 'DELETE' });
+    setSyllabi(syllabi.filter(s => s.id !== id));
   };
 
   return (
@@ -392,9 +413,14 @@ function AcademicStructureTab() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {boards.map(b => (
-                <div key={b.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex flex-col">
-                  <span className="font-bold text-sm">{b.name}</span>
-                  <span className="text-xs text-text-muted mt-1">{b.code}</span>
+                <div key={b.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm">{b.name}</span>
+                    <span className="text-xs text-text-muted mt-1">{b.code}</span>
+                  </div>
+                  <button onClick={() => deleteBoard(b.id)} className="p-2 text-danger hover:bg-danger/10 rounded transition-colors" title="Delete Board">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -434,7 +460,12 @@ function AcademicStructureTab() {
                     <span className="font-bold text-sm block">{s.name}</span>
                     <span className="text-xs text-text-muted mt-0.5">{boards.find(b => b.id === s.boardId)?.name}</span>
                   </div>
-                  <span className="text-xs text-text-muted px-2 py-1 bg-white rounded border border-border-soft">Level {s.level}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-text-muted px-2 py-1 bg-white rounded border border-border-soft">Level {s.level}</span>
+                    <button onClick={() => deleteStandard(s.id)} className="p-1.5 text-danger hover:bg-danger/10 rounded transition-colors" title="Delete Class">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -485,12 +516,15 @@ function AcademicStructureTab() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {sortedSyllabi.map(s => (
-                <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex flex-col justify-between">
+                <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex flex-col justify-between relative group">
                   <span className="font-bold text-sm text-brand-blue">{s.subject?.name}</span>
                   <div className="mt-2 text-xs text-text-muted flex items-center gap-2">
                     <span className="px-2 py-0.5 bg-white rounded border border-border-soft">{s.board?.name}</span>
                     <span className="px-2 py-0.5 bg-white rounded border border-border-soft">{s.standard?.name}</span>
                   </div>
+                  <button onClick={() => deleteSyllabus(s.id)} className="absolute top-2 right-2 p-1.5 text-danger opacity-0 group-hover:opacity-100 hover:bg-danger/10 rounded transition-all" title="Remove Subject">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
             </div>

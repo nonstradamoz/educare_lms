@@ -136,6 +136,12 @@ export class SetupService {
   }
 
   // Deletions
+  async deleteBoard(id: string) {
+    return this.prisma.board.delete({ where: { id } });
+  }
+  async deleteStandard(id: string) {
+    return this.prisma.standard.delete({ where: { id } });
+  }
   async deleteSubject(id: string) {
     return this.prisma.subject.delete({ where: { id } });
   }

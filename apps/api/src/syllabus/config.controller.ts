@@ -2,6 +2,7 @@ import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ProgressService } from './progress.service';
 import { PrismaService } from '../database/prisma.service';
+import { SyllabusConfiguration } from '@educare/database';
 
 @UseGuards(JwtAuthGuard)
 @Controller('syllabus-config')
@@ -12,12 +13,12 @@ export class ConfigController {
   ) {}
 
   @Get()
-  getConfig() {
+  async getConfig(): Promise<SyllabusConfiguration> {
     return this.progressService.getConfiguration();
   }
 
   @Put()
-  async updateConfig(@Body() data: any) {
+  async updateConfig(@Body() data: any): Promise<SyllabusConfiguration> {
     const config = await this.progressService.getConfiguration();
     return this.prisma.syllabusConfiguration.update({
       where: { id: config.id },

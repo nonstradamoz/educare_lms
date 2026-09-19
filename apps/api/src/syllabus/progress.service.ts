@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { SyllabusConfiguration } from '@educare/database';
 
 @Injectable()
 export class ProgressService {
   constructor(private prisma: PrismaService) {}
 
-  async getConfiguration() {
+  async getConfiguration(): Promise<SyllabusConfiguration> {
     let config = await this.prisma.syllabusConfiguration.findFirst();
     if (!config) {
       config = await this.prisma.syllabusConfiguration.create({ data: {} });

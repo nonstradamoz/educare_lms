@@ -35,8 +35,14 @@ export class SetupService {
       where: boardId ? { boardId } : undefined,
     });
   }
-  async createStandard(data: { name: string; code: string; level: number; boardId: string }) {
-    return this.prisma.standard.create({ data });
+  async createStandard(data: { name: string; code?: string; level: number; boardId: string }) {
+    return this.prisma.standard.create({
+      data: {
+        name: data.name,
+        level: data.level,
+        boardId: data.boardId,
+      }
+    });
   }
 
   // Subjects

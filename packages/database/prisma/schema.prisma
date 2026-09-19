@@ -137,13 +137,17 @@ model Board {
   syllabi     Syllabus[]
   liveClasses LiveClass[]
   exams       Exam[]
+  standards   Standard[]
 
   @@map("boards")
 }
 
 model Standard {
   id        String   @id @default(uuid())
-  name      String   @unique // e.g., "Class 11", "Class 12"
+  name      String   // e.g., "Class 11", "Class 12"
+  level     Int      @default(1)
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -152,6 +156,7 @@ model Standard {
   liveClasses LiveClass[]
   exams       Exam[]
 
+  @@unique([name, boardId])
   @@map("standards")
 }
 

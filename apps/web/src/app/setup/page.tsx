@@ -284,11 +284,14 @@ function AcademicStructureTab() {
   
   const [yearForm, setYearForm] = useState({ name: "", startDate: "", endDate: "" });
   const [boardForm, setBoardForm] = useState({ name: "", code: "" });
-  const [standardForm, setStandardForm] = useState({ name: "", code: "", level: 1 });
+  const [standardForm, setStandardForm] = useState({ name: "", code: "", level: 1, boardId: "" });
+  const [standardFilterBoard, setStandardFilterBoard] = useState("");
   const [subjectForm, setSubjectForm] = useState({ name: "", boardId: "", standardId: "" });
   const [subjectSort, setSubjectSort] = useState("board");
   const [filterBoard, setFilterBoard] = useState("");
   const [filterStandard, setFilterStandard] = useState("");
+
+  const filteredStandards = standards.filter(s => !standardFilterBoard || s.boardId === standardFilterBoard);
 
   const sortedSyllabi = [...syllabi]
     .filter(s => {
@@ -326,10 +329,10 @@ function AcademicStructureTab() {
   };
 
   const addStandard = async () => {
-    if (!standardForm.name) return;
+    if (!standardForm.name || !standardForm.boardId) return;
     const res = await fetchApi<any>('/setup/standards', { method: 'POST', body: JSON.stringify(standardForm) });
     setStandards([...standards, res]);
-    setStandardForm({ name: "", code: "", level: 1 });
+    setStandardForm({ name: "", code: "", level: 1, boardId: standardForm.boardId });
   };
 
   const addSubject = async () => {
@@ -400,16 +403,37 @@ function AcademicStructureTab() {
 
         {activeTab === "Classes" && (
           <div>
-            <div className="flex gap-4 mb-6">
-              <input type="text" placeholder="Class Name (e.g. Class 11)" value={standardForm.name} onChange={e => setStandardForm({...standardForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1" />
-              <input type="text" placeholder="Code (e.g. 11)" value={standardForm.code} onChange={e => setStandardForm({...standardForm, code: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-32" />
-              <input type="number" placeholder="Level" value={standardForm.level} onChange={e => setStandardForm({...standardForm, level: parseInt(e.target.value)})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-24" />
-              <button onClick={addStandard} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold">Add Class</button>
+            <div className="bg-surface-2/50 p-4 rounded-xl border border-border-soft mb-6">
+              <h4 className="text-xs font-bold text-text-primary mb-3">Add New Class</h4>
+              <div className="flex gap-4">
+                <select value={standardForm.boardId} onChange={e => setStandardForm({...standardForm, boardId: e.target.value})} className="h-10 rounded-lg border border-border-soft bg-white px-3 text-sm w-48 focus:ring-2 focus:ring-brand-blue/20 outline-none">
+                  <option value="" disabled>Select Board</option>
+                  {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+                <input type="text" placeholder="Class Name (e.g. Class 11)" value={standardForm.name} onChange={e => setStandardForm({...standardForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1 focus:ring-2 focus:ring-brand-blue/20 outline-none" />
+                <input type="text" placeholder="Code (e.g. 11)" value={standardForm.code} onChange={e => setStandardForm({...standardForm, code: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-32 focus:ring-2 focus:ring-brand-blue/20 outline-none" />
+                <input type="number" placeholder="Level" value={standardForm.level} onChange={e => setStandardForm({...standardForm, level: parseInt(e.target.value)})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-24 focus:ring-2 focus:ring-brand-blue/20 outline-none" />
+                <button onClick={addStandard} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0 opacity-90 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled={!standardForm.name || !standardForm.boardId}>Add Class</button>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              {standards.map(s => (
+            
+            <div className="flex items-center justify-between mb-4 bg-white p-3 rounded-lg border border-border-soft shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold text-text-secondary">Filter:</span>
+                <select value={standardFilterBoard} onChange={e => setStandardFilterBoard(e.target.value)} className="h-8 rounded border border-border-soft bg-surface-2 px-2 text-xs focus:outline-none">
+                  <option value="">All Boards</option>
+                  {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {filteredStandards.map(s => (
                 <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex items-center justify-between">
-                  <span className="font-bold text-sm">{s.name}</span>
+                  <div>
+                    <span className="font-bold text-sm block">{s.name}</span>
+                    <span className="text-xs text-text-muted mt-0.5">{boards.find(b => b.id === s.boardId)?.name}</span>
+                  </div>
                   <span className="text-xs text-text-muted px-2 py-1 bg-white rounded border border-border-soft">Level {s.level}</span>
                 </div>
               ))}
@@ -426,9 +450,9 @@ function AcademicStructureTab() {
                   <option value="" disabled>Select Board</option>
                   {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
-                <select value={subjectForm.standardId} onChange={e => setSubjectForm({...subjectForm, standardId: e.target.value})} className="h-10 rounded-lg border border-border-soft bg-white px-3 text-sm w-48 focus:ring-2 focus:ring-brand-blue/20 outline-none">
+                <select value={subjectForm.standardId} onChange={e => setSubjectForm({...subjectForm, standardId: e.target.value})} className="h-10 rounded-lg border border-border-soft bg-white px-3 text-sm w-48 focus:ring-2 focus:ring-brand-blue/20 outline-none" disabled={!subjectForm.boardId}>
                   <option value="" disabled>Select Class</option>
-                  {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {standards.filter(s => s.boardId === subjectForm.boardId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
                 <input type="text" placeholder="Subject Name (e.g. Physics)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1 focus:ring-2 focus:ring-brand-blue/20 outline-none" />
                 <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0 opacity-90 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all" disabled={!subjectForm.name || !subjectForm.boardId || !subjectForm.standardId}>
@@ -444,9 +468,9 @@ function AcademicStructureTab() {
                   <option value="">All Boards</option>
                   {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
-                <select value={filterStandard} onChange={e => setFilterStandard(e.target.value)} className="h-8 rounded border border-border-soft bg-surface-2 px-2 text-xs focus:outline-none">
+                <select value={filterStandard} onChange={e => setFilterStandard(e.target.value)} className="h-8 rounded border border-border-soft bg-surface-2 px-2 text-xs focus:outline-none" disabled={!filterBoard}>
                   <option value="">All Classes</option>
-                  {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {standards.filter(s => s.boardId === filterBoard).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
               <div className="flex items-center gap-2">
@@ -766,9 +790,9 @@ function CurriculumBuilderTab() {
           </div>
           <div>
             <label className="block text-xs font-bold text-text-secondary mb-1.5">Class / Standard</label>
-            <select value={selStandard} onChange={e => setSelStandard(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+            <select value={selStandard} onChange={e => setSelStandard(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20" disabled={!selBoard}>
               <option value="" disabled>Select Class</option>
-              {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {standards.filter(s => s.boardId === selBoard).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
           <div>

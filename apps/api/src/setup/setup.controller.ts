@@ -38,8 +38,8 @@ export class SetupController {
   }
 
   @Get('standards')
-  getStandards() {
-    return this.setupService.getStandards();
+  getStandards(@Query('boardId') boardId?: string) {
+    return this.setupService.getStandards(boardId);
   }
 
   @Post('standards')

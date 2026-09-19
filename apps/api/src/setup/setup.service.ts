@@ -30,10 +30,12 @@ export class SetupService {
   }
 
   // Standards (Classes)
-  async getStandards() {
-    return this.prisma.standard.findMany();
+  async getStandards(boardId?: string) {
+    return this.prisma.standard.findMany({
+      where: boardId ? { boardId } : undefined,
+    });
   }
-  async createStandard(data: { name: string; code: string; level: number }) {
+  async createStandard(data: { name: string; code: string; level: number; boardId: string }) {
     return this.prisma.standard.create({ data });
   }
 

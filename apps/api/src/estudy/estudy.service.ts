@@ -26,7 +26,7 @@ export class EstudyService {
       const firstSyllabus = await this.prisma.syllabus.findFirst();
       if (!firstSyllabus) {
          const board = await this.prisma.board.findFirst() || await this.prisma.board.create({ data: { name: 'Dummy Board' } });
-         const standard = await this.prisma.standard.findFirst() || await this.prisma.standard.create({ data: { name: 'Class 10' } });
+         const standard = await this.prisma.standard.findFirst() || await this.prisma.standard.create({ data: { name: 'Class 10', boardId: board.id } });
          const subject = await this.prisma.subject.findFirst() || await this.prisma.subject.create({ data: { name: 'Science' } });
          
          const newSyllabus = await this.prisma.syllabus.create({

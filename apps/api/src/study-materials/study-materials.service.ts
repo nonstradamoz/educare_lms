@@ -40,7 +40,7 @@ export class StudyMaterialService {
         if (!syllabus) {
            // create a dummy board, standard, subject, and syllabus if none exist
            const board = await this.prisma.board.findFirst() || await this.prisma.board.create({ data: { name: 'Dummy Board' } });
-           const standard = await this.prisma.standard.findFirst() || await this.prisma.standard.create({ data: { name: 'Dummy Standard' } });
+           const standard = await this.prisma.standard.findFirst() || await this.prisma.standard.create({ data: { name: 'Dummy Standard', boardId: board.id } });
            const subject = await this.prisma.subject.findFirst() || await this.prisma.subject.create({ data: { name: 'Dummy Subject' } });
            syllabus = await this.prisma.syllabus.create({ data: { boardId: board.id, standardId: standard.id, subjectId: subject.id } });
         }

@@ -21,7 +21,7 @@ export class StudentsService {
       const board = await this.prisma.board.findUnique({ where: { name: data.board } });
       if (!board) throw new NotFoundException(`Board "${data.board}" not found.`);
 
-      const standard = await this.prisma.standard.findUnique({ where: { name: data.classLevel } });
+      const standard = await this.prisma.standard.findUnique({ where: { name_boardId: { name: data.classLevel, boardId: board.id } } });
       if (!standard) throw new NotFoundException(`Class "${data.classLevel}" not found.`);
 
       // 2. Find or create the Batch
@@ -128,7 +128,7 @@ export class StudentsService {
     const centre = data.centre ? await this.prisma.centre.findFirst({ where: { name: data.centre } }) : null;
     const year = data.academicYear ? await this.prisma.academicYear.findUnique({ where: { name: data.academicYear } }) : null;
     const board = data.board ? await this.prisma.board.findUnique({ where: { name: data.board } }) : null;
-    const standard = data.classLevel ? await this.prisma.standard.findUnique({ where: { name: data.classLevel } }) : null;
+    const standard = (data.classLevel && board) ? await this.prisma.standard.findUnique({ where: { name_boardId: { name: data.classLevel, boardId: board.id } } }) : null;
 
     let batch = null;
     if (centre && year && board && standard) {

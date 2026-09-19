@@ -288,12 +288,18 @@ function AcademicStructureTab() {
   const [subjectForm, setSubjectForm] = useState({ name: "", boardId: "", standardId: "" });
   const [subjectSort, setSubjectSort] = useState("board");
 
-  const sortedSyllabi = [...syllabi].sort((a, b) => {
-    if (subjectSort === 'board') return (a.board?.name || "").localeCompare(b.board?.name || "");
-    if (subjectSort === 'class') return (a.standard?.level || 0) - (b.standard?.level || 0) || (a.standard?.name || "").localeCompare(b.standard?.name || "");
-    if (subjectSort === 'subject') return (a.subject?.name || "").localeCompare(b.subject?.name || "");
-    return 0;
-  });
+  const sortedSyllabi = [...syllabi]
+    .filter(s => {
+      if (subjectForm.boardId && s.boardId !== subjectForm.boardId) return false;
+      if (subjectForm.standardId && s.standardId !== subjectForm.standardId) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (subjectSort === 'board') return (a.board?.name || "").localeCompare(b.board?.name || "");
+      if (subjectSort === 'class') return (a.standard?.level || 0) - (b.standard?.level || 0) || (a.standard?.name || "").localeCompare(b.standard?.name || "");
+      if (subjectSort === 'subject') return (a.subject?.name || "").localeCompare(b.subject?.name || "");
+      return 0;
+    });
 
   useEffect(() => {
     fetchApi<any[]>('/setup/academic-years').then(data => setYears(data));
@@ -413,15 +419,17 @@ function AcademicStructureTab() {
           <div>
             <div className="flex gap-4 mb-6">
               <select value={subjectForm.boardId} onChange={e => setSubjectForm({...subjectForm, boardId: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-48">
-                <option value="" disabled>Select Board</option>
+                <option value="">All Boards</option>
                 {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
               <select value={subjectForm.standardId} onChange={e => setSubjectForm({...subjectForm, standardId: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm w-48">
-                <option value="" disabled>Select Class</option>
+                <option value="">All Classes</option>
                 {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               <input type="text" placeholder="Subject Name (e.g. Physics)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1" />
-              <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0">Add Subject</button>
+              <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0 opacity-90 hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed" disabled={!subjectForm.name || !subjectForm.boardId || !subjectForm.standardId}>
+                Add Subject
+              </button>
             </div>
             
             <div className="flex items-center justify-end mb-4">

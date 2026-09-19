@@ -35,11 +35,17 @@ export function StudentsClient({ initialStudents }: { initialStudents: Student[]
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Student | null>(null);
 
-  const filtered = students.filter(s => {
-    const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
-                        s.admissionNo.toLowerCase().includes(search.toLowerCase()) ||
-                        s.email.toLowerCase().includes(search.toLowerCase()) ||
-                        s.phone.includes(search);
+  const filtered = (students || []).filter(s => {
+    if (!s) return false;
+    const name = s.name || "";
+    const admNo = s.admissionNo || "";
+    const email = s.email || "";
+    const phone = s.phone || "";
+    
+    const matchSearch = name.toLowerCase().includes(search.toLowerCase()) || 
+                        admNo.toLowerCase().includes(search.toLowerCase()) ||
+                        email.toLowerCase().includes(search.toLowerCase()) ||
+                        phone.includes(search);
     const matchYear = filterYear === "All Years" || s.academicYear === filterYear;
     const matchBoard = filterBoard === "All Boards" || s.board === filterBoard;
     const matchClass = filterClass === "All Classes" || s.classLevel === filterClass;

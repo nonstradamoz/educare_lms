@@ -262,7 +262,7 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
                         <p className="text-[11px] text-text-muted mt-0.5">{m.syllabus?.standard?.name || "General"} | {m.syllabus?.board?.name || "No Board"}</p>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-xs font-medium text-text-primary">{new Date(m.createdAt).toLocaleDateString()}</p>
+                        <p className="text-xs font-medium text-text-primary" suppressHydrationWarning>{new Date(m.createdAt).toLocaleDateString()}</p>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button 

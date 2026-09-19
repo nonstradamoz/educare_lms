@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Delete, Param } from '@nestjs/common';
 import { SetupService } from './setup.service';
 
 @Controller('setup')
@@ -86,5 +86,41 @@ export class SetupController {
   @Post('topics')
   createTopic(@Body() data: any) {
     return this.setupService.createTopic(data);
+  }
+
+  @Get('subtopics')
+  getSubtopics(@Query('topicId') topicId?: string) {
+    return this.setupService.getSubtopics(topicId);
+  }
+
+  @Post('subtopics')
+  createSubtopic(@Body() data: any) {
+    return this.setupService.createSubtopic(data);
+  }
+
+  // DELETE endpoints for hierarchy
+  @Delete('subjects/:id')
+  deleteSubject(@Param('id') id: string) {
+    return this.setupService.deleteSubject(id);
+  }
+
+  @Delete('syllabi/:id')
+  deleteSyllabus(@Param('id') id: string) {
+    return this.setupService.deleteSyllabus(id);
+  }
+
+  @Delete('chapters/:id')
+  deleteChapter(@Param('id') id: string) {
+    return this.setupService.deleteChapter(id);
+  }
+
+  @Delete('topics/:id')
+  deleteTopic(@Param('id') id: string) {
+    return this.setupService.deleteTopic(id);
+  }
+
+  @Delete('subtopics/:id')
+  deleteSubtopic(@Param('id') id: string) {
+    return this.setupService.deleteSubtopic(id);
   }
 }

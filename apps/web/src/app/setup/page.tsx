@@ -14,7 +14,14 @@ import {
   Plus,
   Trash2,
   Upload,
-  Edit2
+  Edit2,
+  BookOpen,
+  ChevronRight,
+  ChevronDown,
+  Folder,
+  Book,
+  FileBox,
+  Layers
 } from "lucide-react";
 
 export default function SetupPage() {
@@ -24,6 +31,7 @@ export default function SetupPage() {
     { id: "Centre Setup", icon: Building2 },
     { id: "Roles & Permissions", icon: ShieldCheck },
     { id: "Academic Structure", icon: GraduationCap },
+    { id: "Curriculum Builder", icon: BookOpen },
     { id: "Fee Structure", icon: CreditCard },
     { id: "SMS Templates", icon: MessageSquare },
     { id: "Exam Configuration", icon: FileText },
@@ -77,6 +85,7 @@ export default function SetupPage() {
               {activeTab === "Centre Setup" && <CentreSetupTab />}
               {activeTab === "Roles & Permissions" && <RolesPermissionsTab />}
               {activeTab === "Academic Structure" && <AcademicStructureTab />}
+              {activeTab === "Curriculum Builder" && <CurriculumBuilderTab />}
               {activeTab === "Fee Structure" && <FeeStructureTab />}
               {activeTab === "SMS Templates" && <SmsTemplatesTab />}
               {activeTab === "Exam Configuration" && <ExamConfigTab />}
@@ -270,15 +279,18 @@ function AcademicStructureTab() {
   const [years, setYears] = useState<any[]>([]);
   const [boards, setBoards] = useState<any[]>([]);
   const [standards, setStandards] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   
   const [yearForm, setYearForm] = useState({ name: "", startDate: "", endDate: "" });
   const [boardForm, setBoardForm] = useState({ name: "", code: "" });
   const [standardForm, setStandardForm] = useState({ name: "", code: "", level: 1 });
+  const [subjectForm, setSubjectForm] = useState({ name: "" });
 
   useEffect(() => {
     fetchApi<any[]>('/setup/academic-years').then(data => setYears(data));
     fetchApi<any[]>('/setup/boards').then(data => setBoards(data));
     fetchApi<any[]>('/setup/standards').then(data => setStandards(data));
+    fetchApi<any[]>('/setup/subjects').then(data => setSubjects(data));
   }, []);
 
   const addYear = async () => {
@@ -302,6 +314,13 @@ function AcademicStructureTab() {
     setStandardForm({ name: "", code: "", level: 1 });
   };
 
+  const addSubject = async () => {
+    if (!subjectForm.name) return;
+    const res = await fetchApi<any>('/setup/subjects', { method: 'POST', body: JSON.stringify(subjectForm) });
+    setSubjects([...subjects, res]);
+    setSubjectForm({ name: "" });
+  };
+
   return (
     <div className="bg-white rounded-xl border border-border-soft shadow-sm overflow-hidden flex flex-col">
       <div className="p-6 border-b border-border-soft flex items-center justify-between bg-surface-2/30">
@@ -311,7 +330,7 @@ function AcademicStructureTab() {
         </div>
       </div>
       <div className="border-b border-border-soft px-6 flex items-center gap-6">
-        {["Years", "Boards", "Classes"].map(tab => (
+        {["Years", "Boards", "Classes", "Subjects"].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === tab ? "border-brand-blue text-brand-blue" : "border-transparent text-text-secondary hover:text-text-primary"}`}>
             {tab}
           </button>
@@ -367,6 +386,22 @@ function AcademicStructureTab() {
                 <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex items-center justify-between">
                   <span className="font-bold text-sm">{s.name}</span>
                   <span className="text-xs text-text-muted px-2 py-1 bg-white rounded border border-border-soft">Level {s.level}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "Subjects" && (
+          <div>
+            <div className="flex gap-4 mb-6">
+              <input type="text" placeholder="Subject Name (e.g. Physics)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1" />
+              <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold">Add Subject</button>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {subjects.map(s => (
+                <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex items-center justify-between">
+                  <span className="font-bold text-sm">{s.name}</span>
                 </div>
               ))}
             </div>
@@ -546,6 +581,293 @@ function ExamConfigTab() {
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CurriculumBuilderTab() {
+  const [boards, setBoards] = useState<any[]>([]);
+  const [standards, setStandards] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [syllabi, setSyllabi] = useState<any[]>([]);
+  const [chapters, setChapters] = useState<any[]>([]);
+
+  const [selBoard, setSelBoard] = useState("");
+  const [selStandard, setSelStandard] = useState("");
+  const [selSubject, setSelSubject] = useState("");
+
+  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
+  const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
+
+  const [addingChapter, setAddingChapter] = useState(false);
+  const [newChapterName, setNewChapterName] = useState("");
+  
+  const [addingTopicTo, setAddingTopicTo] = useState<string | null>(null);
+  const [newTopicName, setNewTopicName] = useState("");
+
+  const [addingSubtopicTo, setAddingSubtopicTo] = useState<string | null>(null);
+  const [newSubtopicName, setNewSubtopicName] = useState("");
+
+  useEffect(() => {
+    fetchApi<any[]>('/setup/boards').then(setBoards);
+    fetchApi<any[]>('/setup/standards').then(setStandards);
+    fetchApi<any[]>('/setup/subjects').then(setSubjects);
+    fetchApi<any[]>('/setup/syllabi').then(setSyllabi);
+  }, []);
+
+  const activeSyllabus = syllabi.find(s => s.boardId === selBoard && s.standardId === selStandard && s.subjectId === selSubject);
+
+  useEffect(() => {
+    if (activeSyllabus) {
+      fetchApi<any[]>(`/setup/chapters?syllabusId=${activeSyllabus.id}`).then(setChapters);
+    } else {
+      setChapters([]);
+    }
+  }, [activeSyllabus]);
+
+  const initSyllabus = async () => {
+    if (!selBoard || !selStandard || !selSubject) return;
+    const res = await fetchApi<any>('/setup/syllabi', {
+      method: 'POST',
+      body: JSON.stringify({ boardId: selBoard, standardId: selStandard, subjectId: selSubject })
+    });
+    setSyllabi([...syllabi, res]);
+  };
+
+  const toggleChapter = (id: string) => setExpandedChapters(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleTopic = (id: string) => setExpandedTopics(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleAddChapter = async () => {
+    if (!activeSyllabus || !newChapterName) return;
+    const res = await fetchApi<any>('/setup/chapters', {
+      method: 'POST', body: JSON.stringify({ name: newChapterName, syllabusId: activeSyllabus.id })
+    });
+    setChapters([...chapters, { ...res, topics: [] }]);
+    setAddingChapter(false);
+    setNewChapterName("");
+  };
+
+  const handleAddTopic = async (chapterId: string) => {
+    if (!newTopicName) return;
+    const res = await fetchApi<any>('/setup/topics', {
+      method: 'POST', body: JSON.stringify({ name: newTopicName, chapterId })
+    });
+    setChapters(chapters.map(c => c.id === chapterId ? { ...c, topics: [...(c.topics || []), { ...res, subtopics: [] }] } : c));
+    setAddingTopicTo(null);
+    setNewTopicName("");
+    setExpandedChapters(prev => ({ ...prev, [chapterId]: true }));
+  };
+
+  const handleAddSubtopic = async (chapterId: string, topicId: string) => {
+    if (!newSubtopicName) return;
+    const res = await fetchApi<any>('/setup/subtopics', {
+      method: 'POST', body: JSON.stringify({ name: newSubtopicName, topicId })
+    });
+    setChapters(chapters.map(c => c.id === chapterId ? {
+      ...c, topics: c.topics.map((t: any) => t.id === topicId ? { ...t, subtopics: [...(t.subtopics || []), res] } : t)
+    } : c));
+    setAddingSubtopicTo(null);
+    setNewSubtopicName("");
+    setExpandedTopics(prev => ({ ...prev, [topicId]: true }));
+  };
+
+  const handleDelete = async (type: 'chapters' | 'topics' | 'subtopics', id: string, parentId?: string, grandParentId?: string) => {
+    if (!confirm(`Are you sure you want to delete this ${type.slice(0,-1)}?`)) return;
+    await fetchApi(`/setup/${type}/${id}`, { method: 'DELETE' });
+    
+    if (type === 'chapters') {
+      setChapters(chapters.filter(c => c.id !== id));
+    } else if (type === 'topics' && parentId) {
+      setChapters(chapters.map(c => c.id === parentId ? { ...c, topics: c.topics.filter((t: any) => t.id !== id) } : c));
+    } else if (type === 'subtopics' && parentId && grandParentId) {
+      setChapters(chapters.map(c => c.id === grandParentId ? {
+        ...c, topics: c.topics.map((t: any) => t.id === parentId ? { ...t, subtopics: t.subtopics.filter((s: any) => s.id !== id) } : t)
+      } : c));
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-border-soft shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+      <div className="p-6 border-b border-border-soft flex items-center justify-between bg-surface-2/30">
+        <div>
+          <h3 className="text-sm font-bold text-text-primary">Curriculum Builder</h3>
+          <p className="text-xs text-text-muted mt-1">Build and manage the syllabus hierarchy: Chapters, Topics, and Subtopics.</p>
+        </div>
+      </div>
+      
+      <div className="p-6 border-b border-border-soft bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-text-secondary mb-1.5">Board</label>
+            <select value={selBoard} onChange={e => setSelBoard(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+              <option value="" disabled>Select Board</option>
+              {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-text-secondary mb-1.5">Class / Standard</label>
+            <select value={selStandard} onChange={e => setSelStandard(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+              <option value="" disabled>Select Class</option>
+              {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-text-secondary mb-1.5">Subject</label>
+            <select value={selSubject} onChange={e => setSelSubject(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20">
+              <option value="" disabled>Select Subject</option>
+              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 p-6 bg-surface overflow-y-auto">
+        {!selBoard || !selStandard || !selSubject ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-60">
+            <Layers className="h-12 w-12 text-brand-blue mb-4" />
+            <h3 className="text-sm font-bold text-text-primary">Select Curriculum Matrix</h3>
+            <p className="text-xs text-text-muted mt-1 max-w-sm">Please select a Board, Class, and Subject above to view or build its curriculum.</p>
+          </div>
+        ) : !activeSyllabus ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-white border border-dashed border-border-soft rounded-xl shadow-sm">
+            <BookOpen className="h-10 w-10 text-brand-blue/50 mb-3" />
+            <h3 className="text-sm font-bold text-text-primary">No Curriculum Found</h3>
+            <p className="text-xs text-text-muted mt-1 mb-4">A syllabus mapping hasn't been initialized for this combination yet.</p>
+            <button onClick={initSyllabus} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-6 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors">
+              <Plus className="h-4 w-4" /> Initialize Syllabus
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
+                <Book className="h-4 w-4 text-brand-blue" />
+                Syllabus Content
+              </h4>
+              {!addingChapter && (
+                <button onClick={() => setAddingChapter(true)} className="inline-flex items-center gap-1 rounded-md bg-white border border-border-soft px-3 py-1.5 text-xs font-semibold text-text-secondary hover:text-brand-blue hover:border-brand-blue/30 transition-colors shadow-sm">
+                  <Plus className="h-3.5 w-3.5" /> Add Chapter
+                </button>
+              )}
+            </div>
+
+            {addingChapter && (
+              <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-brand-blue/30 shadow-sm">
+                <Folder className="h-4 w-4 text-brand-blue" />
+                <input autoFocus type="text" value={newChapterName} onChange={e => setNewChapterName(e.target.value)} placeholder="Chapter Name (e.g. Kinematics)" className="flex-1 h-8 text-sm focus:outline-none" />
+                <button onClick={() => { setAddingChapter(false); setNewChapterName(""); }} className="text-xs font-semibold text-text-muted hover:text-text-primary px-2">Cancel</button>
+                <button onClick={handleAddChapter} className="h-7 px-3 bg-brand-blue text-white text-xs font-bold rounded">Save</button>
+              </div>
+            )}
+
+            {chapters.length === 0 && !addingChapter ? (
+              <div className="p-8 text-center text-text-muted text-xs border border-dashed border-border-soft rounded-xl bg-white">
+                No chapters added yet. Click "Add Chapter" to start building.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {chapters.map(c => (
+                  <div key={c.id} className="bg-white rounded-lg border border-border-soft overflow-hidden shadow-sm">
+                    {/* Chapter Header */}
+                    <div className="flex items-center justify-between p-3 hover:bg-surface-2/50 group">
+                      <div className="flex items-center gap-2 cursor-pointer flex-1" onClick={() => toggleChapter(c.id)}>
+                        <button className="p-1 rounded text-text-muted hover:bg-surface-3 transition-colors">
+                          {expandedChapters[c.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </button>
+                        <Folder className="h-4 w-4 text-brand-blue" />
+                        <span className="text-sm font-bold text-text-primary">{c.name}</span>
+                        <span className="text-[10px] font-semibold text-brand-blue bg-brand-blue/10 px-2 py-0.5 rounded-full ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {c.topics?.length || 0} Topics
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setAddingTopicTo(c.id)} className="text-[11px] font-semibold text-brand-blue hover:underline px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          + Topic
+                        </button>
+                        <button onClick={() => handleDelete('chapters', c.id)} className="text-text-muted hover:text-brand-red p-1 rounded transition-colors opacity-0 group-hover:opacity-100">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Chapter Body (Topics) */}
+                    {expandedChapters[c.id] && (
+                      <div className="border-t border-border-soft bg-surface/50 pl-9 pr-3 py-2 space-y-1">
+                        
+                        {addingTopicTo === c.id && (
+                          <div className="flex items-center gap-2 bg-white p-2 rounded border border-brand-blue/30 shadow-sm ml-2 mb-2">
+                            <FileBox className="h-3.5 w-3.5 text-brand-blue/70" />
+                            <input autoFocus type="text" value={newTopicName} onChange={e => setNewTopicName(e.target.value)} placeholder="Topic Name" className="flex-1 h-7 text-xs focus:outline-none" />
+                            <button onClick={() => { setAddingTopicTo(null); setNewTopicName(""); }} className="text-[10px] font-semibold text-text-muted hover:text-text-primary px-2">Cancel</button>
+                            <button onClick={() => handleAddTopic(c.id)} className="h-6 px-2 bg-brand-blue text-white text-[10px] font-bold rounded">Save</button>
+                          </div>
+                        )}
+
+                        {(!c.topics || c.topics.length === 0) && addingTopicTo !== c.id && (
+                          <p className="text-xs text-text-muted italic py-1 pl-2">No topics yet.</p>
+                        )}
+
+                        {c.topics?.map((t: any) => (
+                          <div key={t.id} className="group/topic">
+                            {/* Topic Header */}
+                            <div className="flex items-center justify-between p-2 rounded hover:bg-white transition-colors border border-transparent hover:border-border-soft hover:shadow-sm">
+                              <div className="flex items-center gap-2 cursor-pointer flex-1" onClick={() => toggleTopic(t.id)}>
+                                <button className="p-0.5 rounded text-text-muted hover:text-text-primary transition-colors">
+                                  {expandedTopics[t.id] ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                                </button>
+                                <FileBox className="h-3.5 w-3.5 text-brand-blue/70" />
+                                <span className="text-xs font-semibold text-text-primary">{t.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => setAddingSubtopicTo(t.id)} className="text-[10px] font-semibold text-brand-blue hover:underline px-1 opacity-0 group-hover/topic:opacity-100 transition-opacity">
+                                  + Subtopic
+                                </button>
+                                <button onClick={() => handleDelete('topics', t.id, c.id)} className="text-text-muted hover:text-brand-red p-1 rounded transition-colors opacity-0 group-hover/topic:opacity-100">
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Topic Body (Subtopics) */}
+                            {expandedTopics[t.id] && (
+                              <div className="pl-8 pr-2 py-1 space-y-1">
+                                {addingSubtopicTo === t.id && (
+                                  <div className="flex items-center gap-2 bg-white p-1.5 rounded border border-brand-blue/30 shadow-sm ml-2 mb-1">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-brand-blue/50" />
+                                    <input autoFocus type="text" value={newSubtopicName} onChange={e => setNewSubtopicName(e.target.value)} placeholder="Subtopic Name" className="flex-1 h-6 text-[11px] focus:outline-none" />
+                                    <button onClick={() => { setAddingSubtopicTo(null); setNewSubtopicName(""); }} className="text-[9px] font-semibold text-text-muted hover:text-text-primary px-1">Cancel</button>
+                                    <button onClick={() => handleAddSubtopic(c.id, t.id)} className="h-5 px-1.5 bg-brand-blue text-white text-[9px] font-bold rounded">Save</button>
+                                  </div>
+                                )}
+                                
+                                {(!t.subtopics || t.subtopics.length === 0) && addingSubtopicTo !== t.id && (
+                                  <p className="text-[11px] text-text-muted italic py-0.5 pl-2">No subtopics.</p>
+                                )}
+
+                                {t.subtopics?.map((s: any) => (
+                                  <div key={s.id} className="flex items-center justify-between p-1.5 pl-2 rounded hover:bg-white group/subtopic">
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-1.5 w-1.5 rounded-full bg-brand-blue/30" />
+                                      <span className="text-[11px] text-text-secondary group-hover/subtopic:text-text-primary transition-colors">{s.name}</span>
+                                    </div>
+                                    <button onClick={() => handleDelete('subtopics', s.id, t.id, c.id)} className="text-text-muted hover:text-brand-red p-0.5 rounded transition-colors opacity-0 group-hover/subtopic:opacity-100">
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -56,9 +56,17 @@ export class SetupService {
   // Chapters
   async getChapters(syllabusId?: string) {
     if (syllabusId) {
-      return this.prisma.chapter.findMany({ where: { syllabusId } });
+      return this.prisma.chapter.findMany({ 
+        where: { syllabusId },
+        include: { topics: { include: { subtopics: true } } }
+      });
     }
-    return this.prisma.chapter.findMany({ include: { syllabus: { include: { subject: true } } } });
+    return this.prisma.chapter.findMany({ 
+      include: { 
+        syllabus: { include: { subject: true } },
+        topics: { include: { subtopics: true } }
+      } 
+    });
   }
   async createChapter(data: { name: string; syllabusId: string }) {
     return this.prisma.chapter.create({ data });
@@ -67,11 +75,39 @@ export class SetupService {
   // Topics
   async getTopics(chapterId?: string) {
     if (chapterId) {
-      return this.prisma.topic.findMany({ where: { chapterId } });
+      return this.prisma.topic.findMany({ where: { chapterId }, include: { subtopics: true } });
     }
-    return this.prisma.topic.findMany({ include: { chapter: true } });
+    return this.prisma.topic.findMany({ include: { chapter: true, subtopics: true } });
   }
   async createTopic(data: { name: string; chapterId: string }) {
     return this.prisma.topic.create({ data });
+  }
+
+  // Subtopics
+  async getSubtopics(topicId?: string) {
+    if (topicId) {
+      return this.prisma.subtopic.findMany({ where: { topicId } });
+    }
+    return this.prisma.subtopic.findMany({ include: { topic: true } });
+  }
+  async createSubtopic(data: { name: string; topicId: string }) {
+    return this.prisma.subtopic.create({ data });
+  }
+
+  // Deletions
+  async deleteSubject(id: string) {
+    return this.prisma.subject.delete({ where: { id } });
+  }
+  async deleteSyllabus(id: string) {
+    return this.prisma.syllabus.delete({ where: { id } });
+  }
+  async deleteChapter(id: string) {
+    return this.prisma.chapter.delete({ where: { id } });
+  }
+  async deleteTopic(id: string) {
+    return this.prisma.topic.delete({ where: { id } });
+  }
+  async deleteSubtopic(id: string) {
+    return this.prisma.subtopic.delete({ where: { id } });
   }
 }

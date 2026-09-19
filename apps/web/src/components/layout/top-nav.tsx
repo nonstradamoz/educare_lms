@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -13,15 +13,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/components/providers/auth-provider";
 
-export function TopNav({ title = "Dashboard" }: { title?: string }) {
+export function TopNav({ title = "Dashboard", onMenuClick }: { title?: string, onMenuClick?: () => void }) {
   const { email, role } = useAuth();
   
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border-soft bg-white px-6">
-      {/* Left — Page title */}
-      <div>
-        <h1 className="text-base font-semibold text-text-primary tracking-tight">{title}</h1>
-        <p className="text-xs text-text-muted mt-0.5">Educare Kalathipady</p>
+    <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-border-soft bg-white px-4 md:px-6">
+      {/* Left — Page title & Hamburger */}
+      <div className="flex items-center gap-3">
+        {onMenuClick && (
+          <button 
+            onClick={onMenuClick}
+            className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-surface-2 text-text-secondary transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
+        <div>
+          <h1 className="text-base font-semibold text-text-primary tracking-tight">{title}</h1>
+          <p className="text-xs text-text-muted mt-0.5 hidden sm:block">Educare Kalathipady</p>
+        </div>
       </div>
 
       {/* Right */}

@@ -21,6 +21,7 @@ import {
   Wrench,
   HelpCircle,
   PanelLeftClose,
+  X,
   LogOut,
 } from "lucide-react";
 
@@ -49,7 +50,15 @@ const systemNav = [
   { label: "Help",     href: "/help",     icon: HelpCircle },
 ];
 
-export function Sidebar({ role }: { role?: string }) {
+export function Sidebar({ 
+  role, 
+  isMobileMenuOpen, 
+  setIsMobileMenuOpen 
+}: { 
+  role?: string, 
+  isMobileMenuOpen?: boolean, 
+  setIsMobileMenuOpen?: (open: boolean) => void 
+}) {
   const path = usePathname();
   const router = useRouter();
 
@@ -66,14 +75,35 @@ export function Sidebar({ role }: { role?: string }) {
 
 
   return (
-    <aside className="hidden w-[260px] shrink-0 flex-col bg-brand-blue md:flex h-screen sticky top-0">
-      {/* Brand */}
-      <div className="flex h-16 items-center gap-3 px-6 border-b border-white/10">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-red shadow-sm">
-          <span className="text-white font-bold text-xs tracking-wider">EC</span>
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 md:hidden" 
+          onClick={() => setIsMobileMenuOpen?.(false)} 
+        />
+      )}
+
+      {/* Sidebar Drawer */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-[260px] flex-col bg-brand-blue shadow-xl transition-transform duration-300 ease-in-out
+        md:relative md:flex md:translate-x-0
+        ${isMobileMenuOpen ? "translate-x-0 flex" : "-translate-x-full hidden md:flex"}
+      `}>
+        {/* Brand */}
+        <div className="flex h-16 items-center justify-between px-6 border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-red shadow-sm">
+              <span className="text-white font-bold text-xs tracking-wider">EC</span>
+            </div>
+            <span className="text-white font-semibold text-base tracking-tight">Educare</span>
+          </div>
+          {isMobileMenuOpen && (
+            <button onClick={() => setIsMobileMenuOpen?.(false)} className="md:hidden text-white/70 hover:text-white">
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
-        <span className="text-white font-semibold text-base tracking-tight">Educare</span>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
@@ -103,7 +133,7 @@ export function Sidebar({ role }: { role?: string }) {
         </button>
       </div>
     </aside>
-
+    </>
   );
 }
 

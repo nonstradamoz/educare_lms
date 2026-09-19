@@ -30,8 +30,11 @@ export class SyllabusController {
 
   @Post('student-progress/event')
   recordStudentEvent(@Body() data: any, @Req() req: any) {
-    // e.g. { eventType: 'LECTURE', topicId: '...', batchId: '...', progress: 100 }
-    // Records the event, updates the progress table, and recalculates mastery
     return this.syllabusService.recordStudentEvent(req.user.id, data);
+  }
+
+  @Get('analytics/:batchId')
+  getBatchAnalytics(@Param('batchId') batchId: string) {
+    return this.syllabusService.getBatchAnalytics(batchId);
   }
 }

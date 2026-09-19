@@ -1,0 +1,18 @@
+import { fetchApiServer } from "@/lib/api-server";
+import { FacultyClient } from "./faculty-client";
+import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+
+export default async function FacultyPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("AccessToken")?.value;
+  
+  if (!token) {
+    redirect("/login");
+  }
+
+  // Fetch batches for this faculty (placeholder using general setup batches for now)
+  const batches = await fetchApiServer<any[]>('/setup/batches').catch(() => []);
+
+  return <FacultyClient initialBatches={batches} />;
+}

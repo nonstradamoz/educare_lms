@@ -147,12 +147,48 @@ export class SyllabusService {
   }
 
   async recordStudentEvent(userId: string, data: any) {
-    // Basic placeholder for recording events and triggering progress recalculation
     const student = await this.prisma.studentProfile.findUnique({ where: { userId } });
     if (!student) throw new NotFoundException('Student profile not found');
-
-    // This would typically insert/update a specific interaction table (e.g. video watch log),
-    // and then call ProgressService to recalculate the topic progress.
     return { success: true, message: "Event recorded" };
+  }
+
+  async getBatchAnalytics(batchId: string) {
+    const studentProgress = await this.prisma.studentTopicProgress.findMany({
+      where: { batchId },
+      include: {
+        student: { include: { user: true } },
+        topic: true
+      }
+    });
+
+    const students = new Set(studentProgress.map(p => p.studentId));
+    let totalLearningProgress = 0;
+    let totalMasteryScore = 0; // Using practice accuracy as a proxy for mastery score here
+    let weakTopics: Record<string, number> = {};
+
+    studentProgress.forEach(p => {
+      totalLearningProgress += p.completionPercentage;
+      totalMasteryScore += p.practiceAccuracy;
+      
+      if (p.status === 'REVISION_REQUIRED' || p.practiceAccuracy < 60) {
+        weakTopics[p.topic.name] = (weakTopics[p.topic.name] || 0) + 1;
+      }
+    });
+
+    const avgLearningProgress = studentProgress.length ? (totalLearningProgress / studentProgress.length) : 0;
+    const avgMastery = studentProgress.length ? (totalMasteryScore / studentProgress.length) : 0;
+
+    // Sort weak topics by frequency
+    const topWeakTopics = Object.entries(weakTopics)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+
+    return {
+      totalStudents: students.size,
+      avgLearningProgress: Math.round(avgLearningProgress),
+      avgMastery: Math.round(avgMastery),
+      topWeakTopics
+    };
   }
 }

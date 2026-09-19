@@ -286,6 +286,14 @@ function AcademicStructureTab() {
   const [boardForm, setBoardForm] = useState({ name: "", code: "" });
   const [standardForm, setStandardForm] = useState({ name: "", code: "", level: 1 });
   const [subjectForm, setSubjectForm] = useState({ name: "", boardId: "", standardId: "" });
+  const [subjectSort, setSubjectSort] = useState("board");
+
+  const sortedSyllabi = [...syllabi].sort((a, b) => {
+    if (subjectSort === 'board') return (a.board?.name || "").localeCompare(b.board?.name || "");
+    if (subjectSort === 'class') return (a.standard?.level || 0) - (b.standard?.level || 0) || (a.standard?.name || "").localeCompare(b.standard?.name || "");
+    if (subjectSort === 'subject') return (a.subject?.name || "").localeCompare(b.subject?.name || "");
+    return 0;
+  });
 
   useEffect(() => {
     fetchApi<any[]>('/setup/academic-years').then(data => setYears(data));
@@ -415,8 +423,20 @@ function AcademicStructureTab() {
               <input type="text" placeholder="Subject Name (e.g. Physics)" value={subjectForm.name} onChange={e => setSubjectForm({...subjectForm, name: e.target.value})} className="h-10 rounded-lg border border-border-soft px-3 text-sm flex-1" />
               <button onClick={addSubject} className="h-10 bg-brand-blue text-white px-4 rounded-lg text-sm font-bold shrink-0">Add Subject</button>
             </div>
+            
+            <div className="flex items-center justify-end mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-text-secondary">Sort by:</span>
+                <select value={subjectSort} onChange={e => setSubjectSort(e.target.value)} className="h-8 rounded border border-border-soft bg-surface-2 px-2 text-xs focus:outline-none">
+                  <option value="board">Board</option>
+                  <option value="class">Class</option>
+                  <option value="subject">Subject Name</option>
+                </select>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {syllabi.map(s => (
+              {sortedSyllabi.map(s => (
                 <div key={s.id} className="p-4 rounded-lg border border-border-soft bg-surface-2 flex flex-col justify-between">
                   <span className="font-bold text-sm text-brand-blue">{s.subject?.name}</span>
                   <div className="mt-2 text-xs text-text-muted flex items-center gap-2">

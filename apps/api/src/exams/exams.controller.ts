@@ -1,20 +1,25 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { StorageService } from '../storage/storage.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('exams')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
 export class ExamsController {
   constructor(
     private readonly examsService: ExamsService,
     private readonly storageService: StorageService
-  ) {}
+  ) { }
 
   @Get()
   getExams(): Promise<any> {
     return this.examsService.getExams();
   }
-
   @Post()
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
   createExam(@Body() data: any) {
     return this.examsService.createExam(data);
   }
@@ -25,6 +30,7 @@ export class ExamsController {
   }
 
   @Post('mcq')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
   createMcqQuestion(@Body() data: any): Promise<any> {
     return this.examsService.createMcqQuestion(data);
   }

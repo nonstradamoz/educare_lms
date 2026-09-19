@@ -1,7 +1,12 @@
-import { Controller, Get, Post, Body, Query, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Delete, Param, UseGuards } from '@nestjs/common';
 import { SetupService } from './setup.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('setup')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN', 'CENTRE_ADMIN')
 export class SetupController {
   constructor(private readonly setupService: SetupService) {}
 

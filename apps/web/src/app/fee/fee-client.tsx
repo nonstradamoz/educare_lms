@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { CreditCard, Plus, Search, Filter, X, ChevronRight, BookOpen, ChevronDown, CheckCircle2, FileText, Download, User } from "lucide-react";
+import { CreditCard, Plus, Search, Filter, X, ChevronRight, BookOpen, ChevronDown, CheckCircle2, FileText, Download, User, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api";
@@ -55,6 +55,18 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
       console.error(e);
     }
   };
+  
+  if (role === 'TEACHER') {
+    return (
+      <DashboardLayout title="Fee Management">
+        <div className="flex h-[60vh] items-center justify-center flex-col text-center">
+          <ShieldCheck className="h-16 w-16 text-brand-red/50 mb-4" />
+          <h2 className="text-xl font-bold text-text-primary">Access Denied</h2>
+          <p className="text-sm text-text-muted mt-2 max-w-md">Teachers do not have permission to view or manage fee information. This section is restricted to administrators and students.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const filtered = fees.filter(f => {
     const studentName = f.studentName || "";

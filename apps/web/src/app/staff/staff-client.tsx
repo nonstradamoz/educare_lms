@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { fetchApi } from "@/lib/api";
-import { UserCheck, Plus, Search, Filter, X, User, ChevronRight, BookOpen, ChevronDown, Users, Shield, FileText } from "lucide-react";
+import { useAuth } from "@/components/providers/auth-provider";
+import { UserCheck, Plus, Search, Filter, X, User, ChevronRight, BookOpen, ChevronDown, Users, Shield, FileText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 interface Staff {
@@ -28,6 +29,7 @@ interface Staff {
 }
 
 export function StaffClient({ initialStaffList }: { initialStaffList: Staff[] }) {
+  const { role } = useAuth();
   const [staffList, setStaffList] = useState<Staff[]>(initialStaffList);
   const [search, setSearch] = useState("");
   const [filterCentre, setFilterCentre] = useState("All Centres");
@@ -36,7 +38,6 @@ export function StaffClient({ initialStaffList }: { initialStaffList: Staff[] })
   const [filterBoard, setFilterBoard] = useState("All Boards");
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Staff | null>(null);
-
   const filtered = staffList.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
                         s.empId.toLowerCase().includes(search.toLowerCase()) ||
@@ -49,6 +50,18 @@ export function StaffClient({ initialStaffList }: { initialStaffList: Staff[] })
       (s.assignments && s.assignments.some(a => a.board === filterBoard));
     return matchSearch && matchCentre && matchRole && matchStatus && matchBoard;
   });
+
+  if (role === 'TEACHER' || role === 'STUDENT') {
+    return (
+      <DashboardLayout title="Staff Management">
+        <div className="flex h-[60vh] items-center justify-center flex-col text-center">
+          <ShieldCheck className="h-16 w-16 text-brand-red/50 mb-4" />
+          <h2 className="text-xl font-bold text-text-primary">Access Denied</h2>
+          <p className="text-sm text-text-muted mt-2 max-w-md">You do not have permission to view the staff area. This section is restricted to administrators.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Staff Management">

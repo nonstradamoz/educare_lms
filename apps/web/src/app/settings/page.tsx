@@ -1,8 +1,25 @@
+"use client";
+
+import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageShell } from "@/components/layout/page-shell";
-import { Settings } from "lucide-react";
+import { Settings, ShieldCheck } from "lucide-react";
 
 export default function SettingsPage() {
+  const { role } = useAuth();
+  
+  if (role === 'TEACHER' || role === 'STUDENT') {
+    return (
+      <DashboardLayout title="Settings">
+        <div className="flex h-[60vh] items-center justify-center flex-col text-center">
+          <ShieldCheck className="h-16 w-16 text-brand-red/50 mb-4" />
+          <h2 className="text-xl font-bold text-text-primary">Access Denied</h2>
+          <p className="text-sm text-text-muted mt-2 max-w-md">You do not have permission to view the settings area. This section is restricted to administrators.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Settings">
       <PageShell title="Settings" subtitle="Configure your LMS preferences" icon={Settings} accentColor="blue">

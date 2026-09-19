@@ -11,6 +11,7 @@ export class SetupController {
   constructor(private readonly setupService: SetupService) {}
 
   @Get('centres')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getCentres() {
     return this.setupService.getCentres();
   }
@@ -21,6 +22,7 @@ export class SetupController {
   }
 
   @Get('academic-years')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getAcademicYears() {
     return this.setupService.getAcademicYears();
   }
@@ -33,6 +35,7 @@ export class SetupController {
   }
 
   @Get('boards')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getBoards() {
     return this.setupService.getBoards();
   }
@@ -43,6 +46,7 @@ export class SetupController {
   }
 
   @Get('standards')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getStandards(@Query('boardId') boardId?: string) {
     return this.setupService.getStandards(boardId);
   }
@@ -54,6 +58,7 @@ export class SetupController {
   }
 
   @Get('subjects')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getSubjects() {
     return this.setupService.getSubjects();
   }
@@ -64,6 +69,7 @@ export class SetupController {
   }
 
   @Get('syllabi')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getSyllabi(@Query('boardId') boardId?: string, @Query('standardId') standardId?: string) {
     return this.setupService.getSyllabi(boardId, standardId);
   }
@@ -74,6 +80,7 @@ export class SetupController {
   }
 
   @Get('chapters')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getChapters(@Query('syllabusId') syllabusId?: string) {
     return this.setupService.getChapters(syllabusId);
   }
@@ -84,6 +91,7 @@ export class SetupController {
   }
 
   @Get('topics')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getTopics(@Query('chapterId') chapterId?: string) {
     return this.setupService.getTopics(chapterId);
   }
@@ -94,6 +102,7 @@ export class SetupController {
   }
 
   @Get('subtopics')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getSubtopics(@Query('topicId') topicId?: string) {
     return this.setupService.getSubtopics(topicId);
   }

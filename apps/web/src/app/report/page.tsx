@@ -176,7 +176,7 @@ export default function ReportsPage() {
         title="Reports & Analytics"
         subtitle="Generate comprehensive insights on academics, financials, and CRM."
         icon={BarChart3}
-        accentColor="indigo"
+        accentColor="blue"
       >
         <div className="bg-white rounded-2xl border border-border-soft shadow-sm p-6">
           {/* Report Configuration */}

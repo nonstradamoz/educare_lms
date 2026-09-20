@@ -37,11 +37,11 @@ export default function AttendancePage() {
     setLoading(true);
     try {
       // 1. Fetch Students
-      const stdData = await fetchApi(`/attendance/students/${selectedBatch}`);
+      const stdData = (await fetchApi(`/attendance/students/${selectedBatch}`)) as any;
       setStudents(stdData);
 
       // 2. Fetch Existing Attendance
-      const attData = await fetchApi(`/attendance/${selectedBatch}?date=${date}`);
+      const attData = (await fetchApi(`/attendance/${selectedBatch}?date=${date}`)) as any;
       
       if (attData && attData.records) {
         setRecords(attData.records.map((r: any) => ({
@@ -101,7 +101,7 @@ export default function AttendancePage() {
         title="Attendance Tracker"
         subtitle="Mark and manage daily student attendance"
         icon={CalendarCheck}
-        accentColor="indigo"
+        accentColor="blue"
         actions={
           <button 
             onClick={handleSave}

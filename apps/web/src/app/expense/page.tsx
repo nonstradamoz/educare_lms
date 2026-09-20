@@ -31,7 +31,7 @@ export default function ExpenseIncomePage() {
         fetchApi("/finance/summary")
       ]);
       setTransactions(Array.isArray(txData) ? txData : []);
-      setSummary(sumData);
+      setSummary(sumData as any);
     } catch (e) {
       console.error(e);
     } finally {

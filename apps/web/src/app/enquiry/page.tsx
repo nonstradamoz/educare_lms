@@ -49,7 +49,7 @@ export default function EnquiryPage() {
         fetchApi("/enquiry/summary")
       ]);
       setEnquiries(Array.isArray(data) ? data : []);
-      setSummary(stats);
+      setSummary(stats as any);
     } catch (e) {
       console.error("Failed to load enquiries", e);
     } finally {

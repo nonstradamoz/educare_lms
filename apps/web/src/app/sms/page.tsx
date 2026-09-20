@@ -42,9 +42,9 @@ export default function SmsPage() {
         fetchApi("/setup/standards").catch(() => []),
         fetchApi("/setup/centres").catch(() => [])
       ]);
-      setBoards(b);
-      setClasses(c);
-      setCentres(ctr);
+      setBoards(b as any[]);
+      setClasses(c as any[]);
+      setCentres(ctr as any[]);
     } catch (e) {
       console.error(e);
     } finally {
@@ -101,7 +101,7 @@ export default function SmsPage() {
         title="SMS & Communications"
         subtitle="Send broadcast messages and view delivery logs (Powered by Twilio)"
         icon={MessageSquare}
-        accentColor="indigo"
+        accentColor="blue"
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
           

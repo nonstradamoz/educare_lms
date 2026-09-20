@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Bell,
   Calendar,
@@ -70,10 +71,12 @@ export function AdminDashboard({ user }: { user: any }) {
 
       {/* ── Footer action ── */}
       <div className="flex justify-end pt-1">
-        <button className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-blue-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40 focus-visible:ring-offset-2">
-          View Full Report
-          <ArrowRight className="h-4 w-4" />
-        </button>
+        <Link href="/report">
+          <button className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-blue-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue/40 focus-visible:ring-offset-2">
+            View Full Report
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </Link>
       </div>
     </div>
   );

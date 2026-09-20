@@ -19,8 +19,15 @@ type Record = {
 };
 
 export default function AttendancePage() {
-  const [batches, setBatches] = useState<any[]>([]);
-  const [selectedBatch, setSelectedBatch] = useState<string>("");
+  const [centres, setCentres] = useState<any[]>([]);
+  const [boards, setBoards] = useState<any[]>([]);
+  const [standards, setStandards] = useState<any[]>([]);
+  
+  const [selectedCentre, setSelectedCentre] = useState<string>("");
+  const [selectedBoard, setSelectedBoard] = useState<string>("");
+  const [selectedStandard, setSelectedStandard] = useState<string>("");
+  const [selectedTrack, setSelectedTrack] = useState<string>("BOTH");
+
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   
   const [students, setStudents] = useState<Student[]>([]);
@@ -29,19 +36,31 @@ export default function AttendancePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchApi("/setup/batches").then(b => setBatches(Array.isArray(b) ? b : [])).catch(() => {});
+    fetchApi("/setup/centres").then(d => setCentres(Array.isArray(d) ? d : [])).catch(() => {});
+    fetchApi("/setup/boards").then(d => setBoards(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (selectedBoard) {
+      fetchApi(`/setup/standards?boardId=${selectedBoard}`).then(d => setStandards(Array.isArray(d) ? d : [])).catch(() => {});
+    } else {
+      setStandards([]);
+    }
+  }, [selectedBoard]);
+
   const loadAttendance = async () => {
-    const batchParam = selectedBatch || "ALL";
+    if (!selectedCentre || !selectedBoard || !selectedStandard || !selectedTrack) return;
+    
     setLoading(true);
     try {
+      const query = `?centreId=${selectedCentre}&boardId=${selectedBoard}&standardId=${selectedStandard}&track=${selectedTrack}`;
+      
       // 1. Fetch Students
-      const stdData = (await fetchApi(`/attendance/students/${batchParam}`)) as any;
+      const stdData = (await fetchApi(`/attendance/students/filter${query}`)) as any;
       setStudents(stdData);
 
       // 2. Fetch Existing Attendance
-      const attData = (await fetchApi(`/attendance/${batchParam}?date=${date}`)) as any;
+      const attData = (await fetchApi(`/attendance/filter${query}&date=${date}`)) as any;
       
       if (attData && attData.records) {
         setRecords(attData.records.map((r: any) => ({
@@ -65,8 +84,13 @@ export default function AttendancePage() {
   };
 
   useEffect(() => {
-    loadAttendance();
-  }, [selectedBatch, date]);
+    if (selectedCentre && selectedBoard && selectedStandard && selectedTrack) {
+      loadAttendance();
+    } else {
+      setStudents([]);
+      setRecords([]);
+    }
+  }, [selectedCentre, selectedBoard, selectedStandard, selectedTrack, date]);
 
   const updateRecord = (studentId: string, status: string, remarks: string = "") => {
     setRecords(prev => prev.map(r => 
@@ -79,7 +103,14 @@ export default function AttendancePage() {
     try {
       await fetchApi("/attendance", {
         method: "POST",
-        body: JSON.stringify({ batchId: selectedBatch || "ALL", date, records })
+        body: JSON.stringify({ 
+          centreId: selectedCentre, 
+          boardId: selectedBoard, 
+          standardId: selectedStandard, 
+          track: selectedTrack, 
+          date, 
+          records 
+        })
       });
       alert("Attendance saved successfully!");
     } catch (e) {
@@ -113,29 +144,63 @@ export default function AttendancePage() {
         }
       >
         
-        {/* Selection Bar */}
-        <div className="bg-white rounded-xl border border-border-soft p-4 shadow-sm flex items-center gap-4">
-          <div className="flex-1">
-            <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Select Batch</label>
-            <select 
-              value={selectedBatch} 
-              onChange={e => setSelectedBatch(e.target.value)}
-              className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
-            >
-              <option value="">All Students (No Batch)</option>
-              {batches.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex-1">
-            <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Date</label>
-            <input 
-              type="date" 
-              value={date} 
-              onChange={e => setDate(e.target.value)}
-              className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
-            />
+        <div className="bg-white rounded-xl border border-border-soft p-4 shadow-sm">
+          <div className="grid grid-cols-5 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Centre</label>
+              <select 
+                value={selectedCentre} 
+                onChange={e => setSelectedCentre(e.target.value)}
+                className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
+              >
+                <option value="">Select Centre</option>
+                {centres.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Board</label>
+              <select 
+                value={selectedBoard} 
+                onChange={e => setSelectedBoard(e.target.value)}
+                className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
+              >
+                <option value="">Select Board</option>
+                {boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Class</label>
+              <select 
+                value={selectedStandard} 
+                onChange={e => setSelectedStandard(e.target.value)}
+                disabled={!selectedBoard}
+                className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20 disabled:opacity-50"
+              >
+                <option value="">Select Class</option>
+                {standards.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Track</label>
+              <select 
+                value={selectedTrack} 
+                onChange={e => setSelectedTrack(e.target.value)}
+                className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
+              >
+                <option value="TUITION">Tuition</option>
+                <option value="ENTRANCE">Entrance</option>
+                <option value="BOTH">Both</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Date</label>
+              <input 
+                type="date" 
+                value={date} 
+                onChange={e => setDate(e.target.value)}
+                className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 pr-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
+              />
+            </div>
           </div>
         </div>
 
@@ -169,7 +234,7 @@ export default function AttendancePage() {
              </div>
           ) : students.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-text-muted">
-              <p className="text-sm">No students found in this batch.</p>
+              <p className="text-sm">No students found for these filters.</p>
             </div>
           ) : (
             <div className="overflow-auto flex-1">

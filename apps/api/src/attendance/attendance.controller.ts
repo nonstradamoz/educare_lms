@@ -10,9 +10,32 @@ export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
+  @Get('students/filter')
+  getStudentsByFilter(
+    @Query('centreId') centreId: string,
+    @Query('boardId') boardId: string,
+    @Query('standardId') standardId: string,
+    @Query('track') track: string
+  ) {
+    return this.attendanceService.getStudentsByFilter(centreId, boardId, standardId, track);
+  }
+
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
   @Get('students/:batchId')
   getStudents(@Param('batchId') batchId: string) {
     return this.attendanceService.getBatchStudents(batchId);
+  }
+
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
+  @Get('filter')
+  getAttendanceByFilter(
+    @Query('centreId') centreId: string,
+    @Query('boardId') boardId: string,
+    @Query('standardId') standardId: string,
+    @Query('track') track: string,
+    @Query('date') date: string
+  ) {
+    return this.attendanceService.getAttendanceByFilter(centreId, boardId, standardId, track, date);
   }
 
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')

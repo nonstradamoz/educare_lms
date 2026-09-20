@@ -354,8 +354,8 @@ export function CurriculumBrowser() {
       const topicsWithContent = await Promise.all(
         topics.map(async (topic) => {
           const [materials, exams] = await Promise.all([
-            fetchApi(`/study-materials/by-topic/${topic.id}`).catch(() => []),
-            fetchApi(`/exams/by-topic/${topic.id}`).catch(() => []),
+            fetchApi(`/study-materials/by-topic/${topic.id}`).catch(() => []) as Promise<TopicMaterial[]>,
+            fetchApi(`/exams/by-topic/${topic.id}`).catch(() => []) as Promise<TopicExam[]>,
           ]);
           return { ...topic, materials, exams, loadingContent: false };
         })

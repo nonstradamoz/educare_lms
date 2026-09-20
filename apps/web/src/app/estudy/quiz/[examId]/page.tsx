@@ -60,8 +60,8 @@ export default function QuizPage() {
   // Load exam
   useEffect(() => {
     fetchApi(`/exams`)
-      .then((exams: Exam[]) => {
-        const found = exams.find(e => e.id === examId);
+      .then((exams: any) => {
+        const found = (exams as Exam[]).find(e => e.id === examId);
         if (!found) { setPhase("loading"); return; }
         setExam(found);
         const qs = found.mcqQuestions ?? [];

@@ -100,7 +100,7 @@ export function Sidebar({
               alt="Educare Group of Institutions"
               width={228}
               height={48}
-              className="object-contain w-full h-full scale-[1.6]"
+              className="object-contain w-full h-full scale-[2.2]"
               priority
             />
           </div>

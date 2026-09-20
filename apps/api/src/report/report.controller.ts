@@ -30,7 +30,6 @@ export class ReportController {
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
   @Get('performance')
   getPerformanceReport(@Query('batchId') batchId: string) {
-    if (!batchId) return [];
     return this.reportService.getStudentPerformanceReport(batchId);
   }
 }

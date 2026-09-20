@@ -66,18 +66,24 @@ export class ReportService {
     };
   }
 
-  async getStudentPerformanceReport(batchId: string) {
-    // 1. Get students in batch
-    const enrollments = await this.prisma.enrollment.findMany({
-      where: { batchId },
-      include: {
-        studentProfile: {
-          include: { user: { select: { firstName: true, lastName: true } } }
+  async getStudentPerformanceReport(batchId?: string) {
+    let students;
+    if (batchId) {
+      const enrollments = await this.prisma.enrollment.findMany({
+        where: { batchId },
+        include: {
+          studentProfile: {
+            include: { user: { select: { firstName: true, lastName: true } } }
+          }
         }
-      }
-    });
+      });
+      students = enrollments.map((e: any) => e.studentProfile);
+    } else {
+      students = await this.prisma.studentProfile.findMany({
+        include: { user: { select: { firstName: true, lastName: true } } }
+      });
+    }
 
-    const students = enrollments.map((e: any) => e.studentProfile);
     const studentIds = students.map((s: any) => s.id);
 
     // 2. Get attendance aggregates
@@ -88,7 +94,7 @@ export class ReportService {
 
     // 3. Map aggregates back to students
     return students.map((student: any) => {
-      const studentAtts = attRecords.filter((r: any) => r.studentId === student.id && r.attendance.batchId === batchId);
+      const studentAtts = batchId ? attRecords.filter((r: any) => r.studentId === student.id && r.attendance.batchId === batchId) : attRecords.filter((r: any) => r.studentId === student.id);
       const totalDays = studentAtts.length;
       const presentDays = studentAtts.filter((a: any) => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
       const attPercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;

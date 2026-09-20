@@ -17,7 +17,6 @@ export default function ReportsPage() {
   const [batchId, setBatchId] = useState("");
   const [batches, setBatches] = useState<any[]>([]);
   const [studentId, setStudentId] = useState("");
-  const [batchStudents, setBatchStudents] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
@@ -26,14 +25,6 @@ export default function ReportsPage() {
     fetchApi("/setup/batches").then(b => setBatches(Array.isArray(b) ? b : [])).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (reportType === "PERFORMANCE" && batchId) {
-      fetchApi(`/attendance/students/${batchId}`).then(s => setBatchStudents(Array.isArray(s) ? s : [])).catch(() => {});
-    } else {
-      setBatchStudents([]);
-      setStudentId("");
-    }
-  }, [batchId, reportType]);
 
   const generateReport = async () => {
     setLoading(true);
@@ -251,20 +242,20 @@ export default function ReportsPage() {
                     onChange={e => setBatchId(e.target.value)}
                     className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
                   >
-                    <option value="">Select a Batch...</option>
+                    <option value="">All Batches</option>
                     {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
-                {batchId && (
+                {data && data.length > 0 && (
                   <div className="w-56">
-                    <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Select Student (Optional)</label>
+                    <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Select Student</label>
                     <select 
                       value={studentId}
                       onChange={e => setStudentId(e.target.value)}
                       className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
                     >
-                      <option value="">All Students</option>
-                      {batchStudents.map(s => <option key={s.studentId} value={s.studentId}>{s.name}</option>)}
+                      <option value="">All Students (Table View)</option>
+                      {data.map((s: any) => <option key={s.studentId} value={s.studentId}>{s.name} ({s.admissionNo})</option>)}
                     </select>
                   </div>
                 )}
@@ -284,7 +275,7 @@ export default function ReportsPage() {
 
             <button 
               onClick={generateReport}
-              disabled={loading || (reportType === 'PERFORMANCE' && !batchId)}
+              disabled={loading}
               className="h-10 px-6 flex items-center justify-center gap-2 rounded-lg bg-indigo-600 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4" /> Generate</>}

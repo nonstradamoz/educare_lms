@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api";
+import logoImage from "@/logos/logo1.png";
 import {
   LayoutDashboard,
   Users,
@@ -93,8 +95,8 @@ export function Sidebar({
         {/* Brand */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-red shadow-sm">
-              <span className="text-white font-bold text-xs tracking-wider">EC</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 shadow-sm overflow-hidden">
+              <Image src={logoImage} alt="Educare Logo" width={32} height={32} className="object-cover" />
             </div>
             <span className="text-white font-semibold text-base tracking-tight">Educare</span>
           </div>

@@ -839,11 +839,11 @@ enum TransactionType {
 
 model Attendance {
   id           String   @id @default(uuid())
-  batchId      String
+  batchId      String?
   date         DateTime
   recordedById String
 
-  batch      Batch @relation(fields: [batchId], references: [id])
+  batch      Batch? @relation(fields: [batchId], references: [id])
   recordedBy User  @relation("AttendanceRecorder", fields: [recordedById], references: [id])
 
   records AttendanceRecord[]

@@ -33,15 +33,15 @@ export default function AttendancePage() {
   }, []);
 
   const loadAttendance = async () => {
-    if (!selectedBatch) return;
+    const batchParam = selectedBatch || "ALL";
     setLoading(true);
     try {
       // 1. Fetch Students
-      const stdData = (await fetchApi(`/attendance/students/${selectedBatch}`)) as any;
+      const stdData = (await fetchApi(`/attendance/students/${batchParam}`)) as any;
       setStudents(stdData);
 
       // 2. Fetch Existing Attendance
-      const attData = (await fetchApi(`/attendance/${selectedBatch}?date=${date}`)) as any;
+      const attData = (await fetchApi(`/attendance/${batchParam}?date=${date}`)) as any;
       
       if (attData && attData.records) {
         setRecords(attData.records.map((r: any) => ({
@@ -75,12 +75,11 @@ export default function AttendancePage() {
   };
 
   const handleSave = async () => {
-    if (!selectedBatch) return;
     setSaving(true);
     try {
       await fetchApi("/attendance", {
         method: "POST",
-        body: JSON.stringify({ batchId: selectedBatch, date, records })
+        body: JSON.stringify({ batchId: selectedBatch || "ALL", date, records })
       });
       alert("Attendance saved successfully!");
     } catch (e) {
@@ -123,7 +122,7 @@ export default function AttendancePage() {
               onChange={e => setSelectedBatch(e.target.value)}
               className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
             >
-              <option value="">-- Choose a Batch --</option>
+              <option value="">All Students (No Batch)</option>
               {batches.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
@@ -168,11 +167,6 @@ export default function AttendancePage() {
              <div className="flex-1 flex items-center justify-center">
                <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
              </div>
-          ) : !selectedBatch ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-text-muted">
-              <CalendarCheck className="h-12 w-12 opacity-20 mb-3" />
-              <p className="text-sm">Select a batch to load the attendance register.</p>
-            </div>
           ) : students.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-text-muted">
               <p className="text-sm">No students found in this batch.</p>

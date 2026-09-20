@@ -6,34 +6,42 @@ import { AttendanceStatus } from '@educare/database';
 export class AttendanceService {
   constructor(private prisma: PrismaService) {}
 
-  async getBatchStudents(batchId: string) {
-    const enrollments = await this.prisma.enrollment.findMany({
-      where: { batchId },
-      include: {
-        studentProfile: {
-          include: {
-            user: { select: { firstName: true, lastName: true, id: true } }
+  async getBatchStudents(batchId?: string) {
+    let students;
+    if (batchId && batchId !== 'ALL') {
+      const enrollments = await this.prisma.enrollment.findMany({
+        where: { batchId },
+        include: {
+          studentProfile: {
+            include: {
+              user: { select: { firstName: true, lastName: true, id: true } }
+            }
           }
         }
-      }
-    });
+      });
+      students = enrollments.map(e => e.studentProfile);
+    } else {
+      students = await this.prisma.studentProfile.findMany({
+        include: {
+          user: { select: { firstName: true, lastName: true, id: true } }
+        }
+      });
+    }
 
-    return enrollments.map(e => ({
-      studentId: e.studentProfileId,
-      name: `${e.studentProfile.user.firstName} ${e.studentProfile.user.lastName}`,
-      admissionNo: e.studentProfile.admissionNo
+    return students.map(s => ({
+      studentId: s.id,
+      name: `${s.user.firstName} ${s.user.lastName}`,
+      admissionNo: s.admissionNo
     }));
   }
 
-  async getAttendanceForBatchAndDate(batchId: string, date: string) {
+  async getAttendanceForBatchAndDate(batchId: string | undefined, date: string) {
     const targetDate = new Date(date);
     
-    return this.prisma.attendance.findUnique({
+    return this.prisma.attendance.findFirst({
       where: {
-        batchId_date: {
-          batchId,
-          date: targetDate
-        }
+        batchId: (batchId && batchId !== 'ALL') ? batchId : null,
+        date: targetDate
       },
       include: {
         records: true,
@@ -45,21 +53,26 @@ export class AttendanceService {
   async markAttendance(data: any, userId: string) {
     const { batchId, date, records } = data;
     const targetDate = new Date(date);
+    const resolvedBatchId = (batchId && batchId !== 'ALL') ? batchId : null;
 
-    // Upsert the Attendance parent record
-    const attendance = await this.prisma.attendance.upsert({
-      where: {
-        batchId_date: { batchId, date: targetDate }
-      },
-      create: {
-        batchId,
-        date: targetDate,
-        recordedById: userId
-      },
-      update: {
-        recordedById: userId // Update who last modified it
-      }
+    let attendance = await this.prisma.attendance.findFirst({
+      where: { batchId: resolvedBatchId, date: targetDate }
     });
+
+    if (attendance) {
+      attendance = await this.prisma.attendance.update({
+        where: { id: attendance.id },
+        data: { recordedById: userId }
+      });
+    } else {
+      attendance = await this.prisma.attendance.create({
+        data: {
+          batchId: resolvedBatchId,
+          date: targetDate,
+          recordedById: userId
+        }
+      });
+    }
 
     // We can just delete the old records and insert new ones to handle upsert cleanly
     await this.prisma.attendanceRecord.deleteMany({

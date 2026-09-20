@@ -52,12 +52,7 @@ export function AdminDashboard({ user }: { user: any }) {
           value="0"
           color="red"
         />
-        <InfoPill
-          icon={<Calendar className="h-3.5 w-3.5" />}
-          label="Subscription End Date"
-          value="01 Sep 2026"
-          color="blue"
-        />
+
         <InfoPill
           icon={<MessageSquare className="h-3.5 w-3.5" />}
           label="SMS Balance"

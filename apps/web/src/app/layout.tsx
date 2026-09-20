@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { SplashScreen } from "@/components/splash-screen";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,6 +22,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-inter">
+        <SplashScreen />
         <AuthProvider initialRole={user?.role} initialEmail={user?.email}>{children}</AuthProvider>
       </body>
     </html>

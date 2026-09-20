@@ -94,13 +94,13 @@ export function Sidebar({
       `}>
         {/* Brand */}
         <div className="flex flex-col items-center justify-center px-4 py-5 border-b border-white/10 shrink-0 relative gap-0">
-          <div className="w-full rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.18)] overflow-hidden">
+          <div className="w-full rounded-xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.18)] overflow-hidden h-12 flex items-center justify-center px-2">
             <Image
               src={logoImage}
               alt="Educare Group of Institutions"
               width={228}
-              height={76}
-              className="object-contain w-full h-auto"
+              height={48}
+              className="object-contain w-full h-full"
               priority
             />
           </div>

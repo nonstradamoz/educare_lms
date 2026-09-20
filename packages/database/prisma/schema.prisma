@@ -8,24 +8,29 @@ datasource db {
 }
 
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  password     String
-  firstName    String
-  lastName     String
-  status       UserStatus   @default(ACTIVE)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  firstName String
+  lastName  String
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
-  roleId       String
-  role         Role         @relation(fields: [roleId], references: [id])
-  userCentres  UserCentre[]
+  roleId      String
+  role        Role         @relation(fields: [roleId], references: [id])
+  userCentres UserCentre[]
 
   studentProfile StudentProfile?
   teacherProfile TeacherProfile?
-  
-  uploadedMaterials StudyMaterial[]
+
+  uploadedMaterials   StudyMaterial[]
   assignmentsUploaded Assignment[]
+
+  assignedEnquiries    Enquiry[]
+  sentSmsLogs          SmsLog[]      @relation("SmsSender")
+  recordedTransactions Transaction[] @relation("TransactionRecorder")
+  recordedAttendances  Attendance[]  @relation("AttendanceRecorder")
 
   @@map("users")
 }
@@ -37,11 +42,11 @@ enum UserStatus {
 }
 
 model Role {
-  id          String           @id @default(uuid())
-  name        String           @unique
+  id          String   @id @default(uuid())
+  name        String   @unique
   description String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   users       User[]
   permissions RolePermission[]
@@ -50,13 +55,13 @@ model Role {
 }
 
 model Permission {
-  id          String           @id @default(uuid())
-  action      String           @unique // e.g., 'students.create'
+  id          String   @id @default(uuid())
+  action      String   @unique // e.g., 'students.create'
   description String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  roles       RolePermission[]
+  roles RolePermission[]
 
   @@map("permissions")
 }
@@ -65,28 +70,29 @@ model RolePermission {
   roleId       String
   permissionId String
 
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
 }
 
 model Centre {
-  id          String       @id @default(uuid())
-  name        String
-  code        String       @unique
-  address     String?
-  contactNo   String?
-  email       String?
-  status      CentreStatus @default(ACTIVE)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id        String       @id @default(uuid())
+  name      String
+  code      String       @unique
+  address   String?
+  contactNo String?
+  email     String?
+  status    CentreStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   userCentres UserCentre[]
   batches     Batch[]
   liveClasses LiveClass[]
   exams       Exam[]
+  Transaction Transaction[]
 
   @@map("centres")
 }
@@ -100,8 +106,8 @@ model UserCentre {
   userId   String
   centreId String
 
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  centre   Centre @relation(fields: [centreId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  centre Centre @relation(fields: [centreId], references: [id], onDelete: Cascade)
 
   @@id([userId, centreId])
   @@map("user_centres")
@@ -112,13 +118,13 @@ model UserCentre {
 // -----------------------------------------------------------------------------
 
 model AcademicYear {
-  id        String   @id @default(uuid())
-  name      String   @unique // e.g., "2025-26"
+  id        String    @id @default(uuid())
+  name      String    @unique // e.g., "2025-26"
   startDate DateTime?
   endDate   DateTime?
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   batches   Batch[]
   exams     Exam[]
@@ -144,10 +150,10 @@ model Board {
 
 model Standard {
   id        String   @id @default(uuid())
-  name      String   // e.g., "Class 11", "Class 12"
+  name      String // e.g., "Class 11", "Class 12"
   level     Int      @default(1)
   boardId   String?
-  board     Board?    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board     Board?   @relation(fields: [boardId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -166,10 +172,10 @@ model Subject {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  syllabi             Syllabus[]
-  teacherAssignments  TeacherAssignment[]
-  studentAssignments  Assignment[]
-  exams               Exam[]
+  syllabi            Syllabus[]
+  teacherAssignments TeacherAssignment[]
+  studentAssignments Assignment[]
+  exams              Exam[]
 
   @@map("subjects")
 }
@@ -186,12 +192,12 @@ model Syllabus {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  board      Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  standard   Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
-  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  board    Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  standard Standard @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  subject  Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
-  chapters   Chapter[]
-  materials  StudyMaterial[]
+  chapters  Chapter[]
+  materials StudyMaterial[]
 
   @@unique([boardId, standardId, subjectId])
   @@map("syllabi")
@@ -204,13 +210,13 @@ model Chapter {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  syllabus   Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
-  topics     Topic[]
+  syllabus Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
+  topics   Topic[]
 
-  exams      Exam[]
-  materials  StudyMaterial[]
+  exams         Exam[]
+  materials     StudyMaterial[]
   batchProgress BatchChapterProgress[]
-  assignments Assignment[]
+  assignments   Assignment[]
 
   @@map("chapters")
 }
@@ -222,13 +228,13 @@ model Topic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
   subtopics Subtopic[]
 
-  exams     Exam[]
-  materials StudyMaterial[]
-  batchProgress BatchTopicProgress[]
+  exams           Exam[]
+  materials       StudyMaterial[]
+  batchProgress   BatchTopicProgress[]
   studentProgress StudentTopicProgress[]
   revisionTasks   TopicRevisionTask[]
   assignments     Assignment[]
@@ -247,10 +253,10 @@ model Subtopic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  
-  exams     Exam[]
-  materials StudyMaterial[]
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  exams       Exam[]
+  materials   StudyMaterial[]
   assignments Assignment[]
 
   @@map("subtopics")
@@ -261,28 +267,29 @@ model Subtopic {
 // -----------------------------------------------------------------------------
 
 model Batch {
-  id             String   @id @default(uuid())
-  name           String   // e.g., "Division A", "Morning Batch"
+  id             String    @id @default(uuid())
+  name           String // e.g., "Division A", "Morning Batch"
   academicYearId String
   boardId        String
   standardId     String
   centreId       String
   track          TrackType @default(BOTH)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
-  board          Board        @relation(fields: [boardId], references: [id])
-  standard       Standard     @relation(fields: [standardId], references: [id])
-  centre         Centre       @relation(fields: [centreId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  board        Board        @relation(fields: [boardId], references: [id])
+  standard     Standard     @relation(fields: [standardId], references: [id])
+  centre       Centre       @relation(fields: [centreId], references: [id])
 
-  enrollments    Enrollment[]
-  assignments    TeacherAssignment[]
-  exams          Exam[]
-  homeworks      Assignment[]
-  chapterProgress BatchChapterProgress[]
-  topicProgress   BatchTopicProgress[]
+  enrollments          Enrollment[]
+  assignments          TeacherAssignment[]
+  exams                Exam[]
+  homeworks            Assignment[]
+  chapterProgress      BatchChapterProgress[]
+  topicProgress        BatchTopicProgress[]
   studentTopicProgress StudentTopicProgress[]
+  Attendance           Attendance[]
 
   @@map("batches")
 }
@@ -301,26 +308,27 @@ model StudentProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  enrollments Enrollment[]
-  feeRecords  FeeRecord[]
-  submissions AssignmentSubmission[]
-  topicProgress StudentTopicProgress[]
-  revisionTasks TopicRevisionTask[]
+  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments      Enrollment[]
+  feeRecords       FeeRecord[]
+  submissions      AssignmentSubmission[]
+  topicProgress    StudentTopicProgress[]
+  revisionTasks    TopicRevisionTask[]
+  AttendanceRecord AttendanceRecord[]
 
   @@map("student_profiles")
 }
 
 model Enrollment {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   studentProfileId String
   batchId          String
   track            TrackType @default(BOTH)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
-  batch            Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  batch          Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@unique([studentProfileId, batchId])
   @@map("enrollments")
@@ -331,15 +339,15 @@ model Enrollment {
 // -----------------------------------------------------------------------------
 
 model TeacherProfile {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  qualification  String?
-  experience     Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  qualification String?
+  experience    Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assignments    TeacherAssignment[]
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments TeacherAssignment[]
 
   @@map("teacher_profiles")
 }
@@ -352,9 +360,9 @@ model TeacherAssignment {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
-  batch            Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  subject          Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherProfile TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+  batch          Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  subject        Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@unique([teacherProfileId, batchId, subjectId])
   @@map("teacher_assignments")
@@ -365,37 +373,37 @@ model TeacherAssignment {
 // -----------------------------------------------------------------------------
 
 model Exam {
-  id             String     @id @default(uuid())
+  id             String   @id @default(uuid())
   title          String
-  type           ExamType   @default(QUESTION_BANK)
+  type           ExamType @default(QUESTION_BANK)
   academicYearId String
-  batchId        String?    // Made optional to support general class/board exams
+  batchId        String? // Made optional to support general class/board exams
   subjectId      String
   chapterId      String?
   topicId        String?
   subtopicId     String?
-  
-  boardId        String?
-  standardId     String?
-  centreId       String?
-  
-  targetTrack    TrackType  @default(BOTH)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  boardId    String?
+  standardId String?
+  centreId   String?
 
-  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
-  batch          Batch?       @relation(fields: [batchId], references: [id])
-  subject        Subject      @relation(fields: [subjectId], references: [id])
-  chapter        Chapter?     @relation(fields: [chapterId], references: [id])
-  topic          Topic?       @relation(fields: [topicId], references: [id])
-  subtopic       Subtopic?    @relation(fields: [subtopicId], references: [id])
-  
-  board          Board?       @relation(fields: [boardId], references: [id])
-  standard       Standard?    @relation(fields: [standardId], references: [id])
-  centre         Centre?      @relation(fields: [centreId], references: [id])
+  targetTrack TrackType @default(BOTH)
 
-  mcqQuestions   McqQuestion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  batch        Batch?       @relation(fields: [batchId], references: [id])
+  subject      Subject      @relation(fields: [subjectId], references: [id])
+  chapter      Chapter?     @relation(fields: [chapterId], references: [id])
+  topic        Topic?       @relation(fields: [topicId], references: [id])
+  subtopic     Subtopic?    @relation(fields: [subtopicId], references: [id])
+
+  board    Board?    @relation(fields: [boardId], references: [id])
+  standard Standard? @relation(fields: [standardId], references: [id])
+  centre   Centre?   @relation(fields: [centreId], references: [id])
+
+  mcqQuestions McqQuestion[]
 
   @@map("exams")
 }
@@ -407,7 +415,7 @@ enum ExamType {
 }
 
 model StudyMaterial {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   title          String
   type           MaterialType // e.g., PDF, VIDEO, LINK
   url            String?
@@ -417,17 +425,17 @@ model StudyMaterial {
   topicId        String?
   subtopicId     String?
   uploaderId     String?
-  
-  targetTrack    TrackType  @default(BOTH)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
 
-  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
-  syllabus       Syllabus     @relation(fields: [syllabusId], references: [id])
-  chapter        Chapter?     @relation(fields: [chapterId], references: [id])
-  topic          Topic?       @relation(fields: [topicId], references: [id])
-  subtopic       Subtopic?    @relation(fields: [subtopicId], references: [id])
-  uploader       User?        @relation(fields: [uploaderId], references: [id])
+  targetTrack TrackType @default(BOTH)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  syllabus     Syllabus     @relation(fields: [syllabusId], references: [id])
+  chapter      Chapter?     @relation(fields: [chapterId], references: [id])
+  topic        Topic?       @relation(fields: [topicId], references: [id])
+  subtopic     Subtopic?    @relation(fields: [subtopicId], references: [id])
+  uploader     User?        @relation(fields: [uploaderId], references: [id])
 
   @@map("study_materials")
 }
@@ -438,7 +446,6 @@ enum MaterialType {
   LINK
   DOCUMENT
 }
-
 
 model McqQuestion {
   id            String   @id @default(uuid())
@@ -451,10 +458,10 @@ model McqQuestion {
   negativeMarks Float    @default(1)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
-  examId        String
-  exam          Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
-  
+
+  examId String
+  exam   Exam   @relation(fields: [examId], references: [id], onDelete: Cascade)
+
   @@map("mcq_questions")
 }
 
@@ -469,19 +476,19 @@ model LiveClass {
   teacherName String
   status      LiveClassStatus @default(SCHEDULED)
   scheduledAt DateTime
-  duration    Int             // in minutes
+  duration    Int // in minutes
   roomId      String          @unique @default(uuid())
 
-  boardId     String?
-  standardId  String?
-  centreId    String?
+  boardId    String?
+  standardId String?
+  centreId   String?
 
-  board       Board?    @relation(fields: [boardId],    references: [id])
-  standard    Standard? @relation(fields: [standardId], references: [id])
-  centre      Centre?   @relation(fields: [centreId],   references: [id])
+  board    Board?    @relation(fields: [boardId], references: [id])
+  standard Standard? @relation(fields: [standardId], references: [id])
+  centre   Centre?   @relation(fields: [centreId], references: [id])
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("live_classes")
 }
@@ -502,12 +509,12 @@ model FeeRecord {
   paymentMode String?
   feeHead     String?
 
-  student     StudentProfile @relation(fields: [studentId], references: [id])
-  
+  student StudentProfile @relation(fields: [studentId], references: [id])
+
   targetTrack TrackType @default(BOTH)
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("fee_records")
 }
@@ -523,48 +530,48 @@ enum FeeStatus {
 // -----------------------------------------------------------------------------
 
 model Assignment {
-  id             String   @id @default(uuid())
-  title          String
-  description    String?
-  dueDate        DateTime?
-  attachments    Json?    // Optional JSON containing array of { url: string, filename: string }
-  
-  batchId        String?
-  subjectId      String?
-  chapterId      String?
-  topicId        String?
-  subtopicId     String?
-  uploaderId     String
-  targetTrack    TrackType @default(BOTH)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  attachments Json? // Optional JSON containing array of { url: string, filename: string }
 
-  batch          Batch?    @relation(fields: [batchId], references: [id])
-  subject        Subject?  @relation(fields: [subjectId], references: [id])
-  chapter        Chapter?  @relation(fields: [chapterId], references: [id])
-  topic          Topic?    @relation(fields: [topicId], references: [id])
-  subtopic       Subtopic? @relation(fields: [subtopicId], references: [id])
-  uploader       User      @relation(fields: [uploaderId], references: [id])
-  
-  submissions    AssignmentSubmission[]
+  batchId     String?
+  subjectId   String?
+  chapterId   String?
+  topicId     String?
+  subtopicId  String?
+  uploaderId  String
+  targetTrack TrackType @default(BOTH)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  batch    Batch?    @relation(fields: [batchId], references: [id])
+  subject  Subject?  @relation(fields: [subjectId], references: [id])
+  chapter  Chapter?  @relation(fields: [chapterId], references: [id])
+  topic    Topic?    @relation(fields: [topicId], references: [id])
+  subtopic Subtopic? @relation(fields: [subtopicId], references: [id])
+  uploader User      @relation(fields: [uploaderId], references: [id])
+
+  submissions AssignmentSubmission[]
 
   @@map("assignments")
 }
 
 model AssignmentSubmission {
-  id             String   @id @default(uuid())
-  assignmentId   String
-  studentId      String
-  attachments    Json?    // Optional JSON containing array of { url: string, filename: string }
-  notes          String?
-  status         SubmissionStatus @default(SUBMITTED)
-  grade          Float?
-  feedback       String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String           @id @default(uuid())
+  assignmentId String
+  studentId    String
+  attachments  Json? // Optional JSON containing array of { url: string, filename: string }
+  notes        String?
+  status       SubmissionStatus @default(SUBMITTED)
+  grade        Float?
+  feedback     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
-  assignment     Assignment     @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignment Assignment     @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, studentId])
   @@map("assignment_submissions")
@@ -594,34 +601,34 @@ enum ProgressStatus {
 }
 
 model BatchChapterProgress {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   batchId     String
   chapterId   String
   status      ProgressStatus @default(NOT_STARTED)
   completedAt DateTime?
   updatedBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-  batch       Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  chapter     Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  batch   Batch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
   @@unique([batchId, chapterId])
   @@map("batch_chapter_progress")
 }
 
 model BatchTopicProgress {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   batchId     String
   topicId     String
   status      ProgressStatus @default(NOT_STARTED)
   completedAt DateTime?
   updatedBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-  batch       Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  batch Batch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@unique([batchId, topicId])
   @@map("batch_topic_progress")
@@ -643,44 +650,44 @@ enum RevisionStatus {
 }
 
 model StudentTopicProgress {
-  id               String   @id @default(uuid())
-  studentId        String
-  topicId          String
-  batchId          String
-  
-  completionPercentage Float @default(0)
-  status           StudentTopicStatus @default(NOT_STARTED)
-  
+  id        String @id @default(uuid())
+  studentId String
+  topicId   String
+  batchId   String
+
+  completionPercentage Float              @default(0)
+  status               StudentTopicStatus @default(NOT_STARTED)
+
   lectureProgress  Float @default(0)
   materialProgress Float @default(0)
   practiceProgress Float @default(0)
   testProgress     Float @default(0)
-  
-  questionsAssigned Int @default(0)
-  questionsAttempted Int @default(0)
-  questionsCorrect  Int @default(0)
-  questionsIncorrect Int @default(0)
-  practiceAccuracy  Float @default(0)
-  
-  testsAttempted    Int @default(0)
-  averageTestScore  Float @default(0)
-  latestTestScore   Float @default(0)
-  
-  lastActivityAt   DateTime?
-  completedAt      DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
 
-  student          StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  topic            Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  batch            Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  questionsAssigned  Int   @default(0)
+  questionsAttempted Int   @default(0)
+  questionsCorrect   Int   @default(0)
+  questionsIncorrect Int   @default(0)
+  practiceAccuracy   Float @default(0)
+
+  testsAttempted   Int   @default(0)
+  averageTestScore Float @default(0)
+  latestTestScore  Float @default(0)
+
+  lastActivityAt DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic   Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  batch   Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, topicId, batchId])
   @@map("student_topic_progress")
 }
 
 model TopicRevisionTask {
-  id             String   @id @default(uuid())
+  id             String         @id @default(uuid())
   studentId      String
   topicId        String
   revisionNumber Int
@@ -688,42 +695,186 @@ model TopicRevisionTask {
   completedDate  DateTime?
   revisionScore  Float?
   status         RevisionStatus @default(UPCOMING)
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
 
-  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  topic          Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  topic   Topic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@map("topic_revision_tasks")
 }
 
 model SyllabusConfiguration {
-  id                String @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   // Weightages
-  lectureWeight     Float @default(0.20)
-  materialWeight    Float @default(0.20)
-  practiceWeight    Float @default(0.30)
-  testWeight        Float @default(0.30)
-  
+  lectureWeight  Float @default(0.20)
+  materialWeight Float @default(0.20)
+  practiceWeight Float @default(0.30)
+  testWeight     Float @default(0.30)
+
   // Completion Thresholds
   inProgressThreshold Float @default(25)
   completedThreshold  Float @default(75)
-  
+
   // Mastery Rules
   masteryCompletionThreshold Float @default(90)
   masteryAccuracyThreshold   Float @default(80)
   masteryTestScoreThreshold  Float @default(80)
-  masteryMinQuestions        Int @default(20)
-  
+  masteryMinQuestions        Int   @default(20)
+
   // Revision Rules
   weakPracticeThreshold Float @default(60)
   weakTestThreshold     Float @default(60)
-  revisionIntervalsDays Json @default("[1, 3, 7, 14, 30]")
-  
+  revisionIntervalsDays Json  @default("[1, 3, 7, 14, 30]")
+
   updatedAt DateTime @updatedAt
-  
+
   @@map("syllabus_configurations")
 }
 
+// -----------------------------------------------------------------------------
+// ENQUIRY / LEADS (CRM)
+// -----------------------------------------------------------------------------
+
+model Enquiry {
+  id            String  @id @default(uuid())
+  studentName   String
+  parentName    String?
+  contactNumber String
+  email         String?
+  address       String?
+  source        String? // e.g., Walk-in, Facebook, Reference
+
+  targetBoard    String?
+  targetStandard String?
+  targetCourse   String?
+
+  status       EnquiryStatus @default(NEW)
+  followUpDate DateTime?
+  notes        String?
+
+  assignedToId String?
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("enquiries")
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  VISITED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+// -----------------------------------------------------------------------------
+// SMS / COMMUNICATION
+// -----------------------------------------------------------------------------
+
+model SmsLog {
+  id            String    @id @default(uuid())
+  recipientName String
+  phoneNumber   String
+  message       String
+  status        SmsStatus @default(PENDING)
+  providerId    String? // e.g., Twilio message SID
+  errorDetails  String?
+
+  sentById String?
+  sentBy   User?   @relation("SmsSender", fields: [sentById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sms_logs")
+}
+
+enum SmsStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
+// -----------------------------------------------------------------------------
+// FINANCE (EXPENSE & INCOME)
+// -----------------------------------------------------------------------------
+
+model Transaction {
+  id          String          @id @default(uuid())
+  type        TransactionType
+  category    String // e.g., Salary, Rent, Marketing, Event
+  amount      Float
+  date        DateTime        @default(now())
+  reference   String? // e.g., Invoice No, Cheque No
+  description String?
+  paymentMode String? // Cash, UPI, Bank Transfer
+
+  recordedById String
+  recordedBy   User   @relation("TransactionRecorder", fields: [recordedById], references: [id])
+
+  centreId String?
+  centre   Centre? @relation(fields: [centreId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+// -----------------------------------------------------------------------------
+// ATTENDANCE
+// -----------------------------------------------------------------------------
+
+model Attendance {
+  id           String   @id @default(uuid())
+  batchId      String
+  date         DateTime
+  recordedById String
+
+  batch      Batch @relation(fields: [batchId], references: [id])
+  recordedBy User  @relation("AttendanceRecorder", fields: [recordedById], references: [id])
+
+  records AttendanceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([batchId, date])
+  @@map("attendances")
+}
+
+model AttendanceRecord {
+  id           String           @id @default(uuid())
+  attendanceId String
+  studentId    String
+  status       AttendanceStatus @default(PRESENT)
+  remarks      String?
+
+  attendance Attendance     @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([attendanceId, studentId])
+  @@map("attendance_records")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}

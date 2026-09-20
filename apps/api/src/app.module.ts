@@ -18,6 +18,11 @@ import { StudyMaterialModule } from './study-materials/study-materials.module';
 import { FeeModule } from './fee/fee.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { SyllabusModule } from './syllabus/syllabus.module';
+import { EnquiryModule } from './enquiry/enquiry.module';
+import { SmsModule } from './sms/sms.module';
+import { FinanceModule } from './finance/finance.module';
+import { AttendanceModule } from './attendance/attendance.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -38,6 +43,11 @@ import { SyllabusModule } from './syllabus/syllabus.module';
     FeeModule,
     AssignmentsModule,
     SyllabusModule,
+    EnquiryModule,
+    SmsModule,
+    FinanceModule,
+    AttendanceModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

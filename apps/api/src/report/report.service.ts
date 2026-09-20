@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { TransactionType, EnquiryStatus, AttendanceStatus } from '@prisma/client';
+import { PrismaService } from '../database/prisma.service';
+import { TransactionType, EnquiryStatus, AttendanceStatus } from '@educare/database';
 
 @Injectable()
 export class ReportService {
@@ -77,8 +77,8 @@ export class ReportService {
       }
     });
 
-    const students = enrollments.map(e => e.studentProfile);
-    const studentIds = students.map(s => s.id);
+    const students = enrollments.map((e: any) => e.studentProfile);
+    const studentIds = students.map((s: any) => s.id);
 
     // 2. Get attendance aggregates
     const attRecords = await this.prisma.attendanceRecord.findMany({
@@ -87,10 +87,10 @@ export class ReportService {
     });
 
     // 3. Map aggregates back to students
-    return students.map(student => {
-      const studentAtts = attRecords.filter(r => r.studentId === student.id && r.attendance.batchId === batchId);
+    return students.map((student: any) => {
+      const studentAtts = attRecords.filter((r: any) => r.studentId === student.id && r.attendance.batchId === batchId);
       const totalDays = studentAtts.length;
-      const presentDays = studentAtts.filter(a => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
+      const presentDays = studentAtts.filter((a: any) => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
       const attPercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
       return {

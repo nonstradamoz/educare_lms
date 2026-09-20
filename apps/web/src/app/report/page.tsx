@@ -16,6 +16,8 @@ export default function ReportsPage() {
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [batchId, setBatchId] = useState("");
   const [batches, setBatches] = useState<any[]>([]);
+  const [studentId, setStudentId] = useState("");
+  const [batchStudents, setBatchStudents] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
@@ -23,6 +25,15 @@ export default function ReportsPage() {
   useEffect(() => {
     fetchApi("/setup/batches").then(b => setBatches(Array.isArray(b) ? b : [])).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (reportType === "PERFORMANCE" && batchId) {
+      fetchApi(`/attendance/students/${batchId}`).then(s => setBatchStudents(Array.isArray(s) ? s : [])).catch(() => {});
+    } else {
+      setBatchStudents([]);
+      setStudentId("");
+    }
+  }, [batchId, reportType]);
 
   const generateReport = async () => {
     setLoading(true);
@@ -136,6 +147,43 @@ export default function ReportsPage() {
 
   const renderPerformanceReport = () => {
     if (!data || data.length === 0) return <p className="text-center text-text-muted py-10">No data found for this batch.</p>;
+
+    let displayData = data;
+    if (studentId) {
+      displayData = data.filter((s: any) => s.studentId === studentId);
+      if (displayData.length === 0) return <p className="text-center text-text-muted py-10">Student has no performance data.</p>;
+      
+      const s = displayData[0];
+      const percentage = parseFloat(s.attendanceDetails.percentage);
+      return (
+        <div className="bg-white rounded-xl border border-border-soft p-6 shadow-sm max-w-2xl mx-auto">
+          <div className="flex items-center gap-4 border-b border-border-soft pb-4 mb-4">
+            <div className="h-16 w-16 bg-brand-blue/10 rounded-full flex items-center justify-center text-brand-blue font-black text-2xl">
+              {s.name.charAt(0)}
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-text-primary">{s.name}</h3>
+              <p className="text-sm text-text-secondary font-bold">ID: {s.admissionNo}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-surface rounded-lg p-4">
+              <p className="text-[10px] font-bold text-text-muted uppercase">Total Classes</p>
+              <p className="text-2xl font-black mt-1">{s.attendanceDetails.totalDays}</p>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4 text-green-700">
+              <p className="text-[10px] font-bold uppercase">Classes Attended</p>
+              <p className="text-2xl font-black mt-1">{s.attendanceDetails.presentDays}</p>
+            </div>
+            <div className={`rounded-lg p-4 ${percentage >= 75 ? 'bg-brand-blue/10 text-brand-blue' : 'bg-red-50 text-red-700'}`}>
+              <p className="text-[10px] font-bold uppercase">Attendance %</p>
+              <p className="text-2xl font-black mt-1">{percentage}%</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="overflow-auto border border-border-soft rounded-lg max-h-[500px]">
         <table className="w-full text-sm">
@@ -149,7 +197,7 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border-soft">
-            {data.map((s: any) => (
+            {displayData.map((s: any) => (
               <tr key={s.studentId}>
                 <td className="px-5 py-3 font-bold text-text-primary">{s.name}</td>
                 <td className="px-5 py-3 text-xs text-text-secondary">{s.admissionNo}</td>
@@ -195,16 +243,31 @@ export default function ReportsPage() {
             </div>
 
             {reportType === "PERFORMANCE" ? (
-              <div className="w-64">
-                <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Select Batch</label>
-                <select 
-                  value={batchId}
-                  onChange={e => setBatchId(e.target.value)}
-                  className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
-                >
-                  <option value="">Select a Batch...</option>
-                  {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
+              <div className="flex gap-4">
+                <div className="w-56">
+                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Select Batch</label>
+                  <select 
+                    value={batchId}
+                    onChange={e => setBatchId(e.target.value)}
+                    className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
+                  >
+                    <option value="">Select a Batch...</option>
+                    {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+                {batchId && (
+                  <div className="w-56">
+                    <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Select Student (Optional)</label>
+                    <select 
+                      value={studentId}
+                      onChange={e => setStudentId(e.target.value)}
+                      className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
+                    >
+                      <option value="">All Students</option>
+                      {batchStudents.map(s => <option key={s.studentId} value={s.studentId}>{s.name}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
             ) : (
               <>

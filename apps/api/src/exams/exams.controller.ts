@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ExamsService } from './exams.service';
 import { StorageService } from '../storage/storage.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -17,6 +17,11 @@ export class ExamsController {
   @Get()
   getExams(): Promise<any> {
     return this.examsService.getExams();
+  }
+
+  @Get('by-topic/:topicId')
+  getExamsByTopic(@Param('topicId') topicId: string): Promise<any> {
+    return this.examsService.getExamsByTopic(topicId);
   }
   @Post()
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')

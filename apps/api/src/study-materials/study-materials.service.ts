@@ -66,6 +66,22 @@ export class StudyMaterialService {
     }
   }
 
+  async getByTopic(topicId: string) {
+    return this.prisma.studyMaterial.findMany({
+      where: { topicId },
+      include: {
+        academicYear: true,
+        syllabus: {
+          include: { board: true, standard: true, subject: true }
+        },
+        chapter: true,
+        topic: true,
+        uploader: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async delete(id: string) {
     try {
       return await this.prisma.studyMaterial.delete({

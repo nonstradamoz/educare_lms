@@ -16,8 +16,13 @@ export class StudyMaterialController {
   @UseGuards(JwtAuthGuard)
   @Get()
   getAll(@Req() req: any) {
-    // Optionally filter by req.user.id or roles in the service
     return this.studyMaterialService.getAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('by-topic/:topicId')
+  getByTopic(@Param('topicId') topicId: string) {
+    return this.studyMaterialService.getByTopic(topicId);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -25,6 +30,7 @@ export class StudyMaterialController {
   create(@Body() data: any, @Req() req: any) {
     return this.studyMaterialService.create({ ...data, uploaderId: req.user.id });
   }
+
 
   @Delete(':id')
   delete(@Param('id') id: string) {

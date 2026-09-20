@@ -19,6 +19,22 @@ export class ExamsService {
     });
   }
 
+  async getExamsByTopic(topicId: string): Promise<any> {
+    return this.prisma.exam.findMany({
+      where: {
+        topicId,
+        type: { in: ['MCQ_EXAM', 'MOCK_TEST'] },
+      },
+      include: {
+        subject: true,
+        chapter: true,
+        topic: true,
+        mcqQuestions: true,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async createExam(data: any) {
     let { title, type, academicYearId, batchId, subjectId, chapterId, topicId, boardId, standardId, centreId, targetTrack } = data;
     

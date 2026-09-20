@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { BookOpen, Plus, Search, Filter, ChevronRight, ChevronDown, FileText, Video, Link as LinkIcon, Download, X, Play, ExternalLink, Loader2 } from "lucide-react";
+import { BookOpen, Plus, Search, Filter, ChevronRight, ChevronDown, FileText, Video, Link as LinkIcon, Download, X, Play, ExternalLink, Loader2, GraduationCap, LayoutList } from "lucide-react";
 import Link from "next/link";
 import { FileUploader } from "@/components/upload/file-uploader";
 import { fetchApi } from "@/lib/api";
+import { CurriculumBrowser } from "./curriculum-browser";
+
 
 export interface Material {
   id: string;
@@ -29,7 +31,14 @@ export interface Material {
 export function EStudyClient({ initialMaterials }: { initialMaterials: Material[] }) {
   const [materials, setMaterials] = useState<Material[]>(initialMaterials);
   const [search, setSearch] = useState("");
-  
+  const { role } = useAuth();
+
+  // Students always see Curriculum Browser; others can switch
+  const isStudent = role === "STUDENT";
+  const [activeTab, setActiveTab] = useState<"curriculum" | "repository">(
+    isStudent ? "curriculum" : "curriculum"
+  );
+
   // Hierarchy Data
   const [boards, setBoards] = useState<any[]>([]);
   const [standards, setStandards] = useState<any[]>([]);
@@ -43,16 +52,16 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
   const [filterTrack, setFilterTrack] = useState("All Tracks");
   const [sortBy, setSortBy] = useState("Date Added (Newest First)");
   const [showModal, setShowModal] = useState(false);
-  const { role } = useAuth();
 
   useEffect(() => {
+    if (isStudent) return; // Students don't need the flat list data
     fetchApi('/setup/boards').then((data: any) => setBoards(data)).catch(console.error);
     fetchApi('/setup/standards').then((data: any) => setStandards(data)).catch(console.error);
     fetchApi('/setup/subjects').then((data: any) => setSubjectsList(data)).catch(console.error);
-    
-    // Refresh materials
     fetchApi('/study-materials').then((data: any) => setMaterials(data)).catch(console.error);
-  }, []);
+  }, [isStudent]);
+
+
 
   const filtered = materials.filter(m => {
     const subjName = m.syllabus?.subject?.name || "";
@@ -105,193 +114,183 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
   };
 
   return (
-    <DashboardLayout title="eStudy Materials">
+    <DashboardLayout title="eStudy">
       <div className="flex flex-col h-full bg-surface">
-        
-        {/* Header Section */}
-        <div className="bg-white border-b border-border-soft px-6 lg:px-8 py-6 flex items-center justify-between">
+
+        {/* Header */}
+        <div className="bg-white border-b border-border-soft px-6 lg:px-8 py-5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-xl bg-brand-blue/10 flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-brand-blue" />
+            <div className="h-11 w-11 rounded-xl bg-brand-blue/10 flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-brand-blue" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-text-primary">eStudy Materials</h1>
-              <p className="text-xs text-text-muted mt-1">Manage study notes, video lessons, and reference links</p>
+              <h1 className="text-lg font-bold text-text-primary">eStudy</h1>
+              <p className="text-xs text-text-muted mt-0.5">
+                {isStudent ? "Browse your curriculum and study materials" : "Manage curriculum-aligned study content"}
+              </p>
             </div>
           </div>
-          {role !== 'STUDENT' && (
+          {!isStudent && activeTab === "repository" && (
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
             >
               <Plus className="h-4 w-4" /> Add Material
             </button>
           )}
         </div>
 
-        {/* Breadcrumb */}
-        <div className="px-6 lg:px-8 py-4 flex items-center gap-2 text-xs font-medium text-text-muted">
-          <Link href="/" className="flex items-center gap-1.5 hover:text-text-primary transition-colors">
-            <BookOpen className="h-3.5 w-3.5" /> Academics
-          </Link>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span className="text-text-primary">eStudy</span>
-        </div>
-
-        <div className="px-6 lg:px-8 pb-8 space-y-6 flex-1 overflow-y-auto">
-          
-          {/* Filters Section */}
-          <div className="bg-white rounded-2xl border border-border-soft shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-6 text-sm font-bold text-text-primary">
-              <Filter className="h-4 w-4 text-brand-blue" /> Filter Materials
-            </div>
-            
-            <div className="flex mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by Title, Subject or Class..."
-                  className="w-full h-10 rounded-l-lg border border-r-0 border-border-soft bg-surface-2 pl-10 pr-4 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                />
-              </div>
-              <button className="h-10 px-6 rounded-r-lg bg-brand-blue-dark text-white text-sm font-semibold hover:bg-brand-blue transition-colors">
-                Search
+        {/* Tab bar — only for non-students */}
+        {!isStudent && (
+          <div className="bg-white border-b border-border-soft px-6 lg:px-8 flex items-center gap-1">
+            {([
+              { key: "curriculum" as const, label: "Curriculum Browser", icon: GraduationCap },
+              { key: "repository" as const, label: "Material Repository", icon: LayoutList },
+            ] as const).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 px-4 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
+                  activeTab === tab.key
+                    ? "border-brand-blue text-brand-blue"
+                    : "border-transparent text-text-muted hover:text-text-primary"
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
               </button>
-            </div>
+            ))}
+          </div>
+        )}
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              {[
-                { label: "Track", state: filterTrack, set: setFilterTrack, options: ["All Tracks", "TUITION", "ENTRANCE"] },
-                { label: "Board", state: filterBoard, set: setFilterBoard, options: ["All Boards", ...boards.map(b => b.name)] },
-                { label: "Class", state: filterClass, set: setFilterClass, options: ["All Classes", ...standards.map(s => s.name)] },
-                { label: "Subject", state: filterSubject, set: setFilterSubject, options: ["All Subjects", ...subjectsList.map(s => s.name)] },
-                { label: "Type", state: filterType, set: setFilterType, options: ["All Types", "PDF", "VIDEO", "LINK", "DOCUMENT"] },
-                { label: "Sort By", state: sortBy, set: setSortBy, options: ["Date Added (Newest First)", "Date Added (Oldest First)", "Title (A-Z)", "Title (Z-A)"] },
-              ].map((f) => (
-                <div key={f.label} className="relative">
-                  <select
-                    value={f.state}
-                    onChange={(e) => f.set(e.target.value)}
-                    className="w-full h-10 appearance-none rounded-xl border border-border-soft bg-white px-3 pr-8 text-[13px] font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
-                  >
-                    {f.options.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+        <div className="px-6 lg:px-8 pb-8 pt-6 flex-1 overflow-y-auto">
+
+          {/* ── Curriculum Browser ── */}
+          {activeTab === "curriculum" && <CurriculumBrowser />}
+
+          {/* ── Material Repository (non-students only) ── */}
+          {activeTab === "repository" && !isStudent && (
+            <div className="space-y-6">
+
+              {/* Filters */}
+              <div className="bg-white rounded-2xl border border-border-soft shadow-sm p-6">
+                <div className="flex items-center gap-2 mb-6 text-sm font-bold text-text-primary">
+                  <Filter className="h-4 w-4 text-brand-blue" /> Filter Materials
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* List Section */}
-          <div className="bg-white rounded-2xl border border-border-soft shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-border-soft flex items-center justify-between bg-surface-2/50">
-              <div className="flex items-center gap-2 text-sm font-bold text-text-primary">
-                <FileText className="h-4 w-4 text-brand-blue" /> Material Repository
+                <div className="flex mb-6">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+                    <input
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search by Title, Subject or Class..."
+                      className="w-full h-10 rounded-l-lg border border-r-0 border-border-soft bg-surface-2 pl-10 pr-4 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                    />
+                  </div>
+                  <button className="h-10 px-6 rounded-r-lg bg-brand-blue-dark text-white text-sm font-semibold hover:bg-brand-blue transition-colors">
+                    Search
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {[
+                    { label: "Track", state: filterTrack, set: setFilterTrack, options: ["All Tracks", "TUITION", "ENTRANCE"] },
+                    { label: "Board", state: filterBoard, set: setFilterBoard, options: ["All Boards", ...boards.map(b => b.name)] },
+                    { label: "Class", state: filterClass, set: setFilterClass, options: ["All Classes", ...standards.map(s => s.name)] },
+                    { label: "Subject", state: filterSubject, set: setFilterSubject, options: ["All Subjects", ...subjectsList.map(s => s.name)] },
+                    { label: "Type", state: filterType, set: setFilterType, options: ["All Types", "PDF", "VIDEO", "LINK", "DOCUMENT"] },
+                    { label: "Sort By", state: sortBy, set: setSortBy, options: ["Date Added (Newest First)", "Date Added (Oldest First)", "Title (A-Z)", "Title (Z-A)"] },
+                  ].map((f) => (
+                    <div key={f.label} className="relative">
+                      <select
+                        value={f.state}
+                        onChange={(e) => f.set(e.target.value)}
+                        className="w-full h-10 appearance-none rounded-xl border border-border-soft bg-white px-3 pr-8 text-[13px] font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
+                      >
+                        {f.options.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                    </div>
+                  ))}
+                </div>
               </div>
-              
-              <div className="flex items-center gap-1 text-xs font-medium">
-                <button className="px-2 py-1 text-text-muted hover:text-text-primary">« Previous</button>
-                <button className="h-7 w-7 rounded bg-brand-blue text-white flex items-center justify-center shadow-sm">1</button>
-                <button className="px-2 py-1 text-text-muted hover:text-text-primary">Next »</button>
-              </div>
-            </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border-soft bg-white">
-                    {role !== 'STUDENT' && (
-                      <th className="px-6 py-4 text-left">
-                        <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
-                      </th>
-                    )}
-                    <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Title</th>
-                    <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Type</th>
-                    <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Subject & Class</th>
-                    <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Date Added</th>
-                    <th className="px-6 py-4 text-right"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-soft">
-                  {sortedMaterials.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-20 text-center text-sm text-text-muted">
-                        No materials match your filters.
-                      </td>
-                    </tr>
-                  ) : (
-                    sortedMaterials.map((m) => (
-                      <tr key={m.id} className="hover:bg-surface-2/30 transition-colors">
-                      {role !== 'STUDENT' && (
-                        <td className="px-6 py-4">
-                          <input type="checkbox" className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20" />
-                        </td>
+              {/* Table */}
+              <div className="bg-white rounded-2xl border border-border-soft shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-border-soft flex items-center justify-between bg-surface-2/50">
+                  <div className="flex items-center gap-2 text-sm font-bold text-text-primary">
+                    <FileText className="h-4 w-4 text-brand-blue" /> Material Repository
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border-soft bg-white">
+                        <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Title</th>
+                        <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Type</th>
+                        <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Subject & Class</th>
+                        <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Date Added</th>
+                        <th className="px-6 py-4 text-right"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-soft">
+                      {sortedMaterials.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-20 text-center text-sm text-text-muted">
+                            No materials match your filters.
+                          </td>
+                        </tr>
+                      ) : (
+                        sortedMaterials.map((m) => (
+                          <tr key={m.id} className="hover:bg-surface-2/30 transition-colors">
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className={`h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${m.type === 'VIDEO' ? 'bg-brand-blue/10' : 'bg-surface-2'}`}>
+                                  {getIconForType(m.type)}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-text-primary">{m.title}</p>
+                                  <p className="text-[11px] text-text-muted mt-0.5">
+                                    {m.uploader ? `Uploaded by ${m.uploader.firstName} ${m.uploader.lastName}` : "System Admin"}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${m.type === 'VIDEO' ? 'border-brand-blue bg-brand-blue/10 text-brand-blue' : 'border-border-soft bg-surface-2 text-text-secondary'}`}>
+                                {m.type}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4">
+                              <p className="text-xs font-bold text-brand-blue">{m.syllabus?.subject?.name || "N/A"}</p>
+                              <p className="text-[11px] text-text-muted mt-0.5">{m.syllabus?.standard?.name || "General"} | {m.syllabus?.board?.name || "No Board"}</p>
+                            </td>
+                            <td className="px-4 py-4">
+                              <p className="text-xs font-medium text-text-primary" suppressHydrationWarning>{new Date(m.createdAt).toLocaleDateString()}</p>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={() => {
+                                  if (!m.url) return;
+                                  window.open(m.url, '_blank');
+                                }}
+                                className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
+                                {m.type === "VIDEO" ? <><Play className="h-3.5 w-3.5" /> Play</> : m.type === "LINK" ? <><ExternalLink className="h-3.5 w-3.5" /> Open</> : <><Download className="h-3.5 w-3.5" /> Download</>}
+                              </button>
+                            </td>
+                          </tr>
+                        ))
                       )}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${m.type === 'VIDEO' ? 'bg-brand-blue/10' : 'bg-surface-2'}`}>
-                            {getIconForType(m.type)}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-bold text-text-primary">{m.title}</p>
-                              {m.targetTrack && m.targetTrack !== "BOTH" && (
-                                <span className="shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase bg-brand-blue/10 text-brand-blue border-brand-blue/20">
-                                  {m.targetTrack}
-                               </span>
-                              )}
-                            </div>
-                            <p className="text-[11px] text-text-muted mt-0.5">
-                              {m.uploader ? `Uploaded by ${m.uploader.firstName} ${m.uploader.lastName}` : "System Admin"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${m.type === 'VIDEO' ? 'border-brand-blue bg-brand-blue/10 text-brand-blue' : 'border-border-soft bg-surface-2 text-text-secondary'}`}>
-                          {m.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-xs font-bold text-brand-blue">{m.syllabus?.subject?.name || "N/A"}</p>
-                        <p className="text-[11px] text-text-muted mt-0.5">{m.syllabus?.standard?.name || "General"} | {m.syllabus?.board?.name || "No Board"}</p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-xs font-medium text-text-primary" suppressHydrationWarning>{new Date(m.createdAt).toLocaleDateString()}</p>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button 
-                          onClick={() => {
-                            if (!m.url) return;
-                            if (m.type === "VIDEO") {
-                              if (m.url.includes('http')) {
-                                // Fallback if video is stored in R2 directly
-                                window.open(m.url, '_blank');
-                              } else {
-                                // Cloudflare Stream ID
-                                window.open(`https://customer-${process.env.NEXT_PUBLIC_CLOUDFLARE_CUSTOMER_CODE || "your-code"}.cloudflarestream.com/${m.url}/iframe`, '_blank');
-                              }
-                            } else {
-                              // PDFs, Links, Documents
-                              window.open(m.url, '_blank');
-                            }
-                          }}
-                          className="inline-flex items-center gap-1.5 text-brand-blue hover:text-brand-blue-dark text-xs font-bold transition-colors">
-                          {m.type === "VIDEO" ? <><Play className="h-3.5 w-3.5" /> Play</> : m.type === "LINK" ? <><ExternalLink className="h-3.5 w-3.5" /> Open</> : <><Download className="h-3.5 w-3.5" /> Download</>}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-                </tbody>
-              </table>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
             </div>
-          </div>
+          )}
+
         </div>
       </div>
 
@@ -300,6 +299,7 @@ export function EStudyClient({ initialMaterials }: { initialMaterials: Material[
     </DashboardLayout>
   );
 }
+
 
 function AddMaterialModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [title, setTitle] = useState("");

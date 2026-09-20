@@ -93,13 +93,20 @@ export function Sidebar({
         ${isMobileMenuOpen ? "translate-x-0 flex" : "-translate-x-full hidden md:flex"}
       `}>
         {/* Brand */}
-        <div className="flex h-28 items-center justify-center px-6 border-b border-white/10 shrink-0 relative">
-          <div className="flex items-center justify-center rounded-2xl bg-white shadow-xl p-3 w-full max-w-[210px] h-20 transition-transform hover:scale-[1.02]">
-            <Image src={logoImage} alt="Educare Logo" width={200} height={64} className="object-contain w-full h-full" priority />
+        <div className="flex flex-col items-center justify-center px-4 py-5 border-b border-white/10 shrink-0 relative gap-0">
+          <div className="w-full rounded-2xl bg-white shadow-[0_4px_24px_rgba(0,0,0,0.18)] overflow-hidden">
+            <Image
+              src={logoImage}
+              alt="Educare Group of Institutions"
+              width={228}
+              height={76}
+              className="object-contain w-full h-auto"
+              priority
+            />
           </div>
           {isMobileMenuOpen && (
-            <button onClick={() => setIsMobileMenuOpen?.(false)} className="md:hidden absolute right-4 text-white/70 hover:text-white">
-              <X className="h-5 w-5" />
+            <button onClick={() => setIsMobileMenuOpen?.(false)} className="md:hidden absolute right-3 top-3 text-white/70 hover:text-white bg-white/10 rounded-lg p-1">
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>

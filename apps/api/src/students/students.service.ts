@@ -67,7 +67,7 @@ export class StudentsService {
         const profile = await prisma.studentProfile.create({
           data: {
             userId: user.id,
-            admissionNo: data.admissionNo || `ADM-${Date.now()}`,
+            admissionNo: data.admissionNo && data.admissionNo !== "ADM-999" ? data.admissionNo : `${centre.code || 'ADM'}-${Date.now().toString().slice(-5)}`,
             parentName: data.parentName,
             parentEmail: data.parentEmail,
             parentPhone: data.parentPhone,
@@ -102,6 +102,9 @@ export class StudentsService {
 
   async getStudents() {
     return this.prisma.studentProfile.findMany({
+      where: {
+        user: { status: 'ACTIVE' }
+      },
       include: {
         user: true,
         enrollments: {

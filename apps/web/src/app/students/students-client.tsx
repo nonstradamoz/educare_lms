@@ -319,7 +319,7 @@ export function StudentsClient({ initialStudents }: { initialStudents: Student[]
 function AddStudentModal({ student, onClose, onSave }: { student: Student | null, onClose: () => void, onSave: (s: Student) => void }) {
   const [activeTab, setActiveTab] = useState("Admission");
   
-  const [admissionNo, setAdmissionNo] = useState(student?.admissionNo || "74");
+  const [admissionNo, setAdmissionNo] = useState(student?.admissionNo || "");
   const [firstName, setFirstName] = useState(student?.name?.split(" ")[0] || "");
   const [lastName, setLastName] = useState(student?.name?.split(" ").slice(1).join(" ") || "");
   const [email, setEmail] = useState(student?.email || "");
@@ -417,11 +417,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                   Admission No <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <input type="text" value={admissionNo} onChange={(e) => setAdmissionNo(e.target.value)} className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
-                    <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1 cursor-pointer" />
-                    <ChevronDown className="h-3 w-3 text-text-muted cursor-pointer" />
-                  </div>
+                  <input type="text" value={admissionNo} onChange={(e) => setAdmissionNo(e.target.value)} placeholder="Auto-generated if left blank" className="w-full h-10 rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20" />
                 </div>
               </div>
 
@@ -747,7 +743,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                   const newStudentData: Student = {
                     id: student?.id || Math.random().toString(36).substr(2, 9),
                     name: `${firstName} ${lastName}`.trim() || "New Student",
-                    admissionNo: admissionNo || "ADM-999",
+                    admissionNo: admissionNo || "",
                     email: email || "student@example.com",
                     phone: phone || "+91 9999999999",
                     parentName: parentName || "Parent",

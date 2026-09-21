@@ -96,9 +96,14 @@ export default function AttendancePage() {
   }, [selectedCentre, selectedBoard, selectedStandard, selectedTrack, date]);
 
   const updateRecord = (studentId: string, status: string, remarks: string = "") => {
-    setRecords(prev => prev.map(r => 
-      r.studentId === studentId ? { ...r, status: status as any, remarks } : r
-    ));
+    setRecords(prev => {
+      const exists = prev.find(r => r.studentId === studentId);
+      if (exists) {
+        return prev.map(r => r.studentId === studentId ? { ...r, status: status as any, remarks } : r);
+      } else {
+        return [...prev, { studentId, status: status as any, remarks }];
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -251,8 +256,7 @@ export default function AttendancePage() {
                 </thead>
                 <tbody className="divide-y divide-border-soft">
                   {students.map((student) => {
-                    const record = records.find(r => r.studentId === student.studentId);
-                    if (!record) return null;
+                    const record = records.find(r => r.studentId === student.studentId) || { status: 'PRESENT', remarks: '' };
 
                     return (
                       <tr key={student.studentId} className={`hover:bg-surface-2/30 transition-colors ${record.status === 'ABSENT' ? 'bg-red-50/50' : ''}`}>

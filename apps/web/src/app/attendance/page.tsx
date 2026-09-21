@@ -63,11 +63,14 @@ export default function AttendancePage() {
       const attData = (await fetchApi(`/attendance/filter${query}&date=${date}`)) as any;
       
       if (attData && attData.records) {
-        setRecords(attData.records.map((r: any) => ({
-          studentId: r.studentId,
-          status: r.status,
-          remarks: r.remarks || ""
-        })));
+        setRecords(stdData.map((s: any) => {
+          const existing = attData.records.find((r: any) => r.studentId === s.studentId);
+          return {
+            studentId: s.studentId,
+            status: existing ? existing.status : "PRESENT",
+            remarks: existing?.remarks || ""
+          };
+        }));
       } else {
         // Initialize default to PRESENT
         setRecords(stdData.map((s: any) => ({

@@ -113,6 +113,7 @@ export default function SetupPage() {
 
 function CentreSetupTab() {
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [centres, setCentres] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -128,12 +129,21 @@ function CentreSetupTab() {
 
   const handleSave = async () => {
     try {
-      const created = await fetchApi<any>('/setup/centres', {
-        method: 'POST',
-        body: JSON.stringify(formData)
-      });
-      setCentres([...centres, created]);
+      if (editingId) {
+        const updated = await fetchApi<any>(`/setup/centres/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(formData)
+        });
+        setCentres(centres.map(c => c.id === editingId ? updated : c));
+      } else {
+        const created = await fetchApi<any>('/setup/centres', {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+        setCentres([...centres, created]);
+      }
       setIsAdding(false);
+      setEditingId(null);
       setFormData({ name: "", code: "", type: "MAIN", address: "" });
     } catch (e) {
       console.error(e);
@@ -155,8 +165,8 @@ function CentreSetupTab() {
     return (
       <div className="bg-white rounded-xl border border-border-soft p-6 md:p-8 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-sm font-bold text-text-primary">Add New Centre</h3>
-          <button onClick={() => setIsAdding(false)} className="text-xs font-semibold text-text-secondary hover:text-text-primary">Cancel</button>
+          <h3 className="text-sm font-bold text-text-primary">{editingId ? "Edit Centre" : "Add New Centre"}</h3>
+          <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="text-xs font-semibold text-text-secondary hover:text-text-primary">Cancel</button>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -190,7 +200,7 @@ function CentreSetupTab() {
           <h3 className="text-sm font-bold text-text-primary">Centres & Branches</h3>
           <p className="text-xs text-text-muted mt-1">Manage multiple learning centres within your institution.</p>
         </div>
-        <button onClick={() => setIsAdding(true)} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors">
+        <button onClick={() => { setFormData({ name: "", code: "", type: "MAIN", address: "" }); setEditingId(null); setIsAdding(true); }} className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors">
           <Plus className="h-3.5 w-3.5" /> Add New Centre
         </button>
       </div>
@@ -225,7 +235,14 @@ function CentreSetupTab() {
                 <td className="px-6 py-4 text-text-secondary">{c.type}</td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex justify-end gap-2">
-                    <button className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-surface-3 text-text-muted transition-colors">
+                    <button 
+                      onClick={() => {
+                        setEditingId(c.id);
+                        setFormData({ name: c.name, code: c.code, type: c.type, address: c.address || "" });
+                        setIsAdding(true);
+                      }}
+                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-surface-3 text-text-muted transition-colors"
+                    >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button onClick={() => handleDeleteCentre(c.id)} className="h-8 w-8 inline-flex items-center justify-center rounded-lg hover:bg-danger/10 text-danger transition-colors" title="Delete Centre">

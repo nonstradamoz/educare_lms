@@ -12,6 +12,9 @@ export class SetupService {
   async createCentre(data: { name: string; code: string; type: string; address?: string }) {
     return this.prisma.centre.create({ data });
   }
+  async updateCentre(id: string, data: any) {
+    return this.prisma.centre.update({ where: { id }, data });
+  }
   async deleteCentre(id: string) {
     return this.prisma.centre.delete({ where: { id } });
   }

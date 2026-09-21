@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Delete, Param, UseGuards, Put } from '@nestjs/common';
 import { SetupService } from './setup.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -19,6 +19,11 @@ export class SetupController {
   @Post('centres')
   createCentre(@Body() data: any) {
     return this.setupService.createCentre(data);
+  }
+
+  @Put('centres/:id')
+  updateCentre(@Param('id') id: string, @Body() data: any) {
+    return this.setupService.updateCentre(id, data);
   }
 
   @Get('academic-years')

@@ -337,6 +337,30 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
   const [division, setDivision] = useState(student?.division || "");
   const [targetTrack, setTargetTrack] = useState<"TUITION" | "ENTRANCE" | "BOTH" | "">(student?.track || "");
 
+  const [apiYears, setApiYears] = useState<any[]>([]);
+  const [apiBoards, setApiBoards] = useState<any[]>([]);
+  const [apiCentres, setApiCentres] = useState<any[]>([]);
+  const [apiStandards, setApiStandards] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchApi("/setup/academic-years").then(d => setApiYears(Array.isArray(d) ? d : [])).catch(console.error);
+    fetchApi("/setup/boards").then(d => setApiBoards(Array.isArray(d) ? d : [])).catch(console.error);
+    fetchApi("/setup/centres").then(d => setApiCentres(Array.isArray(d) ? d : [])).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (board) {
+      const bObj = apiBoards.find(b => b.name === board);
+      if (bObj) {
+        fetchApi(`/setup/standards?boardId=${bObj.id}`).then(d => setApiStandards(Array.isArray(d) ? d : [])).catch(console.error);
+      } else {
+        setApiStandards([]);
+      }
+    } else {
+      setApiStandards([]);
+    }
+  }, [board, apiBoards]);
+
   const TABS = [
     { id: "Admission", icon: User },
     { id: "Basic Information", icon: BookOpen },
@@ -421,8 +445,9 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
                   >
                     <option value="">---Select---</option>
-                    <option value="2025-26">2025-26</option>
-                    <option value="2026-27">2026-27</option>
+                    {apiYears.map(y => (
+                      <option key={y.id} value={y.name}>{y.name}</option>
+                    ))}
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
@@ -443,10 +468,31 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 disabled:opacity-50"
                   >
                     <option value="">---Select---</option>
-                    <option value="State">State</option>
-                    <option value="CBSE">CBSE</option>
-                    <option value="ICSE">ICSE</option>
-                    <option value="ISC">ISC</option>
+                    {apiBoards.map(b => (
+                      <option key={b.id} value={b.name}>{b.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
+                    <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
+                    <ChevronDown className="h-3 w-3 text-text-muted" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1.5">
+                  Centre <span className="text-brand-red">*</span>
+                </label>
+                <div className="relative">
+                  <select 
+                    value={centre} 
+                    onChange={(e) => { setCentre(e.target.value); setDivision(""); }}
+                    className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  >
+                    <option value="">---Select---</option>
+                    {apiCentres.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
@@ -467,29 +513,9 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 disabled:opacity-50"
                   >
                     <option value="">---Select---</option>
-                    <option value="Class 11">Class 11</option>
-                    <option value="Class 12">Class 12</option>
-                  </select>
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
-                    <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
-                    <ChevronDown className="h-3 w-3 text-text-muted" />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5">
-                  Centre <span className="text-brand-red">*</span>
-                </label>
-                <div className="relative">
-                  <select 
-                    value={centre} 
-                    onChange={(e) => { setCentre(e.target.value); setDivision(""); }}
-                    className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
-                  >
-                    <option value="">---Select---</option>
-                    <option value="Educare Kalathipady">Educare Kalathipady</option>
-                    <option value="Educare North Wing">Educare North Wing</option>
+                    {apiStandards.map(s => (
+                      <option key={s.id} value={s.name}>{s.name}</option>
+                    ))}
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />

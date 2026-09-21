@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchApi } from "@/lib/api";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { PageShell } from "@/components/ui/page-shell";
+import { PageShell } from "@/components/layout/page-shell";
 import { FileText, Save, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 

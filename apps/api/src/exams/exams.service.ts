@@ -43,13 +43,13 @@ export class ExamsService {
 
     const enrollments = await this.prisma.enrollment.findMany({
       where: whereClause,
-      include: { student: { include: { user: true } } }
+      include: { studentProfile: { include: { user: true } } }
     });
 
     return enrollments.map(e => ({
-      studentId: e.studentId,
-      name: `${e.student.user.firstName} ${e.student.user.lastName}`,
-      admissionNo: e.student.admissionNo
+      studentId: e.studentProfileId,
+      name: `${e.studentProfile.user.firstName} ${e.studentProfile.user.lastName}`,
+      admissionNo: e.studentProfile.admissionNo
     }));
   }
 

@@ -74,6 +74,12 @@ export class AttendanceService {
     return batch.id;
   }
 
+  async getBatches(centreId: string, boardId: string, standardId: string, track: string) {
+    return this.prisma.batch.findMany({
+      where: { centreId, boardId, standardId, track: track as any }
+    });
+  }
+
   async getStudentsByFilter(centreId: string, boardId: string, standardId: string, track: string) {
     const enrollments = await this.prisma.enrollment.findMany({
       where: {

@@ -30,6 +30,9 @@ export default function AttendancePage() {
 
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   
+  const [batches, setBatches] = useState<any[]>([]);
+  const [selectedBatch, setSelectedBatch] = useState<string>("");
+
   const [students, setStudents] = useState<Student[]>([]);
   const [records, setRecords] = useState<Record[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,19 +51,27 @@ export default function AttendancePage() {
     }
   }, [selectedBoard]);
 
+  useEffect(() => {
+    if (selectedCentre && selectedBoard && selectedStandard && selectedTrack) {
+      const query = `?centreId=${selectedCentre}&boardId=${selectedBoard}&standardId=${selectedStandard}&track=${selectedTrack}`;
+      fetchApi(`/attendance/batches/filter${query}`).then(d => setBatches(Array.isArray(d) ? d : [])).catch(() => {});
+    } else {
+      setBatches([]);
+      setSelectedBatch("");
+    }
+  }, [selectedCentre, selectedBoard, selectedStandard, selectedTrack]);
+
   const loadAttendance = async () => {
-    if (!selectedCentre || !selectedBoard || !selectedStandard || !selectedTrack) return;
+    if (!selectedBatch) return;
     
     setLoading(true);
     try {
-      const query = `?centreId=${selectedCentre}&boardId=${selectedBoard}&standardId=${selectedStandard}&track=${selectedTrack}`;
-      
-      // 1. Fetch Students
-      const stdData = (await fetchApi(`/attendance/students/filter${query}`)) as any;
+      // 1. Fetch Students in Batch
+      const stdData = (await fetchApi(`/attendance/students/${selectedBatch}`)) as any;
       setStudents(stdData);
 
       // 2. Fetch Existing Attendance
-      const attData = (await fetchApi(`/attendance/filter${query}&date=${date}`)) as any;
+      const attData = (await fetchApi(`/attendance/${selectedBatch}?date=${date}`)) as any;
       
       if (attData && attData.records) {
         setRecords(stdData.map((s: any) => {
@@ -87,13 +98,13 @@ export default function AttendancePage() {
   };
 
   useEffect(() => {
-    if (selectedCentre && selectedBoard && selectedStandard && selectedTrack) {
+    if (selectedBatch) {
       loadAttendance();
     } else {
       setStudents([]);
       setRecords([]);
     }
-  }, [selectedCentre, selectedBoard, selectedStandard, selectedTrack, date]);
+  }, [selectedBatch, date]);
 
   const updateRecord = (studentId: string, status: string, remarks: string = "") => {
     setRecords(prev => {
@@ -112,10 +123,7 @@ export default function AttendancePage() {
       await fetchApi("/attendance", {
         method: "POST",
         body: JSON.stringify({ 
-          centreId: selectedCentre, 
-          boardId: selectedBoard, 
-          standardId: selectedStandard, 
-          track: selectedTrack, 
+          batchId: selectedBatch,
           date, 
           records 
         })
@@ -153,7 +161,7 @@ export default function AttendancePage() {
       >
         
         <div className="bg-white rounded-xl border border-border-soft p-4 shadow-sm">
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-6 gap-4">
             <div>
               <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Centre</label>
               <select 
@@ -198,6 +206,18 @@ export default function AttendancePage() {
                 <option value="TUITION">Tuition</option>
                 <option value="ENTRANCE">Entrance</option>
                 <option value="BOTH">Both</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Division</label>
+              <select 
+                value={selectedBatch} 
+                onChange={e => setSelectedBatch(e.target.value)}
+                disabled={batches.length === 0}
+                className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20 disabled:opacity-50"
+              >
+                <option value="">Select Division</option>
+                {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
             <div>

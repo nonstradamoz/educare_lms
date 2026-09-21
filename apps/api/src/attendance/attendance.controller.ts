@@ -21,6 +21,17 @@ export class AttendanceController {
   }
 
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
+  @Get('batches/filter')
+  getBatches(
+    @Query('centreId') centreId: string,
+    @Query('boardId') boardId: string,
+    @Query('standardId') standardId: string,
+    @Query('track') track: string
+  ) {
+    return this.attendanceService.getBatches(centreId, boardId, standardId, track);
+  }
+
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
   @Get('students/:batchId')
   getStudents(@Param('batchId') batchId: string) {
     return this.attendanceService.getBatchStudents(batchId);

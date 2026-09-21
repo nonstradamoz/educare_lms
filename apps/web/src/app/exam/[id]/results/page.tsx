@@ -31,8 +31,8 @@ export default function ExamResultsPage() {
       setStudents(stds);
       
       if (resData && resData.length > 0) {
-        setResults(stds.map(s => {
-          const existing = resData.find(r => r.studentId === s.studentId);
+        setResults(stds.map((s: any) => {
+          const existing = resData.find((r: any) => r.studentId === s.studentId);
           return {
             studentId: s.studentId,
             marksObtained: existing?.marksObtained || 0,
@@ -42,7 +42,7 @@ export default function ExamResultsPage() {
           };
         }));
       } else {
-        setResults(stds.map(s => ({
+        setResults(stds.map((s: any) => ({
           studentId: s.studentId,
           marksObtained: 0,
           maxMarks: 100,

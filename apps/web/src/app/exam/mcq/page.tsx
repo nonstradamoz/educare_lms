@@ -108,6 +108,12 @@ export default function MCQExamPage() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link
+                  href={`/exam/${exam.id}/results`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border-soft bg-white px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface-2 transition-colors"
+                >
+                  <FileText className="h-3.5 w-3.5" /> Results
+                </Link>
+                <Link
                   href={`/exam/mcq/${exam.id}/preview`}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border-soft bg-white px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-surface-2 transition-colors"
                 >

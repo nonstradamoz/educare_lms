@@ -19,6 +19,59 @@ export class ExamsService {
     });
   }
 
+  async getExamResults(examId: string): Promise<any> {
+    return this.prisma.examResult.findMany({
+      where: { examId },
+      include: { student: { include: { user: true } } }
+    });
+  }
+
+  async getExamStudents(examId: string): Promise<any> {
+    const exam = await this.prisma.exam.findUnique({ where: { id: examId } });
+    if (!exam) throw new NotFoundException('Exam not found');
+
+    const whereClause: any = {};
+    if (exam.batchId) {
+      whereClause.batchId = exam.batchId;
+    } else {
+      if (exam.academicYearId) whereClause.academicYearId = exam.academicYearId;
+      if (exam.boardId) whereClause.boardId = exam.boardId;
+      if (exam.standardId) whereClause.standardId = exam.standardId;
+      if (exam.centreId) whereClause.centreId = exam.centreId;
+      if (exam.targetTrack && exam.targetTrack !== 'BOTH') whereClause.track = exam.targetTrack;
+    }
+
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: whereClause,
+      include: { student: { include: { user: true } } }
+    });
+
+    return enrollments.map(e => ({
+      studentId: e.studentId,
+      name: `${e.student.user.firstName} ${e.student.user.lastName}`,
+      admissionNo: e.student.admissionNo
+    }));
+  }
+
+  async saveExamResults(examId: string, results: any[]) {
+    // Delete existing to support simple upsert list
+    await this.prisma.examResult.deleteMany({ where: { examId } });
+    
+    if (results.length > 0) {
+      await this.prisma.examResult.createMany({
+        data: results.map((r: any) => ({
+          examId,
+          studentId: r.studentId,
+          marksObtained: Number(r.marksObtained),
+          maxMarks: Number(r.maxMarks),
+          grade: r.grade || null,
+          remarks: r.remarks || null,
+        }))
+      });
+    }
+    return { success: true };
+  }
+
   async getExamsByTopic(topicId: string): Promise<any> {
     return this.prisma.exam.findMany({
       where: {

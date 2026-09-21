@@ -15,6 +15,11 @@ export class StudentsController {
     return this.studentsService.getStudents();
   }
 
+  @Get('search')
+  searchStudents(@Query('q') query: string) {
+    return this.studentsService.searchStudents(query);
+  }
+
   @Put(':id')
   updateStudent(@Param('id') id: string, @Body() data: any) {
     return this.studentsService.updateStudent(id, data);

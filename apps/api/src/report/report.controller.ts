@@ -32,4 +32,10 @@ export class ReportController {
   getPerformanceReport(@Query('batchId') batchId: string) {
     return this.reportService.getStudentPerformanceReport(batchId);
   }
+
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
+  @Get('student-performance/:studentId')
+  getSingleStudentPerformance(@Param('studentId') studentId: string) {
+    return this.reportService.getSingleStudentPerformance(studentId);
+  }
 }

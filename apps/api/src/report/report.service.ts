@@ -111,4 +111,39 @@ export class ReportService {
       };
     });
   }
+
+  async getSingleStudentPerformance(studentId: string) {
+    const student = await this.prisma.studentProfile.findUnique({
+      where: { id: studentId },
+      include: { user: { select: { firstName: true, lastName: true } } }
+    });
+
+    if (!student) throw new Error("Student not found");
+
+    const records = await this.prisma.attendanceRecord.findMany({
+      where: { studentId }
+    });
+
+    const totalDays = records.length;
+    const presentDays = records.filter(r => r.status === 'PRESENT').length;
+    const percentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : '0.0';
+
+    const examResults = await this.prisma.examResult.findMany({
+      where: { studentId },
+      include: { exam: { select: { title: true, type: true, createdAt: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return {
+      studentId: student.id,
+      name: `${student.user.firstName} ${student.user.lastName}`,
+      admissionNo: student.admissionNo,
+      attendanceDetails: {
+        totalDays,
+        presentDays,
+        percentage
+      },
+      examResults
+    };
+  }
 }

@@ -100,6 +100,26 @@ export class StudentsService {
     }
   }
 
+  async searchStudents(query: string) {
+    if (!query || query.length < 2) return [];
+    
+    return this.prisma.studentProfile.findMany({
+      where: {
+        user: { status: 'ACTIVE' },
+        OR: [
+          { admissionNo: { contains: query, mode: 'insensitive' } },
+          { user: { firstName: { contains: query, mode: 'insensitive' } } },
+          { user: { lastName: { contains: query, mode: 'insensitive' } } },
+        ]
+      },
+      include: {
+        user: true,
+        enrollments: { include: { batch: true } }
+      },
+      take: 10
+    });
+  }
+
   async getStudents() {
     return this.prisma.studentProfile.findMany({
       where: {

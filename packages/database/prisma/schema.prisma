@@ -315,6 +315,7 @@ model StudentProfile {
   topicProgress    StudentTopicProgress[]
   revisionTasks    TopicRevisionTask[]
   AttendanceRecord AttendanceRecord[]
+  examResults      ExamResult[]
 
   @@map("student_profiles")
 }
@@ -404,8 +405,28 @@ model Exam {
   centre   Centre?   @relation(fields: [centreId], references: [id])
 
   mcqQuestions McqQuestion[]
+  results      ExamResult[]
 
   @@map("exams")
+}
+
+model ExamResult {
+  id             String         @id @default(uuid())
+  examId         String
+  studentId      String
+  marksObtained  Float
+  maxMarks       Float
+  grade          String?
+  remarks        String?
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  exam           Exam           @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, studentId])
+  @@map("exam_results")
 }
 
 enum ExamType {

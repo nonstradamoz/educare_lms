@@ -22,9 +22,9 @@ export default function LoginPage() {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      // Set the cookie on the frontend domain so proxy.ts can read it
       document.cookie = `AccessToken=${response.access_token}; path=/; max-age=86400; samesite=lax`;
-      window.location.href = "/";
+      router.push("/");
+      router.refresh();
     } catch (err: any) {
       setError(err.message || "Invalid credentials");
     } finally {

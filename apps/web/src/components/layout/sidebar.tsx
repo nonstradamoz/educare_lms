@@ -73,7 +73,8 @@ export function Sidebar({
       console.error(e);
     } finally {
       document.cookie = `AccessToken=; path=/; max-age=0`;
-      window.location.href = "/login";
+      router.push("/login");
+      router.refresh();
     }
   };
 

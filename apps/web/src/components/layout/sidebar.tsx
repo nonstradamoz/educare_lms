@@ -66,16 +66,15 @@ export function Sidebar({
   const path = usePathname();
   const router = useRouter();
 
-  const handleLogout = async () => {
-    try {
-      await fetchApi("/auth/logout", { method: "POST" });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      document.cookie = `AccessToken=; path=/; max-age=0`;
-      router.push("/login");
-      router.refresh();
-    }
+  const handleLogout = () => {
+    // Fire and forget backend logout
+    fetchApi("/auth/logout", { method: "POST" }).catch(console.error);
+    
+    // Immediately clear client cookie
+    document.cookie = `AccessToken=; path=/; max-age=0`;
+    
+    // Force a cache-busting hard reload to the login page
+    window.location.href = "/login?t=" + Date.now();
   };
 
 

@@ -23,8 +23,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       document.cookie = `AccessToken=${response.access_token}; path=/; max-age=86400; samesite=lax`;
-      router.push("/");
-      router.refresh();
+      // Force a cache-busting hard reload to the dashboard
+      window.location.href = "/?t=" + Date.now();
     } catch (err: any) {
       setError(err.message || "Invalid credentials");
     } finally {

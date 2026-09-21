@@ -27,7 +27,7 @@ export default function ExamResultsPage() {
       }),
       fetchApi(`/exams/${id}/students`),
       fetchApi(`/exams/${id}/results`)
-    ]).then(([_, stds, resData]: [any, any[], any[]]) => {
+    ]).then(([_, stds, resData]: any) => {
       setStudents(stds);
       
       if (resData && resData.length > 0) {

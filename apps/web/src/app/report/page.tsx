@@ -282,7 +282,7 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border-soft">
-            {displayData.map((s: any) => (
+            {data.map((s: any) => (
               <tr key={s.studentId}>
                 <td className="px-5 py-3 font-bold text-text-primary">{s.name}</td>
                 <td className="px-5 py-3 text-xs text-text-secondary">{s.admissionNo}</td>

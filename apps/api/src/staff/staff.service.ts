@@ -97,15 +97,21 @@ export class StaffService {
         if (role) roleId = role.id;
       }
 
+      const updateData: any = {
+        email: data.email || undefined,
+        firstName: data.name ? data.name.split(' ')[0] : undefined,
+        lastName: data.name ? data.name.split(' ').slice(1).join(' ') : undefined,
+        roleId,
+        status: data.status === 'Inactive' ? 'INACTIVE' : 'ACTIVE',
+      };
+
+      if (data.password) {
+        updateData.password = await argon2.hash(data.password);
+      }
+
       const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: {
-          email: data.email || undefined,
-          firstName: data.name ? data.name.split(' ')[0] : undefined,
-          lastName: data.name ? data.name.split(' ').slice(1).join(' ') : undefined,
-          roleId,
-          status: data.status === 'Inactive' ? 'INACTIVE' : 'ACTIVE',
-        }
+        data: updateData
       });
 
       if (centre) {

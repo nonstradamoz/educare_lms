@@ -595,12 +595,12 @@ function AddStaffModal({ staff, onClose, onSave }: { staff: Staff | null, onClos
               onClick={() => {
                 if (activeTab === "Documents" || staff) {
                   // Final save
-                  const newStaffData: Staff = {
+                  const newStaffData: any = {
                     id: staff?.id || Math.random().toString(36).substr(2, 9),
-                    empId: formData.empId || "EMP-003",
-                    name: formData.name || "New Staff Member",
-                    email: formData.email || "staff@example.com",
-                    phone: formData.phone || "+91 9999999999",
+                    empId: formData.empId || undefined,
+                    name: formData.name || undefined,
+                    email: formData.email || undefined,
+                    phone: formData.phone || undefined,
                     role: formData.role || "Teacher",
                     centre: formData.centre || "Educare Kalathipady",
                     status: formData.status as "Active" | "Inactive",

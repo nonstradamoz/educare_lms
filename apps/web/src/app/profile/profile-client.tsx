@@ -64,7 +64,7 @@ export function ProfileClient() {
     
     try {
       // 1. Get presigned URL
-      const { uploadUrl, finalUrl } = await fetchApi(`/storage/presigned-url?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`);
+      const { uploadUrl, finalUrl } = (await fetchApi(`/storage/presigned-url?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`)) as any;
       
       // 2. Upload file to R2 directly
       const uploadRes = await fetch(uploadUrl, {

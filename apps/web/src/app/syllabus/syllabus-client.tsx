@@ -39,10 +39,20 @@ export function SyllabusClient({ initialBatches }: { initialBatches: any[] }) {
       // Optimistic update
       setSyllabusTree(tree => tree.map(subj => ({
         ...subj,
-        chapters: subj.chapters.map((chap: any) => ({
-          ...chap,
-          topics: chap.topics.map((t: any) => t.id === topicId ? { ...t, status } : t)
-        }))
+        chapters: subj.chapters.map((chap: any) => {
+          const hasTopic = chap.topics.some((t: any) => t.id === topicId);
+          if (!hasTopic) return chap;
+          
+          const newTopics = chap.topics.map((t: any) => t.id === topicId ? { ...t, status } : t);
+          const completedCount = newTopics.filter((t: any) => t.status === 'COMPLETED').length;
+          const startedCount = newTopics.filter((t: any) => t.status !== 'NOT_STARTED').length;
+          
+          let newChapStatus = 'NOT_STARTED';
+          if (completedCount === newTopics.length && newTopics.length > 0) newChapStatus = 'COMPLETED';
+          else if (startedCount > 0) newChapStatus = 'IN_PROGRESS';
+          
+          return { ...chap, topics: newTopics, status: newChapStatus };
+        })
       })));
     } catch (e) {
       console.error(e);
@@ -58,7 +68,17 @@ export function SyllabusClient({ initialBatches }: { initialBatches: any[] }) {
       // Optimistic update
       setSyllabusTree(tree => tree.map(subj => ({
         ...subj,
-        chapters: subj.chapters.map((chap: any) => chap.id === chapterId ? { ...chap, status } : chap)
+        chapters: subj.chapters.map((chap: any) => {
+          if (chap.id !== chapterId) return chap;
+          if (status === 'COMPLETED' || status === 'NOT_STARTED') {
+             return {
+               ...chap,
+               status,
+               topics: chap.topics.map((t: any) => ({ ...t, status }))
+             };
+          }
+          return { ...chap, status };
+        })
       })));
     } catch (e) {
       console.error(e);

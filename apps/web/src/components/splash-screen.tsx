@@ -6,18 +6,18 @@ import logo2 from "@/logos/logo2.png";
 
 // Deterministic star field — server & client always match
 const STARS = [
-  { x: 5,  y: 12, s: 1.5, o: 0.6, d: 2.1 }, { x: 18, y: 45, s: 1,   o: 0.4, d: 3.2 },
-  { x: 30, y: 8,  s: 2,   o: 0.7, d: 1.8 }, { x: 42, y: 72, s: 1.5, o: 0.5, d: 2.7 },
-  { x: 55, y: 20, s: 1,   o: 0.3, d: 4.1 }, { x: 68, y: 88, s: 2,   o: 0.6, d: 2.4 },
-  { x: 78, y: 35, s: 1.5, o: 0.4, d: 3.5 }, { x: 90, y: 60, s: 1,   o: 0.7, d: 1.9 },
-  { x: 12, y: 80, s: 2,   o: 0.5, d: 2.8 }, { x: 25, y: 55, s: 1,   o: 0.4, d: 3.9 },
-  { x: 48, y: 92, s: 1.5, o: 0.6, d: 2.2 }, { x: 62, y: 5,  s: 1,   o: 0.3, d: 4.4 },
-  { x: 75, y: 78, s: 2,   o: 0.5, d: 1.7 }, { x: 88, y: 18, s: 1.5, o: 0.7, d: 3.1 },
-  { x: 8,  y: 38, s: 1,   o: 0.4, d: 2.6 }, { x: 35, y: 65, s: 2,   o: 0.6, d: 1.5 },
-  { x: 52, y: 42, s: 1.5, o: 0.3, d: 4.0 }, { x: 82, y: 50, s: 1,   o: 0.5, d: 2.9 },
-  { x: 95, y: 28, s: 2,   o: 0.6, d: 1.6 }, { x: 20, y: 95, s: 1,   o: 0.4, d: 3.3 },
-  { x: 65, y: 30, s: 1.5, o: 0.7, d: 2.0 }, { x: 40, y: 15, s: 1,   o: 0.3, d: 4.2 },
-  { x: 72, y: 92, s: 2,   o: 0.5, d: 2.5 }, { x: 15, y: 62, s: 1.5, o: 0.6, d: 3.6 },
+  { x: 5, y: 12, s: 1.5, o: 0.6, d: 2.1 }, { x: 18, y: 45, s: 1, o: 0.4, d: 3.2 },
+  { x: 30, y: 8, s: 2, o: 0.7, d: 1.8 }, { x: 42, y: 72, s: 1.5, o: 0.5, d: 2.7 },
+  { x: 55, y: 20, s: 1, o: 0.3, d: 4.1 }, { x: 68, y: 88, s: 2, o: 0.6, d: 2.4 },
+  { x: 78, y: 35, s: 1.5, o: 0.4, d: 3.5 }, { x: 90, y: 60, s: 1, o: 0.7, d: 1.9 },
+  { x: 12, y: 80, s: 2, o: 0.5, d: 2.8 }, { x: 25, y: 55, s: 1, o: 0.4, d: 3.9 },
+  { x: 48, y: 92, s: 1.5, o: 0.6, d: 2.2 }, { x: 62, y: 5, s: 1, o: 0.3, d: 4.4 },
+  { x: 75, y: 78, s: 2, o: 0.5, d: 1.7 }, { x: 88, y: 18, s: 1.5, o: 0.7, d: 3.1 },
+  { x: 8, y: 38, s: 1, o: 0.4, d: 2.6 }, { x: 35, y: 65, s: 2, o: 0.6, d: 1.5 },
+  { x: 52, y: 42, s: 1.5, o: 0.3, d: 4.0 }, { x: 82, y: 50, s: 1, o: 0.5, d: 2.9 },
+  { x: 95, y: 28, s: 2, o: 0.6, d: 1.6 }, { x: 20, y: 95, s: 1, o: 0.4, d: 3.3 },
+  { x: 65, y: 30, s: 1.5, o: 0.7, d: 2.0 }, { x: 40, y: 15, s: 1, o: 0.3, d: 4.2 },
+  { x: 72, y: 92, s: 2, o: 0.5, d: 2.5 }, { x: 15, y: 62, s: 1.5, o: 0.6, d: 3.6 },
 ];
 
 // SVG ring circumference for a r=90 circle
@@ -25,9 +25,9 @@ const RADIUS = 90;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export function SplashScreen() {
-  const [mounted, setMounted]   = useState(false);
-  const [visible, setVisible]   = useState(true);
-  const [fading,  setFading]    = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [fading, setFading] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -164,7 +164,7 @@ export function SplashScreen() {
           />
           <defs>
             <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stopColor="#1d4ed8" />
+              <stop offset="0%" stopColor="#1d4ed8" />
               <stop offset="100%" stopColor="#dc2626" />
             </linearGradient>
           </defs>
@@ -182,8 +182,8 @@ export function SplashScreen() {
           <Image
             src={logo2}
             alt="Educare LMS"
-            width={145}
-            height={145}
+            width={600}
+            height={600}
             className="object-contain"
             priority
           />

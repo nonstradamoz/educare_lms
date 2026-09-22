@@ -49,14 +49,18 @@ export class SyllabusService {
           };
         });
 
-        // Auto-calculate chapter status if not explicitly set
+        // Auto-calculate chapter status based on topics
         let chapterStatus = chapter.batchProgress[0]?.status || 'NOT_STARTED';
-        if (topics.length > 0 && !chapter.batchProgress[0]) {
+        if (topics.length > 0) {
           const completedTopics = topics.filter(t => t.status === 'COMPLETED').length;
+          const startedTopics = topics.filter(t => t.status !== 'NOT_STARTED').length;
+          
           if (completedTopics === topics.length) {
             chapterStatus = 'COMPLETED';
-          } else if (completedTopics > 0) {
+          } else if (startedTopics > 0) {
             chapterStatus = 'IN_PROGRESS';
+          } else {
+            chapterStatus = 'NOT_STARTED';
           }
         }
 
@@ -77,7 +81,7 @@ export class SyllabusService {
   }
 
   async updateChapterProgress(batchId: string, chapterId: string, status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED', userId: string) {
-    return this.prisma.batchChapterProgress.upsert({
+    const progress = await this.prisma.batchChapterProgress.upsert({
       where: {
         batchId_chapterId: {
           batchId,
@@ -97,10 +101,29 @@ export class SyllabusService {
         completedAt: status === 'COMPLETED' ? new Date() : null,
       }
     });
+
+    if (status === 'COMPLETED' || status === 'NOT_STARTED') {
+      const topics = await this.prisma.topic.findMany({ where: { chapterId } });
+      for (const topic of topics) {
+        await this.prisma.batchTopicProgress.upsert({
+          where: { batchId_topicId: { batchId, topicId: topic.id } },
+          create: {
+            batchId, topicId: topic.id, status, updatedBy: userId,
+            completedAt: status === 'COMPLETED' ? new Date() : null,
+          },
+          update: {
+            status, updatedBy: userId,
+            completedAt: status === 'COMPLETED' ? new Date() : null,
+          }
+        });
+      }
+    }
+
+    return progress;
   }
 
   async updateTopicProgress(batchId: string, topicId: string, status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED', userId: string) {
-    return this.prisma.batchTopicProgress.upsert({
+    const progress = await this.prisma.batchTopicProgress.upsert({
       where: {
         batchId_topicId: {
           batchId,
@@ -120,6 +143,38 @@ export class SyllabusService {
         completedAt: status === 'COMPLETED' ? new Date() : null,
       }
     });
+
+    const topic = await this.prisma.topic.findUnique({ where: { id: topicId } });
+    if (topic) {
+      const allTopics = await this.prisma.topic.findMany({ where: { chapterId: topic.chapterId } });
+      const topicProgresses = await this.prisma.batchTopicProgress.findMany({
+        where: { batchId, topicId: { in: allTopics.map(t => t.id) } }
+      });
+      
+      const completedCount = topicProgresses.filter(tp => tp.status === 'COMPLETED').length;
+      const startedCount = topicProgresses.filter(tp => tp.status !== 'NOT_STARTED').length;
+      
+      let newChapterStatus: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' = 'NOT_STARTED';
+      if (completedCount === allTopics.length && allTopics.length > 0) {
+        newChapterStatus = 'COMPLETED';
+      } else if (startedCount > 0) {
+        newChapterStatus = 'IN_PROGRESS';
+      }
+      
+      await this.prisma.batchChapterProgress.upsert({
+        where: { batchId_chapterId: { batchId, chapterId: topic.chapterId } },
+        create: {
+           batchId, chapterId: topic.chapterId, status: newChapterStatus, updatedBy: userId,
+           completedAt: newChapterStatus === 'COMPLETED' ? new Date() : null,
+        },
+        update: {
+           status: newChapterStatus, updatedBy: userId,
+           completedAt: newChapterStatus === 'COMPLETED' ? new Date() : null,
+        }
+      });
+    }
+
+    return progress;
   }
 
   async getStudentSyllabusProgress(batchId: string, studentId: string) {

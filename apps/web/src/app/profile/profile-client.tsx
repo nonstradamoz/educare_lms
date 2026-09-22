@@ -218,7 +218,7 @@ export function ProfileClient() {
                       <div key={e.id}>
                         <p className="text-xs text-text-muted mb-1">Enrolled Batch</p>
                         <p className="text-sm font-bold text-text-primary bg-surface-2 px-3 py-2 rounded-lg inline-block border border-border-soft">
-                          {e.batch?.standard?.name} - {e.batch?.course?.name} ({e.batch?.name})
+                          {e.batch?.standard?.name} ({e.batch?.name})
                         </p>
                       </div>
                     ))}

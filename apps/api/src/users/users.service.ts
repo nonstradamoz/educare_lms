@@ -15,7 +15,7 @@ export class UsersService {
           include: {
             enrollments: {
               include: {
-                batch: { include: { course: true, standard: true } }
+                batch: { include: { standard: true } }
               }
             }
           }

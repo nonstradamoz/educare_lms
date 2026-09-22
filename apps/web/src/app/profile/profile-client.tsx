@@ -20,7 +20,7 @@ export function ProfileClient() {
 
   useEffect(() => {
     fetchApi("/users/me")
-      .then(data => {
+      .then((data: any) => {
         setProfile(data);
         setFormData({
           firstName: data.firstName || "",

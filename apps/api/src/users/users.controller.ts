@@ -13,12 +13,12 @@ export class UsersController {
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   getProfile(@Req() req: any) {
-    return this.usersService.getProfile(req.user.sub);
+    return this.usersService.getProfile(req.user.id);
   }
 
   @Put('me')
   @ApiOperation({ summary: 'Update current user profile' })
   updateProfile(@Req() req: any, @Body() data: any) {
-    return this.usersService.updateProfile(req.user.sub, data);
+    return this.usersService.updateProfile(req.user.id, data);
   }
 }

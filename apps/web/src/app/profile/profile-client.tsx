@@ -8,6 +8,7 @@ export function ProfileClient() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: "",
@@ -54,6 +55,41 @@ export function ProfileClient() {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    setMessage({ type: "", text: "" });
+    
+    try {
+      // 1. Get presigned URL
+      const { uploadUrl, finalUrl } = await fetchApi(`/storage/presigned-url?filename=${encodeURIComponent(file.name)}&contentType=${encodeURIComponent(file.type)}`);
+      
+      // 2. Upload file to R2 directly
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!uploadRes.ok) throw new Error("Failed to upload image to storage");
+
+      // 3. Save to backend
+      const updated = await fetchApi("/users/me", {
+        method: "PUT",
+        body: JSON.stringify({ avatar: finalUrl }),
+      });
+
+      setProfile(updated);
+      setMessage({ type: "success", text: "Profile photo updated!" });
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message || "Failed to upload image" });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
@@ -80,14 +116,32 @@ export function ProfileClient() {
       {/* Header section with Avatar */}
       <div className="bg-white rounded-xl border border-border-soft p-6 md:p-8 flex flex-col md:flex-row gap-8 items-start md:items-center">
         <div className="relative group shrink-0">
-          <div className="h-24 w-24 rounded-2xl bg-brand-blue/10 flex items-center justify-center border border-brand-blue/20 overflow-hidden">
-            <span className="text-3xl font-bold text-brand-blue uppercase">
-              {profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}
-            </span>
+          <div className="h-24 w-24 rounded-2xl bg-brand-blue/10 flex items-center justify-center border border-brand-blue/20 overflow-hidden relative">
+            {profile.avatar ? (
+              <img src={profile.avatar} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <span className="text-3xl font-bold text-brand-blue uppercase">
+                {profile.firstName?.charAt(0)}{profile.lastName?.charAt(0)}
+              </span>
+            )}
+            
+            {uploadingImage && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-r-transparent" />
+              </div>
+            )}
           </div>
-          <button className="absolute -bottom-2 -right-2 h-8 w-8 bg-white border border-border-soft rounded-full flex items-center justify-center text-text-secondary shadow-sm hover:text-brand-blue transition-colors">
+          
+          <label className="absolute -bottom-2 -right-2 h-8 w-8 bg-white border border-border-soft rounded-full flex items-center justify-center text-text-secondary shadow-sm hover:text-brand-blue transition-colors cursor-pointer">
             <Camera className="h-4 w-4" />
-          </button>
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleImageUpload} 
+              disabled={uploadingImage}
+            />
+          </label>
         </div>
 
         <div className="flex-1">

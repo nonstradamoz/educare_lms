@@ -41,6 +41,7 @@ export class UsersService {
     if (data.firstName) updateData.firstName = data.firstName;
     if (data.lastName) updateData.lastName = data.lastName;
     if (data.email) updateData.email = data.email;
+    if (data.avatar) updateData.avatar = data.avatar;
     if (data.password) updateData.password = await argon2.hash(data.password);
 
     const updated = await this.prisma.user.update({

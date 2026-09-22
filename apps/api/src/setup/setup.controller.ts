@@ -62,6 +62,12 @@ export class SetupController {
     return this.setupService.createStandard(data);
   }
 
+  @Get('batches')
+  @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
+  getBatches(@Query('boardId') boardId?: string, @Query('standardId') standardId?: string) {
+    return this.setupService.getBatches(boardId, standardId);
+  }
+
   @Get('subjects')
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER', 'STUDENT')
   getSubjects() {

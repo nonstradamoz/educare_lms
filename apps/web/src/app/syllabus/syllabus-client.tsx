@@ -6,14 +6,37 @@ import { fetchApi } from "@/lib/api";
 import { useAuth } from "@/components/providers/auth-provider";
 import { BookOpenCheck, ChevronDown, ChevronRight, CheckCircle2, Circle, Loader2 } from "lucide-react";
 
-export function SyllabusClient({ initialBatches }: { initialBatches: any[] }) {
+export function SyllabusClient({ initialBatches, initialBoards = [] }: { initialBatches: any[], initialBoards?: any[] }) {
   const { role } = useAuth();
   const [batches] = useState<any[]>(Array.isArray(initialBatches) ? initialBatches : []);
-  const [selectedBatch, setSelectedBatch] = useState<string>(batches[0]?.id || "");
+  const [boards] = useState<any[]>(Array.isArray(initialBoards) ? initialBoards : []);
+  
+  const [selectedBoard, setSelectedBoard] = useState<string>("");
+  const [selectedStandard, setSelectedStandard] = useState<string>("");
+  const [standards, setStandards] = useState<any[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  
+  const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [syllabusTree, setSyllabusTree] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
   const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!selectedBoard) {
+      setStandards([]);
+      setSelectedStandard("");
+      setSelectedBatch("");
+      return;
+    }
+    fetchApi(`/setup/standards?boardId=${selectedBoard}`)
+      .then((data: any) => {
+        setStandards(Array.isArray(data) ? data : []);
+        setSelectedStandard("");
+        setSelectedBatch("");
+      })
+      .catch(console.error);
+  }, [selectedBoard]);
 
   useEffect(() => {
     if (!selectedBatch) return;
@@ -85,10 +108,14 @@ export function SyllabusClient({ initialBatches }: { initialBatches: any[] }) {
     }
   };
 
+  const filteredTree = selectedSubject 
+    ? syllabusTree.filter(subj => subj.subjectId === selectedSubject) 
+    : syllabusTree;
+
   // Calculate Progress
   let totalTopics = 0;
   let completedTopics = 0;
-  syllabusTree.forEach(subj => {
+  filteredTree.forEach(subj => {
     subj.chapters.forEach((chap: any) => {
       chap.topics.forEach((t: any) => {
         totalTopics++;
@@ -114,17 +141,54 @@ export function SyllabusClient({ initialBatches }: { initialBatches: any[] }) {
               <p className="text-xs text-text-muted mt-1">Track academic progress and completion status</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <select
-              value={selectedBatch}
-              onChange={e => setSelectedBatch(e.target.value)}
+              value={selectedBoard}
+              onChange={e => setSelectedBoard(e.target.value)}
               className="h-10 rounded-lg border border-border-soft bg-surface-2 px-4 text-sm font-medium text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
             >
-              <option value="" disabled>Select Batch...</option>
-              {batches.map(b => (
+              <option value="">Select Board...</option>
+              {boards.map(b => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
+            <select
+              value={selectedStandard}
+              onChange={e => {
+                setSelectedStandard(e.target.value);
+                setSelectedBatch("");
+              }}
+              disabled={!selectedBoard}
+              className="h-10 rounded-lg border border-border-soft bg-surface-2 px-4 text-sm font-medium text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 disabled:opacity-50"
+            >
+              <option value="">Select Class...</option>
+              {standards.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <select
+              value={selectedBatch}
+              onChange={e => setSelectedBatch(e.target.value)}
+              disabled={!selectedStandard}
+              className="h-10 rounded-lg border border-border-soft bg-surface-2 px-4 text-sm font-medium text-text-primary focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 disabled:opacity-50"
+            >
+              <option value="">Select Batch...</option>
+              {batches.filter(b => b.standardId === selectedStandard).map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            {syllabusTree.length > 0 && (
+              <select
+                value={selectedSubject}
+                onChange={e => setSelectedSubject(e.target.value)}
+                className="h-10 rounded-lg border border-border-soft bg-brand-blue/5 text-brand-blue px-4 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
+              >
+                <option value="">All Subjects</option>
+                {syllabusTree.map(subj => (
+                  <option key={subj.subjectId} value={subj.subjectId}>{subj.subjectName}</option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
 
@@ -161,7 +225,7 @@ export function SyllabusClient({ initialBatches }: { initialBatches: any[] }) {
             </div>
           ) : (
             <div className="space-y-4">
-              {syllabusTree.map(subject => (
+              {filteredTree.map(subject => (
                 <div key={subject.subjectId} className="bg-white rounded-2xl border border-border-soft overflow-hidden shadow-sm">
                   
                   {/* Subject Header */}

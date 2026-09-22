@@ -51,6 +51,21 @@ export class SetupService {
     });
   }
 
+  // Batches
+  async getBatches(boardId?: string, standardId?: string) {
+    return this.prisma.batch.findMany({
+      where: {
+        ...(boardId && { boardId }),
+        ...(standardId && { standardId }),
+      },
+      include: {
+        board: true,
+        standard: true,
+        centre: true
+      }
+    });
+  }
+
   // Subjects
   async getSubjects() {
     return this.prisma.subject.findMany();

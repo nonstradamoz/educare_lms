@@ -92,7 +92,11 @@ export class StaffService {
     return this.prisma.$transaction(async (prisma) => {
       let roleId = user.roleId;
       if (data.role) {
-        let roleName = data.role === 'Coordinator' || data.role === 'Admin' ? 'CENTRE_ADMIN' : 'TEACHER';
+        let roleName = data.role;
+        if (data.role === 'Coordinator' || data.role === 'Admin') roleName = 'CENTRE_ADMIN';
+        else if (data.role === 'Teacher') roleName = 'TEACHER';
+        else if (data.role !== 'SUPER_ADMIN') roleName = 'TEACHER'; // fallback
+
         const role = await prisma.role.findUnique({ where: { name: roleName } });
         if (role) roleId = role.id;
       }

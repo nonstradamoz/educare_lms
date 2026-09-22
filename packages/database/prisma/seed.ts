@@ -87,7 +87,7 @@ async function main() {
   const superAdminPassword = await argon2.hash('admin123');
   await prisma.user.upsert({
     where: { email: 'admin@educare.com' },
-    update: {},
+    update: { roleId: superAdminRole.id },
     create: {
       email: 'admin@educare.com',
       password: superAdminPassword,

@@ -49,6 +49,7 @@ const managementNav = [
 ];
 
 const systemNav = [
+  { label: "My Profile", href: "/profile", icon: UserCheck },
   { label: "Settings", href: "/settings", icon: Settings },
   { label: "Setup", href: "/setup", icon: Wrench },
   { label: "Help", href: "/help", icon: HelpCircle },

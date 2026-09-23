@@ -6,11 +6,14 @@ import { AttendanceStatus } from '@educare/database';
 export class AttendanceService {
   constructor(private prisma: PrismaService) {}
 
-  async getBatchStudents(batchId?: string) {
+  async getBatchStudents(batchId?: string, subjectId?: string) {
     let students;
     if (batchId && batchId !== 'ALL') {
       const enrollments = await this.prisma.enrollment.findMany({
-        where: { batchId },
+        where: { 
+          batchId,
+          ...(subjectId && { subjects: { some: { id: subjectId } } })
+        },
         include: {
           studentProfile: {
             include: {
@@ -35,13 +38,14 @@ export class AttendanceService {
     }));
   }
 
-  async getAttendanceForBatchAndDate(batchId: string | undefined, date: string) {
+  async getAttendanceForBatchAndDate(batchId: string | undefined, date: string, subjectId?: string) {
     const targetDate = new Date(date);
     
     return this.prisma.attendance.findFirst({
       where: {
         batchId: (batchId && batchId !== 'ALL') ? batchId : null,
-        date: targetDate
+        date: targetDate,
+        subjectId: subjectId || null
       },
       include: {
         records: true,
@@ -117,7 +121,7 @@ export class AttendanceService {
   }
 
   async markAttendance(data: any, userId: string) {
-    const { batchId, date, records, centreId, boardId, standardId, track } = data;
+    const { batchId, date, records, centreId, boardId, standardId, track, subjectId } = data;
     const targetDate = new Date(date);
     
     let resolvedBatchId = batchId;
@@ -128,7 +132,11 @@ export class AttendanceService {
     }
 
     let attendance = await this.prisma.attendance.findFirst({
-      where: { batchId: resolvedBatchId, date: targetDate }
+      where: { 
+        batchId: resolvedBatchId, 
+        date: targetDate,
+        subjectId: subjectId || null
+      }
     });
 
     if (attendance) {
@@ -141,7 +149,8 @@ export class AttendanceService {
         data: {
           batchId: resolvedBatchId,
           date: targetDate,
-          recordedById: userId
+          recordedById: userId,
+          subjectId: subjectId || null
         }
       });
     }

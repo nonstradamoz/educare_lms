@@ -22,6 +22,7 @@ interface Student {
   division: string;
   track?: "TUITION" | "ENTRANCE" | "BOTH";
   password?: string;
+  subjectIds?: string[];
 }
 
 export function StudentsClient({ initialStudents }: { initialStudents: Student[] }) {
@@ -341,11 +342,14 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
   const [apiBoards, setApiBoards] = useState<any[]>([]);
   const [apiCentres, setApiCentres] = useState<any[]>([]);
   const [apiStandards, setApiStandards] = useState<any[]>([]);
+  const [apiSubjects, setApiSubjects] = useState<any[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
   useEffect(() => {
     fetchApi("/setup/academic-years").then(d => setApiYears(Array.isArray(d) ? d : [])).catch(console.error);
     fetchApi("/setup/boards").then(d => setApiBoards(Array.isArray(d) ? d : [])).catch(console.error);
     fetchApi("/setup/centres").then(d => setApiCentres(Array.isArray(d) ? d : [])).catch(console.error);
+    fetchApi("/setup/subjects").then(d => setApiSubjects(Array.isArray(d) ? d : [])).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -632,6 +636,25 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                   <label className="block text-xs font-bold text-text-secondary mb-1.5">Residential Address</label>
                   <textarea rows={3} placeholder="Full address..." className="w-full rounded-lg border border-border-soft bg-surface-2 p-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20 resize-none" />
                 </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-text-secondary mb-1.5">Selected Subjects (Optional)</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {apiSubjects.map(sub => (
+                      <label key={sub.id} className="flex items-center gap-2 text-sm text-text-primary bg-surface-2 p-2 rounded border border-border-soft cursor-pointer hover:border-brand-blue/30">
+                        <input
+                          type="checkbox"
+                          checked={selectedSubjects.includes(sub.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedSubjects([...selectedSubjects, sub.id]);
+                            else setSelectedSubjects(selectedSubjects.filter(id => id !== sub.id));
+                          }}
+                          className="rounded border-border-soft text-brand-blue focus:ring-brand-blue/20"
+                        />
+                        {sub.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -756,6 +779,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     centre: centre || "Educare Kalathipady",
                     track: targetTrack,
                     password: password || undefined,
+                    subjectIds: selectedSubjects.length > 0 ? selectedSubjects : undefined,
                   };
                   onSave(newStudentData);
                 } else {

@@ -33,8 +33,8 @@ export class AttendanceController {
 
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
   @Get('students/:batchId')
-  getStudents(@Param('batchId') batchId: string) {
-    return this.attendanceService.getBatchStudents(batchId);
+  getStudents(@Param('batchId') batchId: string, @Query('subjectId') subjectId: string) {
+    return this.attendanceService.getBatchStudents(batchId, subjectId);
   }
 
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
@@ -51,8 +51,12 @@ export class AttendanceController {
 
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')
   @Get(':batchId')
-  getAttendance(@Param('batchId') batchId: string, @Query('date') date: string) {
-    return this.attendanceService.getAttendanceForBatchAndDate(batchId, date);
+  getAttendance(
+    @Param('batchId') batchId: string, 
+    @Query('date') date: string,
+    @Query('subjectId') subjectId: string
+  ) {
+    return this.attendanceService.getAttendanceForBatchAndDate(batchId, date, subjectId);
   }
 
   @Roles('SUPER_ADMIN', 'CENTRE_ADMIN', 'TEACHER')

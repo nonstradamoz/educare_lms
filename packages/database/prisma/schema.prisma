@@ -178,6 +178,9 @@ model Subject {
   studentAssignments Assignment[]
   exams              Exam[]
 
+  enrollments        Enrollment[]
+  attendances        Attendance[]
+
   @@map("subjects")
 }
 
@@ -331,6 +334,7 @@ model Enrollment {
 
   studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   batch          Batch          @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  subjects       Subject[]
 
   @@unique([studentProfileId, batchId])
   @@map("enrollments")
@@ -864,16 +868,18 @@ model Attendance {
   batchId      String?
   date         DateTime
   recordedById String
+  subjectId    String?
 
-  batch      Batch? @relation(fields: [batchId], references: [id])
-  recordedBy User  @relation("AttendanceRecorder", fields: [recordedById], references: [id])
+  batch      Batch?   @relation(fields: [batchId], references: [id])
+  subject    Subject? @relation(fields: [subjectId], references: [id])
+  recordedBy User     @relation("AttendanceRecorder", fields: [recordedById], references: [id])
 
   records AttendanceRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([batchId, date])
+  @@unique([batchId, date, subjectId])
   @@map("attendances")
 }
 

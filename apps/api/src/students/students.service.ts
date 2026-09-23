@@ -79,6 +79,9 @@ export class StudentsService {
             studentProfileId: profile.id,
             batchId: batch.id,
             track: data.track || 'BOTH',
+            ...(data.subjectIds && data.subjectIds.length > 0 && {
+               subjects: { connect: data.subjectIds.map((id: string) => ({ id })) }
+            })
           }
         });
 

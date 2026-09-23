@@ -32,6 +32,8 @@ export default function AttendancePage() {
   
   const [batches, setBatches] = useState<any[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<string>("");
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
 
   const [students, setStudents] = useState<Student[]>([]);
   const [records, setRecords] = useState<Record[]>([]);
@@ -41,6 +43,7 @@ export default function AttendancePage() {
   useEffect(() => {
     fetchApi("/setup/centres").then(d => setCentres(Array.isArray(d) ? d : [])).catch(() => {});
     fetchApi("/setup/boards").then(d => setBoards(Array.isArray(d) ? d : [])).catch(() => {});
+    fetchApi("/setup/subjects").then(d => setSubjects(Array.isArray(d) ? d : [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -67,11 +70,13 @@ export default function AttendancePage() {
     setLoading(true);
     try {
       // 1. Fetch Students in Batch
-      const stdData = (await fetchApi(`/attendance/students/${selectedBatch}`)) as any;
+      const subjectQuery = selectedSubject ? `?subjectId=${selectedSubject}` : "";
+      const stdData = (await fetchApi(`/attendance/students/${selectedBatch}${subjectQuery}`)) as any;
       setStudents(stdData);
 
       // 2. Fetch Existing Attendance
-      const attData = (await fetchApi(`/attendance/${selectedBatch}?date=${date}`)) as any;
+      const attQuery = selectedSubject ? `&subjectId=${selectedSubject}` : "";
+      const attData = (await fetchApi(`/attendance/${selectedBatch}?date=${date}${attQuery}`)) as any;
       
       if (attData && attData.records) {
         setRecords(stdData.map((s: any) => {
@@ -104,7 +109,7 @@ export default function AttendancePage() {
       setStudents([]);
       setRecords([]);
     }
-  }, [selectedBatch, date]);
+  }, [selectedBatch, date, selectedSubject]);
 
   const updateRecord = (studentId: string, status: string, remarks: string = "") => {
     setRecords(prev => {
@@ -125,7 +130,8 @@ export default function AttendancePage() {
         body: JSON.stringify({ 
           batchId: selectedBatch,
           date, 
-          records 
+          records,
+          subjectId: selectedSubject || undefined
         })
       });
       alert("Attendance saved successfully!");
@@ -218,6 +224,17 @@ export default function AttendancePage() {
               >
                 <option value="">Select Division</option>
                 {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Subject (Optional)</label>
+              <select 
+                value={selectedSubject} 
+                onChange={e => setSelectedSubject(e.target.value)}
+                className="w-full h-10 rounded-lg border border-border-soft bg-surface pl-3 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-600/20"
+              >
+                <option value="">All Subjects (Batch Level)</option>
+                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             <div>

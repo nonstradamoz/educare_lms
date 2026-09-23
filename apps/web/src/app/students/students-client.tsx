@@ -343,7 +343,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
   const [apiCentres, setApiCentres] = useState<any[]>([]);
   const [apiStandards, setApiStandards] = useState<any[]>([]);
   const [apiSubjects, setApiSubjects] = useState<any[]>([]);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(student?.subjectIds || []);
 
   useEffect(() => {
     fetchApi("/setup/academic-years").then(d => setApiYears(Array.isArray(d) ? d : [])).catch(console.error);
@@ -779,7 +779,7 @@ function AddStudentModal({ student, onClose, onSave }: { student: Student | null
                     centre: centre || "Educare Kalathipady",
                     track: targetTrack,
                     password: password || undefined,
-                    subjectIds: selectedSubjects.length > 0 ? selectedSubjects : undefined,
+                    subjectIds: selectedSubjects,
                   };
                   onSave(newStudentData);
                 } else {

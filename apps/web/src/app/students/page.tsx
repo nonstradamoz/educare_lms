@@ -24,6 +24,7 @@ export default async function StudentsPage() {
       classLevel: batch?.standard?.name || 'N/A',
       centre: batch?.centre?.name || 'N/A',
       division: batch?.name || 'N/A',
+      subjectIds: enrollment?.subjects?.map((s: any) => s.id) || [],
     };
   });
 

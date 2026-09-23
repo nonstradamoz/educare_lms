@@ -117,7 +117,12 @@ export class StudentsService {
       },
       include: {
         user: true,
-        enrollments: { include: { batch: true } }
+        enrollments: { 
+          include: { 
+            batch: true,
+            subjects: true 
+          } 
+        }
       },
       take: 10
     });
@@ -139,7 +144,8 @@ export class StudentsService {
                 standard: true,
                 centre: true,
               }
-            }
+            },
+            subjects: true
           }
         }
       },
@@ -197,6 +203,11 @@ export class StudentsService {
           const updateData: any = {};
           if (batch) updateData.batchId = batch.id;
           if (data.track) updateData.track = data.track;
+          if (data.subjectIds !== undefined) {
+            updateData.subjects = {
+              set: data.subjectIds.map((id: string) => ({ id }))
+            };
+          }
           
           await prisma.enrollment.update({
             where: { id: enrollment.id },

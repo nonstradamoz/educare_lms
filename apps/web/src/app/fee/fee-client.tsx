@@ -377,11 +377,29 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
                         <td className="px-6 py-4 text-right">
                           {(s.totalDue > 0 && s.phone) && (
                             <button 
-                              onClick={() => {
-                                const cleanPhone = s.phone.replace(/\\D/g, '');
-                                const number = cleanPhone.startsWith('91') ? cleanPhone : (cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone);
-                                const message = encodeURIComponent(`Dear ${s.name}, this is a gentle reminder that you have pending fees of ₹${s.totalDue}. Please complete the payment at the earliest. Thank you.`);
-                                window.open(`https://wa.me/${number}?text=${message}`, '_blank');
+                              onClick={async (e) => {
+                                const btn = e.currentTarget;
+                                btn.disabled = true;
+                                btn.innerText = "Sending...";
+                                try {
+                                  await fetchApi(`/fee/${s.id}/reminder`, {
+                                    method: 'POST',
+                                    body: JSON.stringify({ amount: s.totalDue })
+                                  });
+                                  btn.innerText = "Sent!";
+                                  btn.classList.replace("bg-green-500", "bg-brand-blue");
+                                  btn.classList.replace("hover:bg-green-600", "hover:bg-brand-blue-dark");
+                                } catch (err) {
+                                  btn.innerText = "Failed";
+                                  btn.classList.replace("bg-green-500", "bg-brand-red");
+                                }
+                                setTimeout(() => {
+                                  if (btn) {
+                                    btn.disabled = false;
+                                    btn.innerText = "Send Reminder";
+                                    btn.className = "inline-flex items-center gap-1.5 rounded bg-green-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-600 transition-colors";
+                                  }
+                                }, 3000);
                               }}
                               className="inline-flex items-center gap-1.5 rounded bg-green-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-600 transition-colors">
                               Send Reminder

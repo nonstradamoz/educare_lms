@@ -20,6 +20,11 @@ export class FeeController {
     return this.feeService.create(data);
   }
 
+  @Post(':studentId/reminder')
+  sendReminder(@Param('studentId') studentId: string, @Body() data: any) {
+    return this.feeService.sendReminder(studentId, data);
+  }
+
   @Delete(':id')
   delete(@Param('id') id: string, @Body() data: { password?: string }) {
     if (data.password !== 'delete123') {

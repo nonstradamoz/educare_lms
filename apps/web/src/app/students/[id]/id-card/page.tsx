@@ -18,7 +18,8 @@ export default async function IdCardPage({ params }: { params: { id: string } })
       centre: batch?.centre?.name || 'N/A',
       bloodGroup: "O+ve", // Static for now, can be added to db later
       phone: student.parentPhone || '',
-      photo: user.avatar || null
+      photo: user.avatar || null,
+      course: "Student" // default course or mapped from subject
     };
 
     return <IdCardClient student={mappedStudent} />;

@@ -14,6 +14,7 @@ interface IdCardProps {
     bloodGroup: string;
     phone: string;
     photo: string | null;
+    course: string;
   };
 }
 

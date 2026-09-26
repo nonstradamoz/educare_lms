@@ -112,17 +112,35 @@ export default function PublicEnquiryForm() {
           </div>
 
           <div className="relative z-10 mt-12 pt-10 border-t border-white/10">
-            <div className="flex items-center gap-2 mb-3">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+            <h3 className="font-bold text-lg mb-4 text-white">Our Campuses</h3>
+            
+            <div className="space-y-5">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 bg-brand-blue/20 p-1.5 rounded-lg shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-blue"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-200 text-sm">Kottayam – Mannanam Campus</h4>
+                  <p className="text-slate-400 text-xs mt-1 leading-relaxed">
+                    Educare Institute, 2nd Floor Gurukrupa Complex,<br/>
+                    Mannanam Jn. Near KEEMS, Mannanam
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="mt-1 bg-brand-blue/20 p-1.5 rounded-lg shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-blue"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-slate-200 text-sm">Kottayam – Kalathipady Campus</h4>
+                  <p className="text-slate-400 text-xs mt-1 leading-relaxed">
+                    Educare Institute, 2nd Floor Castle Charis Complex,<br/>
+                    Kalathipady Jn. Near Pallikoodam, Vadavathur Kottayam
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="text-sm italic text-slate-300">
-              "The best decision we made for our daughter's education. The structured curriculum and supportive teachers completely transformed her confidence."
-            </p>
-            <p className="text-xs font-bold text-slate-400 mt-4">— Mrs. Sharma, Parent</p>
           </div>
         </div>
 

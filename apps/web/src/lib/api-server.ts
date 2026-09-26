@@ -10,7 +10,10 @@ export async function fetchApiServer<T>(endpoint: string, options: RequestInit =
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Cookie: `AccessToken=${token}` } : {}),
+      ...(token ? { 
+        'Cookie': `AccessToken=${token}`,
+        'Authorization': `Bearer ${token}` 
+      } : {}),
       ...options.headers,
     },
   });

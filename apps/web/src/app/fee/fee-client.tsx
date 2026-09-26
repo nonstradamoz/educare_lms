@@ -419,6 +419,7 @@ function CollectFeeModal({ onClose, onSuccess, students }: { onClose: () => void
   const [feeHead, setFeeHead] = useState("Tuition Fee");
   const [amount, setAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState("Cash");
+  const [status, setStatus] = useState("PAID");
   const [targetTrack, setTargetTrack] = useState("");
 
   const handleSave = async () => {
@@ -432,6 +433,7 @@ function CollectFeeModal({ onClose, onSuccess, students }: { onClose: () => void
           feeHead,
           amount: Number(amount),
           paymentMode,
+          status,
           targetTrack
         })
       });
@@ -561,6 +563,27 @@ function CollectFeeModal({ onClose, onSuccess, students }: { onClose: () => void
                     <option value="Cash">Cash</option>
                     <option value="Online / UPI">Online / UPI</option>
                     <option value="Bank Transfer">Bank Transfer</option>
+                  </select>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
+                    <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />
+                    <ChevronDown className="h-3 w-3 text-text-muted" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1.5">
+                  Status <span className="text-brand-red">*</span>
+                </label>
+                <div className="relative">
+                  <select 
+                    value={status}
+                    onChange={e => setStatus(e.target.value)}
+                    className="w-full h-10 appearance-none rounded-lg border border-border-soft bg-surface-2 pl-3 pr-8 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-brand-blue/20"
+                  >
+                    <option value="PAID">Paid</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="OVERDUE">Overdue</option>
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col pointer-events-none">
                     <ChevronDown className="h-3 w-3 text-text-muted rotate-180 -mb-1" />

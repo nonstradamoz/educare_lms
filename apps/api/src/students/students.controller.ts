@@ -15,6 +15,11 @@ export class StudentsController {
     return this.studentsService.getStudents();
   }
 
+  @Get(':id')
+  getStudent(@Param('id') id: string) {
+    return this.studentsService.getStudentById(id);
+  }
+
   @Get('search')
   searchStudents(@Query('q') query: string) {
     return this.studentsService.searchStudents(query);

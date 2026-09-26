@@ -128,6 +128,30 @@ export class StudentsService {
     });
   }
 
+  async getStudentById(id: string) {
+    const student = await this.prisma.studentProfile.findUnique({
+      where: { id },
+      include: {
+        user: true,
+        enrollments: {
+          include: {
+            batch: {
+              include: {
+                academicYear: true,
+                board: true,
+                standard: true,
+                centre: true,
+              }
+            },
+            subjects: true
+          }
+        }
+      }
+    });
+    if (!student) throw new NotFoundException('Student not found');
+    return student;
+  }
+
   async getStudents() {
     return this.prisma.studentProfile.findMany({
       where: {

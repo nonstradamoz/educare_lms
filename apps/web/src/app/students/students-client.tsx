@@ -279,6 +279,13 @@ export function StudentsClient({ initialStudents }: { initialStudents: Student[]
                         <td className="px-4 py-4 text-xs font-medium text-text-secondary">{s.centre}</td>
                         <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-3">
+                            <Link
+                              href={`/students/${s.id}/id-card`}
+                              className="text-amber-600 hover:text-amber-700 font-semibold text-xs transition-colors mr-2"
+                              target="_blank"
+                            >
+                              ID Card
+                            </Link>
                             <button 
                               onClick={() => { setEditItem(s); setShowModal(true); }}
                               className="text-brand-blue hover:text-brand-blue-dark font-semibold text-xs transition-colors"

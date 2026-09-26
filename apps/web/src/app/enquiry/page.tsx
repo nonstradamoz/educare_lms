@@ -75,12 +75,24 @@ export default function EnquiryPage() {
         icon={Headset}
         accentColor="orange"
         actions={
-          <button 
-            onClick={() => { setEditingId(null); setShowModal(true); }}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add Enquiry
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => {
+                const url = window.location.origin + "/public/enquiry";
+                navigator.clipboard.writeText(url);
+                alert("Public form link copied to clipboard:\n" + url);
+              }}
+              className="inline-flex items-center gap-2 rounded-lg border border-border-soft bg-white px-4 py-2 text-xs font-semibold text-text-secondary shadow-sm hover:bg-surface-2 transition-colors"
+            >
+              Share Public Form
+            </button>
+            <button 
+              onClick={() => { setEditingId(null); setShowModal(true); }}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-blue px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-blue-dark transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add Enquiry
+            </button>
+          </div>
         }
       >
         {/* Stats */}
@@ -174,12 +186,33 @@ export default function EnquiryPage() {
                         )}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={() => { setEditingId(e.id); setShowModal(true); }}
-                          className="text-xs font-bold text-brand-blue hover:underline"
-                        >
-                          Update
-                        </button>
+                        <div className="flex items-center justify-end gap-3">
+                          {e.status !== 'CONVERTED' && (
+                            <button
+                              onClick={() => {
+                                const params = new URLSearchParams({
+                                  add: 'true',
+                                  name: e.studentName || '',
+                                  phone: e.contactNumber || '',
+                                  email: e.email || '',
+                                  parentName: e.parentName || '',
+                                  board: e.targetBoard || '',
+                                  standard: e.targetStandard || ''
+                                });
+                                window.location.href = `/students?${params.toString()}`;
+                              }}
+                              className="text-xs font-bold text-green-600 hover:underline"
+                            >
+                              Convert
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { setEditingId(e.id); setShowModal(true); }}
+                            className="text-xs font-bold text-brand-blue hover:underline"
+                          >
+                            Update
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

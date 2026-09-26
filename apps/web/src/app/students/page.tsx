@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { fetchApiServer } from "@/lib/api-server";
 import { StudentsClient } from "./students-client";
 
@@ -28,5 +29,9 @@ export default async function StudentsPage() {
     };
   });
 
-  return <StudentsClient initialStudents={mapped} />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StudentsClient initialStudents={mapped} />
+    </Suspense>
+  );
 }

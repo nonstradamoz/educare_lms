@@ -5,6 +5,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { fetchApi } from "@/lib/api";
 import { Users, Plus, Search, Filter, MoreVertical, X, User, ChevronRight, CheckCircle2, ChevronLeft, Building, BookOpen, GraduationCap, CreditCard, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface Student {
   id: string;
@@ -26,6 +27,9 @@ interface Student {
 }
 
 export function StudentsClient({ initialStudents }: { initialStudents: Student[] }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [search, setSearch] = useState("");
   const [filterYear, setFilterYear] = useState("All Years");
@@ -35,6 +39,36 @@ export function StudentsClient({ initialStudents }: { initialStudents: Student[]
   const [filterDivision, setFilterDivision] = useState("All Divisions");
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Student | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      const name = searchParams.get('name') || "";
+      const phone = searchParams.get('phone') || "";
+      const email = searchParams.get('email') || "";
+      const parentName = searchParams.get('parentName') || "";
+      const board = searchParams.get('board') || "";
+      const standard = searchParams.get('standard') || "";
+      
+      setEditItem({
+        id: "",
+        admissionNo: "",
+        name,
+        email,
+        phone,
+        parentName,
+        parentEmail: "",
+        parentPhone: phone, // Assuming parent phone from enquiry
+        academicYear: "",
+        board,
+        classLevel: standard,
+        centre: "",
+        division: "",
+      });
+      setShowModal(true);
+      // Clean up URL so it doesn't open again on refresh
+      router.replace('/students');
+    }
+  }, [searchParams, router]);
 
   const filtered = (students || []).filter(s => {
     if (!s) return false;

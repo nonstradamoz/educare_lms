@@ -6,10 +6,11 @@ export default async function FeePage() {
   const mapped = data.map((d: any) => ({
     id: d.id,
     receiptNo: d.receiptNo,
-    studentName: d.student?.user?.name || "Unknown",
-    course: "Student", // we can map from enrollments if available
+    studentId: d.studentId,
+    studentName: d.student?.user?.firstName ? `${d.student.user.firstName} ${d.student.user.lastName}` : "Unknown",
+    course: d.student?.enrollments?.[0]?.batch?.name || "Student",
     amount: d.amount,
-    date: new Date(d.date).toLocaleDateString(),
+    date: new Date(d.date || d.createdAt || Date.now()).toLocaleDateString(),
     status: d.status,
     paymentMode: d.paymentMode || "-"
   }));

@@ -21,6 +21,7 @@ interface FeeRecord {
 
 export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[], students: any[] }) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("Records");
   const [fees, setFees] = useState<FeeRecord[]>(initialFees);
   const [search, setSearch] = useState("");
   const [filterCourse, setFilterCourse] = useState("All Classes");
@@ -92,6 +93,35 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
     const d = new Date(f.date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   }).reduce((sum, f) => sum + Number(f.amount), 0);
+
+  const studentSummaries = students.map((s: any) => {
+    const sFees = fees.filter(f => f.studentId === s.id);
+    const totalPaid = sFees.filter(f => f.status === 'PAID').reduce((sum, f) => sum + Number(f.amount), 0);
+    const pending = sFees.filter(f => f.status === 'PENDING').reduce((sum, f) => sum + Number(f.amount), 0);
+    const overdue = sFees.filter(f => f.status === 'OVERDUE').reduce((sum, f) => sum + Number(f.amount), 0);
+    const totalDue = pending + overdue;
+    
+    let status = "PAID";
+    if (overdue > 0) status = "OVERDUE";
+    else if (pending > 0) status = "PENDING";
+    
+    const phone = s.parentPhone || s.user?.phone || "";
+    
+    return {
+      id: s.id,
+      name: `${s.user?.firstName || ''} ${s.user?.lastName || ''}`.trim(),
+      course: s.enrollments?.[0]?.batch?.name || "N/A",
+      phone,
+      totalPaid,
+      totalDue,
+      status
+    };
+  });
+
+  const filteredStudents = studentSummaries.filter(s => {
+    const searchLower = search.toLowerCase();
+    return s.name.toLowerCase().includes(searchLower) || s.course.toLowerCase().includes(searchLower);
+  });
 
   return (
     <DashboardLayout title="Fee Management">
@@ -197,9 +227,24 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
 
           {/* List Section */}
           <div className="bg-white rounded-2xl border border-border-soft shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-border-soft flex items-center justify-between bg-surface-2/50">
-              <div className="flex items-center gap-2 text-sm font-bold text-text-primary">
-                <BookOpen className="h-4 w-4 text-brand-blue" /> Fee Records
+            <div className="px-6 border-b border-border-soft flex items-center justify-between bg-surface-2/50">
+              <div className="flex items-center gap-6">
+                <button 
+                  onClick={() => setActiveTab("Records")}
+                  className={`py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === "Records" ? "border-brand-blue text-brand-blue" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" /> Fee Records
+                  </div>
+                </button>
+                <button 
+                  onClick={() => setActiveTab("Students")}
+                  className={`py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === "Students" ? "border-brand-blue text-brand-blue" : "border-transparent text-text-muted hover:text-text-primary"}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" /> Student Balances
+                  </div>
+                </button>
               </div>
               
               <div className="flex items-center gap-1 text-xs font-medium">
@@ -210,6 +255,7 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
             </div>
 
             <div className="overflow-x-auto">
+              {activeTab === "Records" ? (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border-soft bg-white">
@@ -289,6 +335,64 @@ export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[],
                 )}
                 </tbody>
               </table>
+              ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border-soft bg-white">
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Student & Course</th>
+                    <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Contact</th>
+                    <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Total Paid</th>
+                    <th className="px-4 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Total Due</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-text-muted uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-right"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-soft">
+                  {filteredStudents.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-20 text-center text-sm text-text-muted">
+                        No students found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStudents.map((s) => (
+                      <tr key={s.id} className="hover:bg-surface-2/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-text-primary">{s.name}</p>
+                          <p className="text-[11px] text-text-muted mt-0.5">{s.course}</p>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-text-secondary">{s.phone || "N/A"}</td>
+                        <td className="px-4 py-4 font-bold text-success">₹{s.totalPaid}</td>
+                        <td className="px-4 py-4 font-bold text-brand-red">₹{s.totalDue}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold ${
+                            s.status === "PAID" ? "bg-success/10 border-success/20 text-success" : 
+                            s.status === "PENDING" ? "bg-warning/10 border-warning/20 text-warning" :
+                            "bg-brand-red/10 border-brand-red/20 text-brand-red"
+                          }`}>
+                            {s.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          {(s.totalDue > 0 && s.phone) && (
+                            <button 
+                              onClick={() => {
+                                const cleanPhone = s.phone.replace(/\\D/g, '');
+                                const number = cleanPhone.startsWith('91') ? cleanPhone : (cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone);
+                                const message = encodeURIComponent(`Dear ${s.name}, this is a gentle reminder that you have pending fees of ₹${s.totalDue}. Please complete the payment at the earliest. Thank you.`);
+                                window.open(`https://wa.me/${number}?text=${message}`, '_blank');
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded bg-green-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-600 transition-colors">
+                              Send Reminder
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+              )}
             </div>
           </div>
         </div>

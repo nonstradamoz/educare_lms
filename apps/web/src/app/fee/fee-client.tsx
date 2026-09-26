@@ -17,6 +17,7 @@ interface FeeRecord {
   date: string;
   status: "PAID" | "PENDING" | "OVERDUE";
   paymentMode: string;
+  studentId?: string;
 }
 
 export function FeeClient({ initialFees, students }: { initialFees: FeeRecord[], students: any[] }) {
